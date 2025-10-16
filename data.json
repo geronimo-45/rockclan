@@ -1,6 +1,1169 @@
 {
-  "generated_at": "2025-10-16 11:57:35.547663",
-  "notes": "모든 경기 반영 / 팀전 0.6배 적용 / ID 통합 완료 / Ceta, Chan 분리 유지",
-  "players": [],
-  "matches": []
+  "generated_at": "2025-10-16 12:06:23.930082",
+  "players": [
+    {
+      "id": "Attaboy",
+      "race": "Zerg",
+      "tier": "Diamond",
+      "elo": 1053,
+      "played": 9,
+      "win": 5,
+      "loss": 3,
+      "history": [
+        1000,
+        940,
+        880,
+        899,
+        942,
+        1003,
+        1027,
+        1077,
+        1053,
+        1053
+      ]
+    },
+    {
+      "id": "Basic",
+      "race": "Terran",
+      "tier": "Silver",
+      "elo": 1139,
+      "played": 8,
+      "win": 6,
+      "loss": 2,
+      "history": [
+        1000,
+        958,
+        934,
+        976,
+        1000,
+        1040,
+        1059,
+        1099,
+        1139
+      ]
+    },
+    {
+      "id": "Chan",
+      "race": "Protoss",
+      "tier": "Silver",
+      "elo": 1104,
+      "played": 3,
+      "win": 3,
+      "loss": 0,
+      "history": [
+        1000,
+        1040,
+        1064,
+        1104
+      ]
+    },
+    {
+      "id": "Chann",
+      "race": "Protoss",
+      "tier": "Silver",
+      "elo": 1308,
+      "played": 9,
+      "win": 7,
+      "loss": 2,
+      "history": [
+        1000,
+        1074,
+        1098,
+        1057,
+        1122,
+        1146,
+        1211,
+        1192,
+        1243,
+        1308
+      ]
+    },
+    {
+      "id": "Ceta",
+      "race": "Zerg",
+      "tier": "Gold",
+      "elo": 1000,
+      "played": 0,
+      "win": 0,
+      "loss": 0,
+      "history": [
+        1000
+      ]
+    },
+    {
+      "id": "Coolguy",
+      "race": "Zerg",
+      "tier": "Silver",
+      "elo": 907,
+      "played": 31,
+      "win": 13,
+      "loss": 18,
+      "history": [
+        1000,
+        951,
+        916,
+        902,
+        839,
+        863,
+        812,
+        857,
+        806,
+        848,
+        872,
+        896,
+        920,
+        878,
+        902,
+        878,
+        943,
+        972,
+        1037,
+        1013,
+        1078,
+        1034,
+        1020,
+        976,
+        1047,
+        1118,
+        1104,
+        1051,
+        1032,
+        979,
+        926,
+        907
+      ]
+    },
+    {
+      "id": "Danny",
+      "race": "Zerg",
+      "tier": "Bronze",
+      "elo": 941,
+      "played": 2,
+      "win": 0,
+      "loss": 2,
+      "history": [
+        1000,
+        960,
+        941
+      ]
+    },
+    {
+      "id": "DanielK",
+      "race": "Zerg",
+      "tier": "Bronze",
+      "elo": 1000,
+      "played": 0,
+      "win": 0,
+      "loss": 0,
+      "history": [
+        1000
+      ]
+    },
+    {
+      "id": "Essence",
+      "race": "Protoss",
+      "tier": "Bronze",
+      "elo": 886,
+      "played": 3,
+      "win": 0,
+      "loss": 3,
+      "history": [
+        1000,
+        955,
+        931,
+        886
+      ]
+    },
+    {
+      "id": "Friend",
+      "race": "Protoss",
+      "tier": "Silver",
+      "elo": 1338,
+      "played": 31,
+      "win": 15,
+      "loss": 15,
+      "history": [
+        1000,
+        1082,
+        1111,
+        1076,
+        1141,
+        1206,
+        1169,
+        1155,
+        1118,
+        1078,
+        1097,
+        1057,
+        1017,
+        1088,
+        1122,
+        1193,
+        1235,
+        1193,
+        1169,
+        1243,
+        1233,
+        1192,
+        1246,
+        1193,
+        1179,
+        1126,
+        1102,
+        1173,
+        1241,
+        1270,
+        1338,
+        1338
+      ]
+    },
+    {
+      "id": "Gdragon",
+      "race": "Random",
+      "tier": "Diamond",
+      "elo": 464,
+      "played": 35,
+      "win": 15,
+      "loss": 19,
+      "history": [
+        1000,
+        1044,
+        1076,
+        1090,
+        999,
+        975,
+        1010,
+        936,
+        966,
+        892,
+        824,
+        790,
+        722,
+        774,
+        798,
+        845,
+        892,
+        863,
+        901,
+        838,
+        775,
+        789,
+        724,
+        659,
+        611,
+        587,
+        508,
+        484,
+        525,
+        544,
+        585,
+        635,
+        564,
+        535,
+        464,
+        464
+      ]
+    },
+    {
+      "id": "GgoMajin",
+      "race": "Terran",
+      "tier": "Silver",
+      "elo": 972,
+      "played": 8,
+      "win": 3,
+      "loss": 5,
+      "history": [
+        1000,
+        958,
+        934,
+        976,
+        1000,
+        1024,
+        1000,
+        986,
+        972
+      ]
+    },
+    {
+      "id": "Hani",
+      "race": "Terran",
+      "tier": "Gold",
+      "elo": 1135,
+      "played": 47,
+      "win": 25,
+      "loss": 22,
+      "history": [
+        1000,
+        923,
+        942,
+        985,
+        939,
+        958,
+        912,
+        863,
+        892,
+        843,
+        794,
+        737,
+        680,
+        725,
+        701,
+        763,
+        739,
+        801,
+        863,
+        839,
+        781,
+        839,
+        798,
+        852,
+        876,
+        930,
+        954,
+        996,
+        1050,
+        998,
+        946,
+        1008,
+        1070,
+        1046,
+        1091,
+        1115,
+        1160,
+        1093,
+        1074,
+        1038,
+        1002,
+        954,
+        1026,
+        1098,
+        1117,
+        1063,
+        1087,
+        1135
+      ]
+    },
+    {
+      "id": "Hyunho",
+      "race": "Zerg",
+      "tier": "Silver",
+      "elo": 1065,
+      "played": 5,
+      "win": 3,
+      "loss": 2,
+      "history": [
+        1000,
+        1065,
+        1089,
+        1131,
+        1089,
+        1065
+      ]
+    },
+    {
+      "id": "IN",
+      "race": "Terran",
+      "tier": "Gold",
+      "elo": 953,
+      "played": 6,
+      "win": 2,
+      "loss": 3,
+      "history": [
+        1000,
+        951,
+        902,
+        926,
+        977,
+        953,
+        953
+      ]
+    },
+    {
+      "id": "MGZG",
+      "race": "Zerg",
+      "tier": "Bronze",
+      "elo": 1301,
+      "played": 9,
+      "win": 7,
+      "loss": 2,
+      "history": [
+        1000,
+        1057,
+        1038,
+        1095,
+        1152,
+        1200,
+        1229,
+        1277,
+        1253,
+        1301
+      ]
+    },
+    {
+      "id": "Macho",
+      "race": "Protoss",
+      "tier": "Diamond",
+      "elo": 1022,
+      "played": 3,
+      "win": 1,
+      "loss": 1,
+      "history": [
+        1000,
+        981,
+        981,
+        1022
+      ]
+    },
+    {
+      "id": "MiSTY",
+      "race": "Protoss",
+      "tier": "Silver",
+      "elo": 833,
+      "played": 4,
+      "win": 0,
+      "loss": 4,
+      "history": [
+        1000,
+        952,
+        923,
+        878,
+        833
+      ]
+    },
+    {
+      "id": "Miny",
+      "race": "Protoss",
+      "tier": "Silver",
+      "elo": 1076,
+      "played": 23,
+      "win": 8,
+      "loss": 15,
+      "history": [
+        1000,
+        951,
+        927,
+        892,
+        974,
+        955,
+        1020,
+        985,
+        1050,
+        1098,
+        1079,
+        1127,
+        1201,
+        1182,
+        1250,
+        1240,
+        1308,
+        1267,
+        1248,
+        1207,
+        1158,
+        1144,
+        1095,
+        1076
+      ]
+    },
+    {
+      "id": "Mukddak",
+      "race": "Terran",
+      "tier": "Silver",
+      "elo": 790,
+      "played": 7,
+      "win": 1,
+      "loss": 6,
+      "history": [
+        1000,
+        937,
+        918,
+        969,
+        918,
+        867,
+        819,
+        790
+      ]
+    },
+    {
+      "id": "Rocky",
+      "race": "Terran",
+      "tier": "Silver",
+      "elo": 1670,
+      "played": 47,
+      "win": 26,
+      "loss": 21,
+      "history": [
+        1000,
+        1065,
+        1113,
+        1142,
+        1224,
+        1200,
+        1265,
+        1230,
+        1295,
+        1343,
+        1372,
+        1420,
+        1468,
+        1497,
+        1545,
+        1593,
+        1546,
+        1499,
+        1553,
+        1511,
+        1487,
+        1529,
+        1483,
+        1459,
+        1527,
+        1495,
+        1446,
+        1422,
+        1373,
+        1397,
+        1348,
+        1304,
+        1260,
+        1241,
+        1211,
+        1265,
+        1251,
+        1305,
+        1393,
+        1374,
+        1459,
+        1440,
+        1525,
+        1549,
+        1505,
+        1573,
+        1602,
+        1670
+      ]
+    },
+    {
+      "id": "Rupark",
+      "race": "Zerg",
+      "tier": "Diamond",
+      "elo": 1531,
+      "played": 57,
+      "win": 36,
+      "loss": 19,
+      "history": [
+        1000,
+        929,
+        900,
+        849,
+        905,
+        929,
+        878,
+        922,
+        966,
+        999,
+        1013,
+        1046,
+        1079,
+        1050,
+        1083,
+        1116,
+        1165,
+        1141,
+        1190,
+        1139,
+        1076,
+        1052,
+        1104,
+        1118,
+        1170,
+        1125,
+        1139,
+        1071,
+        1117,
+        1093,
+        1140,
+        1154,
+        1201,
+        1239,
+        1288,
+        1337,
+        1272,
+        1207,
+        1159,
+        1178,
+        1154,
+        1215,
+        1239,
+        1280,
+        1309,
+        1350,
+        1400,
+        1459,
+        1518,
+        1499,
+        1433,
+        1480,
+        1494,
+        1541,
+        1541,
+        1512,
+        1512,
+        1531
+      ]
+    },
+    {
+      "id": "Shinny",
+      "race": "Protoss",
+      "tier": "Legend",
+      "elo": 1025,
+      "played": 3,
+      "win": 2,
+      "loss": 1,
+      "history": [
+        1000,
+        1048,
+        1077,
+        1025
+      ]
+    },
+    {
+      "id": "Skidashi",
+      "race": "Zerg",
+      "tier": "Gold",
+      "elo": 306,
+      "played": 33,
+      "win": 8,
+      "loss": 23,
+      "history": [
+        1000,
+        923,
+        894,
+        831,
+        869,
+        806,
+        866,
+        926,
+        883,
+        907,
+        855,
+        874,
+        936,
+        998,
+        979,
+        941,
+        881,
+        857,
+        797,
+        773,
+        730,
+        670,
+        616,
+        562,
+        522,
+        546,
+        498,
+        438,
+        409,
+        349,
+        349,
+        325,
+        325,
+        306
+      ]
+    },
+    {
+      "id": "Strive",
+      "race": "Protoss",
+      "tier": "Legend",
+      "elo": 753,
+      "played": 24,
+      "win": 14,
+      "loss": 9,
+      "history": [
+        1000,
+        1042,
+        1061,
+        1103,
+        1122,
+        1164,
+        1110,
+        1030,
+        1040,
+        1076,
+        1019,
+        942,
+        952,
+        875,
+        821,
+        860,
+        879,
+        918,
+        824,
+        730,
+        749,
+        788,
+        807,
+        807,
+        753
+      ]
+    },
+    {
+      "id": "Templar",
+      "race": "Protoss",
+      "tier": "Gold",
+      "elo": 612,
+      "played": 12,
+      "win": 2,
+      "loss": 10,
+      "history": [
+        1000,
+        940,
+        921,
+        861,
+        880,
+        837,
+        777,
+        758,
+        704,
+        680,
+        626,
+        650,
+        612
+      ]
+    },
+    {
+      "id": "Veeny",
+      "race": "Terran",
+      "tier": "Gold",
+      "elo": 1165,
+      "played": 47,
+      "win": 22,
+      "loss": 25,
+      "history": [
+        1000,
+        1044,
+        1076,
+        1027,
+        988,
+        968,
+        1010,
+        991,
+        1033,
+        1013,
+        1066,
+        1008,
+        987,
+        967,
+        920,
+        939,
+        892,
+        937,
+        956,
+        976,
+        1004,
+        951,
+        988,
+        1024,
+        960,
+        1006,
+        981,
+        936,
+        981,
+        936,
+        895,
+        938,
+        995,
+        1029,
+        1009,
+        1033,
+        1014,
+        956,
+        976,
+        1030,
+        1008,
+        1062,
+        1086,
+        1140,
+        1096,
+        1117,
+        1139,
+        1165
+      ]
+    },
+    {
+      "id": "Winter",
+      "race": "Protoss",
+      "tier": "Gold",
+      "elo": 1087,
+      "played": 14,
+      "win": 7,
+      "loss": 7,
+      "history": [
+        1000,
+        1042,
+        1076,
+        1110,
+        1131,
+        1112,
+        1146,
+        1167,
+        1188,
+        1133,
+        1088,
+        1055,
+        1076,
+        1087
+      ]
+    },
+    {
+      "id": "Wonder",
+      "race": "Terran",
+      "tier": "Diamond",
+      "elo": 1000,
+      "played": 0,
+      "win": 0,
+      "loss": 0,
+      "history": [
+        1000
+      ]
+    },
+    {
+      "id": "Yolo",
+      "race": "Protoss",
+      "tier": "Diamond",
+      "elo": 1068,
+      "played": 17,
+      "win": 7,
+      "loss": 10,
+      "history": [
+        1000,
+        1031,
+        1002,
+        974,
+        1021,
+        992,
+        1020,
+        967,
+        996,
+        1038,
+        1015,
+        1073,
+        1045,
+        1094,
+        1122,
+        1094,
+        1068
+      ]
+    },
+    {
+      "id": "Umi",
+      "race": "Protoss",
+      "tier": "Bronze",
+      "elo": 1175,
+      "played": 5,
+      "win": 4,
+      "loss": 1,
+      "history": [
+        1000,
+        1057,
+        1114,
+        1095,
+        1152,
+        1175
+      ]
+    }
+  ],
+  "matches": [
+    {
+      "date": "2025-09-01",
+      "map": "4:4헌터",
+      "team1": [
+        "zeze",
+        "rupark",
+        "miny",
+        "coolguy"
+      ],
+      "team2": [
+        "veeny",
+        "gdragon",
+        "rocky",
+        "hyunho"
+      ],
+      "winner": [
+        "veeny",
+        "gdragon",
+        "rocky",
+        "hyunho"
+      ]
+    },
+    {
+      "date": "2025-09-01",
+      "map": "3:3생컨",
+      "team1": [
+        "rupark",
+        "miny",
+        "coolguy"
+      ],
+      "team2": [
+        "gdragon",
+        "veeny",
+        "rocky"
+      ],
+      "winner": [
+        "gdragon",
+        "veeny",
+        "rocky"
+      ]
+    },
+    {
+      "date": "2025-09-02",
+      "map": "투혼",
+      "player1": "hani",
+      "player2": "skidashi",
+      "winner": "hani"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "투혼",
+      "player1": "macho",
+      "player2": "strive",
+      "winner": "strive"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "투혼",
+      "player1": "dong9",
+      "player2": "attaboy",
+      "winner": "dong9"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "투혼",
+      "player1": "rupark",
+      "player2": "winter",
+      "winner": "winter"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "4:4헌터",
+      "team1": [
+        "macho",
+        "dong9",
+        "rupark",
+        "in"
+      ],
+      "team2": [
+        "skidashi",
+        "strive",
+        "attaboy",
+        "winter"
+      ],
+      "winner": [
+        "macho",
+        "dong9",
+        "rupark",
+        "in"
+      ]
+    },
+    {
+      "date": "2025-09-02",
+      "map": "3:3생컨",
+      "team1": [
+        "dong9",
+        "macho",
+        "hani"
+      ],
+      "team2": [
+        "winter",
+        "strive",
+        "templar"
+      ],
+      "winner": [
+        "dong9",
+        "macho",
+        "hani"
+      ]
+    },
+    {
+      "date": "2025-09-18",
+      "map": "4:4헌터",
+      "team1": [
+        "gdragon",
+        "strive",
+        "hani",
+        "miny"
+      ],
+      "team2": [
+        "rupark",
+        "dopamine",
+        "veeny",
+        "skidashi"
+      ],
+      "winner": [
+        "gdragon",
+        "strive",
+        "hani",
+        "miny"
+      ]
+    },
+    {
+      "date": "2025-09-18",
+      "map": "3:3생컨",
+      "team1": [
+        "rupark",
+        "dopamine",
+        "skidashi"
+      ],
+      "team2": [
+        "gdragon",
+        "miny",
+        "strive"
+      ],
+      "winner": [
+        "gdragon",
+        "miny",
+        "strive"
+      ]
+    },
+    {
+      "date": "2025-09-20",
+      "map": "3:3생컨",
+      "team1": [
+        "dong9",
+        "yolo",
+        "friend"
+      ],
+      "team2": [
+        "hani",
+        "strive",
+        "rocky"
+      ],
+      "winner": [
+        "dong9",
+        "yolo",
+        "hani"
+      ]
+    },
+    {
+      "date": "2025-09-24",
+      "map": "헌터",
+      "team1": [
+        "attaboy",
+        "zeze",
+        "rupark",
+        "rocky"
+      ],
+      "team2": [
+        "yolo",
+        "hani",
+        "coolguy",
+        "gdragon"
+      ],
+      "winner": [
+        "yolo",
+        "hani",
+        "coolguy",
+        "gdragon"
+      ]
+    },
+    {
+      "date": "2025-09-24",
+      "map": "투혼",
+      "player1": "shinny",
+      "player2": "rupark",
+      "winner": "shinny"
+    },
+    {
+      "date": "2025-09-27",
+      "map": "투혼",
+      "player1": "mgzg",
+      "player2": "umi",
+      "winner": "umi"
+    },
+    {
+      "date": "2025-09-27",
+      "map": "투혼",
+      "player1": "chan",
+      "player2": "essence",
+      "winner": "chan"
+    },
+    {
+      "date": "2025-09-27",
+      "map": "3:3헌터",
+      "team1": [
+        "basic",
+        "mgzg",
+        "chan"
+      ],
+      "team2": [
+        "misty",
+        "umi",
+        "essence"
+      ],
+      "winner": [
+        "basic",
+        "mgzg",
+        "chan"
+      ]
+    },
+    {
+      "date": "2025-09-27",
+      "map": "투혼",
+      "player1": "basic",
+      "player2": "misty",
+      "winner": "misty"
+    },
+    {
+      "date": "2025-09-28",
+      "map": "투혼",
+      "player1": "rocky",
+      "player2": "winter",
+      "winner": "winter"
+    },
+    {
+      "date": "2025-09-28",
+      "map": "4:4헌터",
+      "team1": [
+        "rupark",
+        "hani",
+        "rocky",
+        "dong9"
+      ],
+      "team2": [
+        "strive",
+        "winter",
+        "veeny",
+        "coolguy"
+      ],
+      "winner": [
+        "rupark",
+        "hani",
+        "rocky",
+        "dong9"
+      ]
+    },
+    {
+      "date": "2025-09-29",
+      "map": "4:4헌터",
+      "team1": [
+        "strive",
+        "winter",
+        "veeny",
+        "coolguy"
+      ],
+      "team2": [
+        "dong9",
+        "hani",
+        "rupark",
+        "rocky"
+      ],
+      "winner": [
+        "dong9",
+        "hani",
+        "rupark",
+        "rocky"
+      ]
+    }
+  ]
 }
