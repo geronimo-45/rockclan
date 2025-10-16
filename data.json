@@ -1,0 +1,2857 @@
+{
+  "players": [
+    {
+      "id": "Attaboy",
+      "race": "Zerg",
+      "tier": "Diamond",
+      "elo": 1053,
+      "played": 9,
+      "win": 5,
+      "loss": 3,
+      "history": [
+        1000,
+        940,
+        880,
+        899,
+        942,
+        1003,
+        1027,
+        1077,
+        1053,
+        1053
+      ]
+    },
+    {
+      "id": "Basic",
+      "race": "Terran",
+      "tier": "Silver",
+      "elo": 1139,
+      "played": 8,
+      "win": 6,
+      "loss": 2,
+      "history": [
+        1000,
+        958,
+        934,
+        976,
+        1000,
+        1040,
+        1059,
+        1099,
+        1139
+      ]
+    },
+    {
+      "id": "Chan",
+      "race": "Protoss",
+      "tier": "Silver",
+      "elo": 1104,
+      "played": 3,
+      "win": 3,
+      "loss": 0,
+      "history": [
+        1000,
+        1040,
+        1064,
+        1104
+      ]
+    },
+    {
+      "id": "Chann",
+      "race": "Protoss",
+      "tier": "Silver",
+      "elo": 1308,
+      "played": 9,
+      "win": 7,
+      "loss": 2,
+      "history": [
+        1000,
+        1074,
+        1098,
+        1057,
+        1122,
+        1146,
+        1211,
+        1192,
+        1243,
+        1308
+      ]
+    },
+    {
+      "id": "DanielK",
+      "race": "Zerg",
+      "tier": "Bronze",
+      "elo": 1000,
+      "played": 0,
+      "win": 0,
+      "loss": 0,
+      "history": [
+        1000
+      ]
+    },
+    {
+      "id": "Danny",
+      "race": "Zerg",
+      "tier": "Bronze",
+      "elo": 941,
+      "played": 2,
+      "win": 0,
+      "loss": 2,
+      "history": [
+        1000,
+        960,
+        941
+      ]
+    },
+    {
+      "id": "Essence",
+      "race": "Unknown",
+      "tier": "Silver",
+      "elo": 886,
+      "played": 3,
+      "win": 0,
+      "loss": 3,
+      "history": [
+        1000,
+        955,
+        931,
+        886
+      ]
+    },
+    {
+      "id": "Friend",
+      "race": "Protoss",
+      "tier": "Silver",
+      "elo": 1338,
+      "played": 31,
+      "win": 15,
+      "loss": 15,
+      "history": [
+        1000,
+        1082,
+        1111,
+        1076,
+        1141,
+        1206,
+        1169,
+        1155,
+        1118,
+        1078,
+        1097,
+        1057,
+        1017,
+        1088,
+        1122,
+        1193,
+        1235,
+        1193,
+        1169,
+        1243,
+        1233,
+        1192,
+        1246,
+        1193,
+        1179,
+        1126,
+        1102,
+        1173,
+        1241,
+        1270,
+        1338,
+        1338
+      ]
+    },
+    {
+      "id": "Gdragon",
+      "race": "Random",
+      "tier": "Diamond",
+      "elo": 464,
+      "played": 35,
+      "win": 15,
+      "loss": 19,
+      "history": [
+        1000,
+        1044,
+        1076,
+        1090,
+        999,
+        975,
+        1010,
+        936,
+        966,
+        892,
+        824,
+        790,
+        722,
+        774,
+        798,
+        845,
+        892,
+        863,
+        901,
+        838,
+        775,
+        789,
+        724,
+        659,
+        611,
+        587,
+        508,
+        484,
+        525,
+        544,
+        585,
+        635,
+        564,
+        535,
+        464,
+        464
+      ]
+    },
+    {
+      "id": "GgoMajin",
+      "race": "Terran",
+      "tier": "Silver",
+      "elo": 972,
+      "played": 8,
+      "win": 3,
+      "loss": 5,
+      "history": [
+        1000,
+        958,
+        934,
+        976,
+        1000,
+        1024,
+        1000,
+        986,
+        972
+      ]
+    },
+    {
+      "id": "Hani",
+      "race": "Terran",
+      "tier": "Gold",
+      "elo": 1135,
+      "played": 47,
+      "win": 25,
+      "loss": 22,
+      "history": [
+        1000,
+        923,
+        942,
+        985,
+        939,
+        958,
+        912,
+        863,
+        892,
+        843,
+        794,
+        737,
+        680,
+        725,
+        701,
+        763,
+        739,
+        801,
+        863,
+        839,
+        781,
+        839,
+        798,
+        852,
+        876,
+        930,
+        954,
+        996,
+        1050,
+        998,
+        946,
+        1008,
+        1070,
+        1046,
+        1091,
+        1115,
+        1160,
+        1093,
+        1074,
+        1038,
+        1002,
+        954,
+        1026,
+        1098,
+        1117,
+        1063,
+        1087,
+        1135
+      ]
+    },
+    {
+      "id": "Hyunho",
+      "race": "Zerg",
+      "tier": "Silver",
+      "elo": 1065,
+      "played": 5,
+      "win": 3,
+      "loss": 2,
+      "history": [
+        1000,
+        1065,
+        1089,
+        1131,
+        1089,
+        1065
+      ]
+    },
+    {
+      "id": "IN",
+      "race": "Terran",
+      "tier": "Gold",
+      "elo": 953,
+      "played": 6,
+      "win": 2,
+      "loss": 3,
+      "history": [
+        1000,
+        951,
+        902,
+        926,
+        977,
+        953,
+        953
+      ]
+    },
+    {
+      "id": "MGZG",
+      "race": "Zerg",
+      "tier": "Bronze",
+      "elo": 1301,
+      "played": 9,
+      "win": 7,
+      "loss": 2,
+      "history": [
+        1000,
+        1057,
+        1038,
+        1095,
+        1152,
+        1200,
+        1229,
+        1277,
+        1253,
+        1301
+      ]
+    },
+    {
+      "id": "Macho",
+      "race": "Protoss",
+      "tier": "Diamond",
+      "elo": 1022,
+      "played": 3,
+      "win": 1,
+      "loss": 1,
+      "history": [
+        1000,
+        981,
+        981,
+        1022
+      ]
+    },
+    {
+      "id": "MiSTY",
+      "race": "Protoss",
+      "tier": "Silver",
+      "elo": 833,
+      "played": 4,
+      "win": 0,
+      "loss": 4,
+      "history": [
+        1000,
+        952,
+        923,
+        878,
+        833
+      ]
+    },
+    {
+      "id": "Miny",
+      "race": "Protoss",
+      "tier": "Silver",
+      "elo": 1076,
+      "played": 23,
+      "win": 8,
+      "loss": 15,
+      "history": [
+        1000,
+        951,
+        927,
+        892,
+        974,
+        955,
+        1020,
+        985,
+        1050,
+        1098,
+        1079,
+        1127,
+        1201,
+        1182,
+        1250,
+        1240,
+        1308,
+        1267,
+        1248,
+        1207,
+        1158,
+        1144,
+        1095,
+        1076
+      ]
+    },
+    {
+      "id": "Mukddak",
+      "race": "Terran",
+      "tier": "Silver",
+      "elo": 790,
+      "played": 7,
+      "win": 1,
+      "loss": 6,
+      "history": [
+        1000,
+        937,
+        918,
+        969,
+        918,
+        867,
+        819,
+        790
+      ]
+    },
+    {
+      "id": "Rocky",
+      "race": "Terran",
+      "tier": "Silver",
+      "elo": 1670,
+      "played": 47,
+      "win": 26,
+      "loss": 21,
+      "history": [
+        1000,
+        1065,
+        1113,
+        1142,
+        1224,
+        1200,
+        1265,
+        1230,
+        1295,
+        1343,
+        1372,
+        1420,
+        1468,
+        1497,
+        1545,
+        1593,
+        1546,
+        1499,
+        1553,
+        1511,
+        1487,
+        1529,
+        1483,
+        1459,
+        1527,
+        1495,
+        1446,
+        1422,
+        1373,
+        1397,
+        1348,
+        1304,
+        1260,
+        1241,
+        1211,
+        1265,
+        1251,
+        1305,
+        1393,
+        1374,
+        1459,
+        1440,
+        1525,
+        1549,
+        1505,
+        1573,
+        1602,
+        1670
+      ]
+    },
+    {
+      "id": "Rupark",
+      "race": "Zerg",
+      "tier": "Diamond",
+      "elo": 1531,
+      "played": 57,
+      "win": 36,
+      "loss": 19,
+      "history": [
+        1000,
+        929,
+        900,
+        849,
+        905,
+        929,
+        878,
+        922,
+        966,
+        999,
+        1013,
+        1046,
+        1079,
+        1050,
+        1083,
+        1116,
+        1165,
+        1141,
+        1190,
+        1139,
+        1076,
+        1052,
+        1104,
+        1118,
+        1170,
+        1125,
+        1139,
+        1071,
+        1117,
+        1093,
+        1140,
+        1154,
+        1201,
+        1239,
+        1288,
+        1337,
+        1272,
+        1207,
+        1159,
+        1178,
+        1154,
+        1215,
+        1239,
+        1280,
+        1309,
+        1350,
+        1400,
+        1459,
+        1518,
+        1499,
+        1433,
+        1480,
+        1494,
+        1541,
+        1541,
+        1512,
+        1512,
+        1531
+      ]
+    },
+    {
+      "id": "Shinny",
+      "race": "Protoss",
+      "tier": "Legend",
+      "elo": 869,
+      "played": 3,
+      "win": 0,
+      "loss": 3,
+      "history": [
+        1000,
+        949,
+        920,
+        869
+      ]
+    },
+    {
+      "id": "Skidashi",
+      "race": "Zerg",
+      "tier": "Gold",
+      "elo": 306,
+      "played": 33,
+      "win": 8,
+      "loss": 23,
+      "history": [
+        1000,
+        923,
+        894,
+        831,
+        869,
+        806,
+        866,
+        926,
+        883,
+        907,
+        855,
+        874,
+        936,
+        998,
+        979,
+        941,
+        881,
+        857,
+        797,
+        773,
+        730,
+        670,
+        616,
+        562,
+        522,
+        546,
+        498,
+        438,
+        409,
+        349,
+        349,
+        325,
+        325,
+        306
+      ]
+    },
+    {
+      "id": "Strive",
+      "race": "Protoss",
+      "tier": "Legend",
+      "elo": 753,
+      "played": 24,
+      "win": 14,
+      "loss": 9,
+      "history": [
+        1000,
+        1042,
+        1061,
+        1103,
+        1122,
+        1164,
+        1110,
+        1030,
+        1040,
+        1076,
+        1019,
+        942,
+        952,
+        875,
+        821,
+        860,
+        879,
+        918,
+        824,
+        730,
+        749,
+        788,
+        807,
+        807,
+        753
+      ]
+    },
+    {
+      "id": "Templar",
+      "race": "Protoss",
+      "tier": "Gold",
+      "elo": 612,
+      "played": 12,
+      "win": 2,
+      "loss": 10,
+      "history": [
+        1000,
+        940,
+        921,
+        861,
+        880,
+        837,
+        777,
+        758,
+        704,
+        680,
+        626,
+        650,
+        612
+      ]
+    },
+    {
+      "id": "Veeny",
+      "race": "Terran",
+      "tier": "Gold",
+      "elo": 475,
+      "played": 49,
+      "win": 18,
+      "loss": 30,
+      "history": [
+        1000,
+        1055,
+        1084,
+        1125,
+        1194,
+        1213,
+        1170,
+        1127,
+        1081,
+        1052,
+        1006,
+        957,
+        928,
+        879,
+        830,
+        890,
+        950,
+        907,
+        855,
+        879,
+        819,
+        790,
+        730,
+        759,
+        716,
+        656,
+        714,
+        772,
+        791,
+        837,
+        899,
+        961,
+        1009,
+        990,
+        947,
+        928,
+        885,
+        818,
+        837,
+        801,
+        782,
+        746,
+        698,
+        631,
+        564,
+        624,
+        564,
+        535,
+        475,
+        475
+      ]
+    },
+    {
+      "id": "Winter",
+      "race": "Protoss",
+      "tier": "Gold",
+      "elo": 1300,
+      "played": 15,
+      "win": 11,
+      "loss": 3,
+      "history": [
+        1000,
+        1060,
+        1079,
+        1139,
+        1201,
+        1225,
+        1287,
+        1335,
+        1268,
+        1287,
+        1220,
+        1249,
+        1309,
+        1338,
+        1338,
+        1300
+      ]
+    },
+    {
+      "id": "Wonder",
+      "race": "Terran",
+      "tier": "Diamond",
+      "elo": 944,
+      "played": 1,
+      "win": 0,
+      "loss": 1,
+      "history": [
+        1000,
+        944
+      ]
+    },
+    {
+      "id": "Yolo",
+      "race": "Protoss",
+      "tier": "Diamond",
+      "elo": 1051,
+      "played": 15,
+      "win": 10,
+      "loss": 5,
+      "history": [
+        1000,
+        932,
+        956,
+        888,
+        926,
+        978,
+        915,
+        939,
+        977,
+        1015,
+        1034,
+        1072,
+        993,
+        969,
+        1010,
+        1051
+      ]
+    },
+    {
+      "id": "Yumi",
+      "race": "Protoss",
+      "tier": "Bronze",
+      "elo": 1025,
+      "played": 5,
+      "win": 3,
+      "loss": 2,
+      "history": [
+        1000,
+        1048,
+        1077,
+        1039,
+        1063,
+        1025
+      ]
+    },
+    {
+      "id": "Zeze",
+      "race": "Protoss",
+      "tier": "Gold",
+      "elo": 839,
+      "played": 18,
+      "win": 7,
+      "loss": 10,
+      "history": [
+        1000,
+        940,
+        911,
+        862,
+        813,
+        758,
+        703,
+        732,
+        694,
+        651,
+        627,
+        584,
+        658,
+        677,
+        734,
+        763,
+        820,
+        820,
+        839
+      ]
+    },
+    {
+      "id": "coolguy",
+      "race": "Zerg",
+      "tier": "Silver",
+      "elo": 907,
+      "played": 31,
+      "win": 13,
+      "loss": 18,
+      "history": [
+        1000,
+        951,
+        916,
+        902,
+        839,
+        863,
+        812,
+        857,
+        806,
+        848,
+        872,
+        896,
+        920,
+        878,
+        902,
+        878,
+        943,
+        972,
+        1037,
+        1013,
+        1078,
+        1034,
+        1020,
+        976,
+        1047,
+        1118,
+        1104,
+        1051,
+        1032,
+        979,
+        926,
+        907
+      ]
+    },
+    {
+      "id": "dong9",
+      "race": "Terran",
+      "tier": "Diamond",
+      "elo": 1317,
+      "played": 34,
+      "win": 22,
+      "loss": 11,
+      "history": [
+        1000,
+        940,
+        921,
+        861,
+        904,
+        956,
+        893,
+        931,
+        976,
+        995,
+        1040,
+        1011,
+        1047,
+        1092,
+        1111,
+        1048,
+        1029,
+        966,
+        1018,
+        1070,
+        1110,
+        1134,
+        1158,
+        1107,
+        1121,
+        1070,
+        1131,
+        1150,
+        1200,
+        1259,
+        1318,
+        1252,
+        1276,
+        1276,
+        1317
+      ]
+    },
+    {
+      "id": "dopamine",
+      "race": "Zerg",
+      "tier": "Diamond",
+      "elo": 1021,
+      "played": 6,
+      "win": 3,
+      "loss": 3,
+      "history": [
+        1000,
+        937,
+        918,
+        977,
+        991,
+        1050,
+        1021
+      ]
+    },
+    {
+      "id": "essence",
+      "race": "Protoss",
+      "tier": "Bronze",
+      "elo": 1000,
+      "played": 0,
+      "win": 0,
+      "loss": 0,
+      "history": [
+        1000
+      ]
+    },
+    {
+      "id": "umi",
+      "race": "Protoss",
+      "tier": "Bronze",
+      "elo": 1000,
+      "played": 0,
+      "win": 0,
+      "loss": 0,
+      "history": [
+        1000
+      ]
+    }
+  ],
+  "matches": [
+    {
+      "date": "2025-09-01",
+      "map": "Matchday",
+      "team1": [
+        "Zeze",
+        "Rupark",
+        "Miny",
+        "coolguy"
+      ],
+      "team2": [
+        "Veeny",
+        "Gdragon",
+        "Rocky",
+        "Hyunho"
+      ],
+      "winner": [
+        "Veeny",
+        "Gdragon",
+        "Rocky",
+        "Hyunho"
+      ],
+      "score": "4:1"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "투혼",
+      "player1": "Miny",
+      "player2": "Hyunho",
+      "winner": "Hyunho",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "투혼",
+      "player1": "Rupark",
+      "player2": "Veeny",
+      "winner": "Veeny",
+      "score": "0:2"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "3:3생컨",
+      "team1": [
+        "Rupark",
+        "Miny",
+        "coolguy"
+      ],
+      "team2": [
+        "Gdragon",
+        "Veeny",
+        "Rocky"
+      ],
+      "winner": [
+        "Gdragon",
+        "Veeny",
+        "Rocky"
+      ],
+      "score": "0:3"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "투혼",
+      "player1": "Zeze",
+      "player2": "Rocky",
+      "winner": "Rocky",
+      "score": "1:3"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "투혼",
+      "player1": "coolguy",
+      "player2": "Gdragon",
+      "winner": "Gdragon",
+      "score": "1:4"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "Matchday",
+      "team1": [
+        "Hani",
+        "Gdragon",
+        "Skidashi",
+        "coolguy",
+        "Mukddak"
+      ],
+      "team2": [
+        "Veeny",
+        "Rupark",
+        "Miny",
+        "Rocky",
+        "Friend"
+      ],
+      "winner": [
+        "Veeny",
+        "Rupark",
+        "Miny",
+        "Rocky",
+        "Friend"
+      ],
+      "score": "5:4"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "투혼",
+      "player1": "Mukddak",
+      "player2": "Veeny",
+      "winner": "Veeny",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "투혼",
+      "player1": "Skidashi",
+      "player2": "Friend",
+      "winner": "Friend",
+      "score": "0:2"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "투혼",
+      "player1": "coolguy",
+      "player2": "Rocky",
+      "winner": "coolguy",
+      "score": "1:2"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "투혼",
+      "player1": "Hani",
+      "player2": "Miny",
+      "winner": "Hani",
+      "score": "2:2"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "투혼",
+      "player1": "Gdragon",
+      "player2": "Rupark",
+      "winner": "Rupark",
+      "score": "2:3"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "3:3생컨",
+      "team1": [
+        "Gdragon",
+        "Hani",
+        "Mukddak"
+      ],
+      "team2": [
+        "Rupark",
+        "Veeny",
+        "Friend"
+      ],
+      "winner": [
+        "Gdragon",
+        "Hani",
+        "Mukddak"
+      ],
+      "score": "3:3"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "4:4헌터",
+      "team1": [
+        "Gdragon",
+        "Skidashi",
+        "coolguy",
+        "Mukddak"
+      ],
+      "team2": [
+        "Rupark",
+        "Miny",
+        "Rocky",
+        "Friend"
+      ],
+      "winner": [
+        "Rupark",
+        "Miny",
+        "Rocky",
+        "Friend"
+      ],
+      "score": "3:4"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "3:3생컨",
+      "team1": [
+        "Gdragon",
+        "Skidashi",
+        "coolguy"
+      ],
+      "team2": [
+        "Veeny",
+        "Rocky",
+        "Miny"
+      ],
+      "winner": [
+        "Gdragon",
+        "Skidashi",
+        "coolguy"
+      ],
+      "score": "4:4"
+    },
+    {
+      "date": "2025-09-01",
+      "map": "4:4헌터",
+      "team1": [
+        "Gdragon",
+        "Skidashi",
+        "coolguy",
+        "Mukddak"
+      ],
+      "team2": [
+        "Rupark",
+        "Miny",
+        "Rocky",
+        "Friend"
+      ],
+      "winner": [
+        "Rupark",
+        "Miny",
+        "Rocky",
+        "Friend"
+      ],
+      "score": "4:5"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "Matchday",
+      "team1": [
+        "Hani",
+        "Veeny",
+        "Friend"
+      ],
+      "team2": [
+        "Rupark",
+        "Rocky",
+        "Miny"
+      ],
+      "winner": [
+        "Rupark",
+        "Rocky",
+        "Miny"
+      ],
+      "score": "3:1"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "투혼",
+      "player1": "Veeny",
+      "player2": "Rocky",
+      "winner": "Rocky",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "투혼",
+      "player1": "Friend",
+      "player2": "Rupark",
+      "winner": "Rupark",
+      "score": "0:2"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "투혼",
+      "player1": "Hani",
+      "player2": "Miny",
+      "winner": "Hani",
+      "score": "1:2"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "3:3헌터",
+      "team1": [
+        "Hani",
+        "Veeny",
+        "Friend"
+      ],
+      "team2": [
+        "Rupark",
+        "Rocky",
+        "Miny"
+      ],
+      "winner": [
+        "Rupark",
+        "Rocky",
+        "Miny"
+      ],
+      "score": "1:3"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "Matchday",
+      "team1": [
+        "Hani",
+        "Veeny",
+        "Friend"
+      ],
+      "team2": [
+        "Rupark",
+        "Rocky",
+        "MGZG"
+      ],
+      "winner": [
+        "Rupark",
+        "Rocky",
+        "MGZG"
+      ],
+      "score": "3:2"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "투혼",
+      "player1": "Hani",
+      "player2": "Rupark",
+      "winner": "Hani",
+      "score": "1:0"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "투혼",
+      "player1": "Friend",
+      "player2": "MGZG",
+      "winner": "Friend",
+      "score": "2:0"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "투혼",
+      "player1": "Veeny",
+      "player2": "Rocky",
+      "winner": "Rocky",
+      "score": "2:1"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "3:3헌터",
+      "team1": [
+        "Hani",
+        "Veeny",
+        "Friend"
+      ],
+      "team2": [
+        "Rupark",
+        "Rocky",
+        "MGZG"
+      ],
+      "winner": [
+        "Rupark",
+        "Rocky",
+        "MGZG"
+      ],
+      "score": "2:2"
+    },
+    {
+      "date": "2025-09-02",
+      "map": "3:3생컨",
+      "team1": [
+        "Hani",
+        "Veeny",
+        "Friend"
+      ],
+      "team2": [
+        "Rupark",
+        "Rocky",
+        "MGZG"
+      ],
+      "winner": [
+        "Rupark",
+        "Rocky",
+        "MGZG"
+      ],
+      "score": "2:3"
+    },
+    {
+      "date": "2025-09-15",
+      "map": "Matchday",
+      "team1": [
+        "Rocky",
+        "Gdragon",
+        "Yolo",
+        "Hani"
+      ],
+      "team2": [
+        "Veeny",
+        "Friend",
+        "Rupark",
+        "Skidashi"
+      ],
+      "winner": [
+        "Veeny",
+        "Friend",
+        "Rupark",
+        "Skidashi"
+      ],
+      "score": "1:4"
+    },
+    {
+      "date": "2025-09-15",
+      "map": "투혼",
+      "player1": "Gdragon",
+      "player2": "Friend",
+      "winner": "Friend",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-15",
+      "map": "투혼",
+      "player1": "Yolo",
+      "player2": "Rupark",
+      "winner": "Yolo",
+      "score": "1:1"
+    },
+    {
+      "date": "2025-09-15",
+      "map": "4:4헌터",
+      "team1": [
+        "Veeny",
+        "Friend",
+        "Rupark",
+        "Skidashi"
+      ],
+      "team2": [
+        "Rocky",
+        "Gdragon",
+        "Yolo",
+        "Hani"
+      ],
+      "winner": [
+        "Veeny",
+        "Friend",
+        "Rupark",
+        "Skidashi"
+      ],
+      "score": "1:2"
+    },
+    {
+      "date": "2025-09-15",
+      "map": "3:3생컨",
+      "team1": [
+        "Rocky",
+        "Yolo",
+        "Hani"
+      ],
+      "team2": [
+        "Skidashi",
+        "Veeny",
+        "Rupark"
+      ],
+      "winner": [
+        "Rocky",
+        "Yolo",
+        "Hani"
+      ],
+      "score": "1:3"
+    },
+    {
+      "date": "2025-09-15",
+      "map": "투혼",
+      "player1": "Hani",
+      "player2": "Skidashi",
+      "winner": "Skidashi",
+      "score": "1:4"
+    },
+    {
+      "date": "2025-09-16",
+      "map": "Matchday",
+      "team1": [
+        "coolguy",
+        "Hyunho",
+        "Friend"
+      ],
+      "team2": [
+        "Basic",
+        "Rocky",
+        "GgoMajin"
+      ],
+      "winner": [
+        "coolguy",
+        "Hyunho",
+        "Friend"
+      ],
+      "score": "3:0"
+    },
+    {
+      "date": "2025-09-16",
+      "map": "투혼",
+      "player1": "coolguy",
+      "player2": "Basic",
+      "winner": "coolguy",
+      "score": "1:0"
+    },
+    {
+      "date": "2025-09-16",
+      "map": "투혼",
+      "player1": "coolguy",
+      "player2": "Rocky",
+      "winner": "coolguy",
+      "score": "2:0"
+    },
+    {
+      "date": "2025-09-16",
+      "map": "투혼",
+      "player1": "coolguy",
+      "player2": "GgoMajin",
+      "winner": "coolguy",
+      "score": "3:0"
+    },
+    {
+      "date": "2025-09-16",
+      "map": "Matchday",
+      "team1": [
+        "coolguy",
+        "Hyunho",
+        "Friend"
+      ],
+      "team2": [
+        "Basic",
+        "Rocky",
+        "GgoMajin"
+      ],
+      "winner": [
+        "Basic",
+        "Rocky",
+        "GgoMajin"
+      ],
+      "score": "1:3"
+    },
+    {
+      "date": "2025-09-16",
+      "map": "투혼",
+      "player1": "Friend",
+      "player2": "GgoMajin",
+      "winner": "GgoMajin",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-16",
+      "map": "투혼",
+      "player1": "Hyunho",
+      "player2": "GgoMajin",
+      "winner": "GgoMajin",
+      "score": "0:2"
+    },
+    {
+      "date": "2025-09-16",
+      "map": "투혼",
+      "player1": "coolguy",
+      "player2": "GgoMajin",
+      "winner": "coolguy",
+      "score": "1:2"
+    },
+    {
+      "date": "2025-09-16",
+      "map": "투혼",
+      "player1": "coolguy",
+      "player2": "Basic",
+      "winner": "Basic",
+      "score": "1:3"
+    },
+    {
+      "date": "2025-09-18",
+      "map": "Matchday",
+      "team1": [
+        "Rupark",
+        "dopamine",
+        "Veeny",
+        "Skidashi"
+      ],
+      "team2": [
+        "Gdragon",
+        "Strive",
+        "Hani",
+        "Miny"
+      ],
+      "winner": [
+        "Gdragon",
+        "Strive",
+        "Hani",
+        "Miny"
+      ],
+      "score": "2:4"
+    },
+    {
+      "date": "2025-09-18",
+      "map": "투혼",
+      "player1": "dopamine",
+      "player2": "Strive",
+      "winner": "Strive",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-18",
+      "map": "투혼",
+      "player1": "Veeny",
+      "player2": "Hani",
+      "winner": "Veeny",
+      "score": "1:1"
+    },
+    {
+      "date": "2025-09-18",
+      "map": "투혼",
+      "player1": "Rupark",
+      "player2": "Gdragon",
+      "winner": "Gdragon",
+      "score": "1:2"
+    },
+    {
+      "date": "2025-09-18",
+      "map": "투혼",
+      "player1": "Skidashi",
+      "player2": "Miny",
+      "winner": "Skidashi",
+      "score": "2:2"
+    },
+    {
+      "date": "2025-09-19",
+      "map": "Matchday",
+      "team1": [
+        "dong9",
+        "Attaboy",
+        "Zeze",
+        "IN"
+      ],
+      "team2": [
+        "Strive",
+        "Skidashi",
+        "Rupark",
+        "Hani"
+      ],
+      "winner": [
+        "Strive",
+        "Skidashi",
+        "Rupark",
+        "Hani"
+      ],
+      "score": "3:4"
+    },
+    {
+      "date": "2025-09-19",
+      "map": "투혼",
+      "player1": "GgoMajin",
+      "player2": "Rupark",
+      "winner": "Rupark",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-19",
+      "map": "투혼",
+      "player1": "dong9",
+      "player2": "Strive",
+      "winner": "Strive",
+      "score": "0:2"
+    },
+    {
+      "date": "2025-09-19",
+      "map": "4:4헌터",
+      "team1": [
+        "dong9",
+        "Attaboy",
+        "Zeze",
+        "IN"
+      ],
+      "team2": [
+        "Strive",
+        "Skidashi",
+        "Rupark",
+        "Hani"
+      ],
+      "winner": [
+        "Strive",
+        "Skidashi",
+        "Rupark",
+        "Hani"
+      ],
+      "score": "0:3"
+    },
+    {
+      "date": "2025-09-19",
+      "map": "투혼",
+      "player1": "Attaboy",
+      "player2": "Skidashi",
+      "winner": "Attaboy",
+      "score": "1:3"
+    },
+    {
+      "date": "2025-09-19",
+      "map": "투혼",
+      "player1": "IN",
+      "player2": "Hani",
+      "winner": "IN",
+      "score": "2:3"
+    },
+    {
+      "date": "2025-09-19",
+      "map": "3:3생컨",
+      "team1": [
+        "dong9",
+        "Attaboy",
+        "IN"
+      ],
+      "team2": [
+        "Strive",
+        "Rupark",
+        "Skidashi"
+      ],
+      "winner": [
+        "dong9",
+        "Attaboy",
+        "IN"
+      ],
+      "score": "3:3"
+    },
+    {
+      "date": "2025-09-19",
+      "map": "투혼",
+      "player1": "GgoMajin",
+      "player2": "Rupark",
+      "winner": "Rupark",
+      "score": "3:4"
+    },
+    {
+      "date": "2025-09-20",
+      "map": "Matchday",
+      "team1": [
+        "dong9",
+        "Chann",
+        "Friend",
+        "Yolo"
+      ],
+      "team2": [
+        "Strive",
+        "Rocky",
+        "Rupark",
+        "Hani"
+      ],
+      "winner": [
+        "dong9",
+        "Chann",
+        "Friend",
+        "Yolo"
+      ],
+      "score": "4:2"
+    },
+    {
+      "date": "2025-09-20",
+      "map": "투혼",
+      "player1": "Chann",
+      "player2": "Rocky",
+      "winner": "Chann",
+      "score": "1:0"
+    },
+    {
+      "date": "2025-09-20",
+      "map": "투혼",
+      "player1": "Friend",
+      "player2": "Strive",
+      "winner": "Strive",
+      "score": "1:1"
+    },
+    {
+      "date": "2025-09-20",
+      "map": "4:4헌터",
+      "team1": [
+        "dong9",
+        "Chann",
+        "Friend",
+        "Yolo"
+      ],
+      "team2": [
+        "Strive",
+        "Rocky",
+        "Rupark",
+        "Hani"
+      ],
+      "winner": [
+        "Strive",
+        "Rocky",
+        "Rupark",
+        "Hani"
+      ],
+      "score": "1:2"
+    },
+    {
+      "date": "2025-09-20",
+      "map": "투혼",
+      "player1": "Yolo",
+      "player2": "Rupark",
+      "winner": "Yolo",
+      "score": "2:2"
+    },
+    {
+      "date": "2025-09-20",
+      "map": "3:3생컨",
+      "team1": [
+        "dong9",
+        "Yolo",
+        "Friend"
+      ],
+      "team2": [
+        "Hani",
+        "Strive",
+        "Rocky"
+      ],
+      "winner": [
+        "dong9",
+        "Yolo",
+        "Friend"
+      ],
+      "score": "4:2"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "Matchday",
+      "team1": [
+        "dong9",
+        "Chann",
+        "Hani",
+        "coolguy"
+      ],
+      "team2": [
+        "Rocky",
+        "Templar",
+        "Skidashi",
+        "Veeny"
+      ],
+      "winner": [
+        "dong9",
+        "Chann",
+        "Hani",
+        "coolguy"
+      ],
+      "score": "4:0"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "투혼",
+      "player1": "Chann",
+      "player2": "Rocky",
+      "winner": "Chann",
+      "score": "1:0"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "투혼",
+      "player1": "dong9",
+      "player2": "Templar",
+      "winner": "dong9",
+      "score": "2:0"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "투혼",
+      "player1": "Hani",
+      "player2": "Skidashi",
+      "winner": "Hani",
+      "score": "3:0"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "투혼",
+      "player1": "coolguy",
+      "player2": "Veeny",
+      "winner": "coolguy",
+      "score": "4:0"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "Matchday",
+      "team1": [
+        "dong9",
+        "Chann",
+        "Hani",
+        "coolguy"
+      ],
+      "team2": [
+        "Rocky",
+        "Templar",
+        "Skidashi",
+        "Veeny"
+      ],
+      "winner": [
+        "dong9",
+        "Chann",
+        "Hani",
+        "coolguy"
+      ],
+      "score": "4:3"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "투혼",
+      "player1": "Chann",
+      "player2": "Templar",
+      "winner": "Templar",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "투혼",
+      "player1": "dong9",
+      "player2": "Veeny",
+      "winner": "Veeny",
+      "score": "0:2"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "투혼",
+      "player1": "coolguy",
+      "player2": "Rocky",
+      "winner": "Rocky",
+      "score": "0:3"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "투혼",
+      "player1": "Hani",
+      "player2": "Skidashi",
+      "winner": "Hani",
+      "score": "1:3"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "3:3생컨",
+      "team1": [
+        "dong9",
+        "Hani",
+        "Chann"
+      ],
+      "team2": [
+        "Templar",
+        "Veeny",
+        "Skidashi"
+      ],
+      "winner": [
+        "dong9",
+        "Hani",
+        "Chann"
+      ],
+      "score": "2:3"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "4:4헌터",
+      "team1": [
+        "dong9",
+        "Chann",
+        "Hani",
+        "coolguy"
+      ],
+      "team2": [
+        "Rocky",
+        "Templar",
+        "Skidashi",
+        "Veeny"
+      ],
+      "winner": [
+        "dong9",
+        "Chann",
+        "Hani",
+        "coolguy"
+      ],
+      "score": "3:3"
+    },
+    {
+      "date": "2025-09-22",
+      "map": "투혼(에결)",
+      "player1": "dong9",
+      "player2": "Templar",
+      "winner": "dong9",
+      "score": "4:3"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "Matchday",
+      "team1": [
+        "Miny",
+        "Gdragon",
+        "Rupark",
+        "Veeny"
+      ],
+      "team2": [
+        "Strive",
+        "Zeze",
+        "coolguy",
+        "Rocky"
+      ],
+      "winner": [
+        "Miny",
+        "Gdragon",
+        "Rupark",
+        "Veeny"
+      ],
+      "score": "4:2"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "Miny",
+      "player2": "Strive",
+      "winner": "Strive",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "Rupark",
+      "player2": "coolguy",
+      "winner": "Rupark",
+      "score": "1:1"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "4:4헌터",
+      "team1": [
+        "Miny",
+        "Gdragon",
+        "Rupark",
+        "Veeny"
+      ],
+      "team2": [
+        "Strive",
+        "Zeze",
+        "coolguy",
+        "Rocky"
+      ],
+      "winner": [
+        "Miny",
+        "Gdragon",
+        "Rupark",
+        "Veeny"
+      ],
+      "score": "2:1"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "Gdragon",
+      "player2": "Zeze",
+      "winner": "Zeze",
+      "score": "2:2"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "Veeny",
+      "player2": "Rocky",
+      "winner": "Veeny",
+      "score": "3:2"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "3:3생컨",
+      "team1": [
+        "Rupark",
+        "Gdragon",
+        "Veeny"
+      ],
+      "team2": [
+        "Zeze",
+        "Strive",
+        "Rocky"
+      ],
+      "winner": [
+        "Rupark",
+        "Gdragon",
+        "Veeny"
+      ],
+      "score": "4:2"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "Matchday",
+      "team1": [
+        "Winter",
+        "Strive",
+        "coolguy",
+        "Rupark"
+      ],
+      "team2": [
+        "Miny",
+        "dong9",
+        "Gdragon",
+        "Hani"
+      ],
+      "winner": [
+        "Winter",
+        "Strive",
+        "coolguy",
+        "Rupark"
+      ],
+      "score": "4:1"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "Winter",
+      "player2": "Miny",
+      "winner": "Winter",
+      "score": "1:0"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "Strive",
+      "player2": "dong9",
+      "winner": "Strive",
+      "score": "1:1"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "4:4헌터",
+      "team1": [
+        "Winter",
+        "Strive",
+        "coolguy",
+        "Rupark"
+      ],
+      "team2": [
+        "Miny",
+        "dong9",
+        "Gdragon",
+        "Hani"
+      ],
+      "winner": [
+        "Winter",
+        "Strive",
+        "coolguy",
+        "Rupark"
+      ],
+      "score": "W"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "coolguy",
+      "player2": "Gdragon",
+      "winner": "Gdragon",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "Matchday",
+      "team1": [
+        "dong9",
+        "Winter",
+        "Veeny",
+        "Hani"
+      ],
+      "team2": [
+        "Rupark",
+        "Gdragon",
+        "Templar",
+        "Skidashi"
+      ],
+      "winner": [
+        "dong9",
+        "Winter",
+        "Veeny",
+        "Hani"
+      ],
+      "score": "4:3"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "Winter",
+      "player2": "Templar",
+      "winner": "Winter",
+      "score": "1:0"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "4:4헌터",
+      "team1": [
+        "dong9",
+        "Winter",
+        "Veeny",
+        "Hani"
+      ],
+      "team2": [
+        "Rupark",
+        "Gdragon",
+        "Templar",
+        "Skidashi"
+      ],
+      "winner": [
+        "dong9",
+        "Winter",
+        "Veeny",
+        "Hani"
+      ],
+      "score": "2:0"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "3:3생컨",
+      "team1": [
+        "dong9",
+        "Winter",
+        "Veeny"
+      ],
+      "team2": [
+        "Gdragon",
+        "Skidashi",
+        "Rupark"
+      ],
+      "winner": [
+        "dong9",
+        "Winter",
+        "Veeny"
+      ],
+      "score": "3:0"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "Veeny",
+      "player2": "Rupark",
+      "winner": "Rupark",
+      "score": "3:1"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "Hani",
+      "player2": "Skidashi",
+      "winner": "Skidashi",
+      "score": "3:2"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "dong9",
+      "player2": "Gdragon",
+      "winner": "dong9",
+      "score": "3:3"
+    },
+    {
+      "date": "2025-09-23",
+      "map": "투혼",
+      "player1": "dong9",
+      "player2": "Rupark",
+      "winner": "dong9",
+      "score": "4:3"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "Matchday",
+      "team1": [
+        "Yolo",
+        "Hani",
+        "Rocky"
+      ],
+      "team2": [
+        "dong9",
+        "Zeze",
+        "Veeny"
+      ],
+      "winner": [
+        "Yolo",
+        "Hani",
+        "Rocky"
+      ],
+      "score": "3:1"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "투혼",
+      "player1": "Hani",
+      "player2": "Zeze",
+      "winner": "Hani",
+      "score": "1:0"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "투혼",
+      "player1": "Yolo",
+      "player2": "Veeny",
+      "winner": "Yolo",
+      "score": "2:0"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "투혼",
+      "player1": "Rocky",
+      "player2": "dong9",
+      "winner": "dong9",
+      "score": "2:1"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "3:3헌터",
+      "team1": [
+        "Yolo",
+        "Hani",
+        "Rocky"
+      ],
+      "team2": [
+        "dong9",
+        "Zeze",
+        "Veeny"
+      ],
+      "winner": [
+        "Yolo",
+        "Hani",
+        "Rocky"
+      ],
+      "score": "3:1"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "Matchday",
+      "team1": [
+        "Attaboy",
+        "dong9",
+        "Zeze",
+        "Rocky",
+        "Rupark"
+      ],
+      "team2": [
+        "Yolo",
+        "Hani",
+        "coolguy",
+        "Veeny",
+        "Gdragon"
+      ],
+      "winner": [
+        "Attaboy",
+        "dong9",
+        "Zeze",
+        "Rocky",
+        "Rupark"
+      ],
+      "score": "5:4"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "투혼",
+      "player1": "Attaboy",
+      "player2": "Yolo",
+      "winner": "Attaboy",
+      "score": "1:0"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "투혼",
+      "player1": "dong9",
+      "player2": "Hani",
+      "winner": "dong9",
+      "score": "2:0"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "투혼",
+      "player1": "Zeze",
+      "player2": "coolguy",
+      "winner": "Zeze",
+      "score": "3:0"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "투혼",
+      "player1": "Rocky",
+      "player2": "Veeny",
+      "winner": "Veeny",
+      "score": "3:1"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "투혼",
+      "player1": "Rupark",
+      "player2": "Gdragon",
+      "winner": "Rupark",
+      "score": "4:1"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "Matchday",
+      "team1": [
+        "Shinny",
+        "Hani",
+        "Veeny"
+      ],
+      "team2": [
+        "Rupark",
+        "Yolo",
+        "Gdragon"
+      ],
+      "winner": [
+        "Rupark",
+        "Yolo",
+        "Gdragon"
+      ],
+      "score": "2:3"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "투혼",
+      "player1": "Veeny",
+      "player2": "Gdragon",
+      "winner": "Gdragon",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "투혼",
+      "player1": "Shinny",
+      "player2": "Rupark",
+      "winner": "Rupark",
+      "score": "1:1"
+    },
+    {
+      "date": "2025-09-24",
+      "map": "3:3생컨",
+      "team1": [
+        "Shinny",
+        "Hani",
+        "Veeny"
+      ],
+      "team2": [
+        "Rupark",
+        "Yolo",
+        "Gdragon"
+      ],
+      "winner": [
+        "Rupark",
+        "Yolo",
+        "Gdragon"
+      ],
+      "score": "2:3"
+    },
+    {
+      "date": "2025-09-26",
+      "map": "Matchday",
+      "team1": [
+        "Basic",
+        "MGZG",
+        "Yumi"
+      ],
+      "team2": [
+        "Danny",
+        "MiSTY",
+        "Mukddak"
+      ],
+      "winner": [
+        "Basic",
+        "MGZG",
+        "Yumi"
+      ],
+      "score": "4:1"
+    },
+    {
+      "date": "2025-09-26",
+      "map": "투혼",
+      "player1": "Basic",
+      "player2": "Danny",
+      "winner": "Basic",
+      "score": "1:0"
+    },
+    {
+      "date": "2025-09-26",
+      "map": "투혼",
+      "player1": "MGZG",
+      "player2": "MiSTY",
+      "winner": "MGZG",
+      "score": "2:0"
+    },
+    {
+      "date": "2025-09-26",
+      "map": "투혼",
+      "player1": "Yumi",
+      "player2": "Mukddak",
+      "winner": "Yumi",
+      "score": "3:0"
+    },
+    {
+      "date": "2025-09-27",
+      "map": "Matchday",
+      "team1": [
+        "Basic",
+        "MGZG",
+        "Chan"
+      ],
+      "team2": [
+        "MiSTY",
+        "Yumi",
+        "Essence"
+      ],
+      "winner": [
+        "Basic",
+        "MGZG",
+        "Chan"
+      ],
+      "score": "3:2"
+    },
+    {
+      "date": "2025-09-27",
+      "map": "투혼",
+      "player1": "MGZG",
+      "player2": "Yumi",
+      "winner": "Yumi",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-27",
+      "map": "투혼",
+      "player1": "Chan",
+      "player2": "Essence",
+      "winner": "Chan",
+      "score": "1:1"
+    },
+    {
+      "date": "2025-09-27",
+      "map": "3:3생컨",
+      "team1": [
+        "Basic",
+        "MGZG",
+        "Chan"
+      ],
+      "team2": [
+        "MiSTY",
+        "Yumi",
+        "Essence"
+      ],
+      "winner": [
+        "Basic",
+        "MGZG",
+        "Chan"
+      ],
+      "score": "2:1"
+    },
+    {
+      "date": "2025-09-27",
+      "map": "4:4헌터",
+      "team1": [
+        "Skidashi",
+        "Wonder",
+        "Veeny",
+        "Hani"
+      ],
+      "team2": [
+        "Attaboy",
+        "dong9",
+        "Rupark",
+        "Gdragon"
+      ],
+      "winner": [
+        "Attaboy",
+        "dong9",
+        "Rupark",
+        "Gdragon"
+      ],
+      "score": "3:4"
+    },
+    {
+      "date": "2025-09-28",
+      "map": "Matchday",
+      "team1": [
+        "Strive",
+        "Veeny",
+        "Friend",
+        "Winter",
+        "coolguy"
+      ],
+      "team2": [
+        "Rupark",
+        "Hani",
+        "Rocky",
+        "dopamine",
+        "dong9"
+      ],
+      "winner": [
+        "Rupark",
+        "Hani",
+        "Rocky",
+        "dopamine",
+        "dong9"
+      ],
+      "score": "2:5"
+    },
+    {
+      "date": "2025-09-28",
+      "map": "투혼",
+      "player1": "Rocky",
+      "player2": "Winter",
+      "winner": "Winter",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-09-28",
+      "map": "투혼",
+      "player1": "dopamine",
+      "player2": "Friend",
+      "winner": "dopamine",
+      "score": "1:1"
+    },
+    {
+      "date": "2025-09-29",
+      "map": "Matchday",
+      "team1": [
+        "Hani",
+        "Rocky",
+        "dopamine",
+        "dong9",
+        "Rupark"
+      ],
+      "team2": [
+        "Veeny",
+        "Strive",
+        "Friend",
+        "Winter",
+        "coolguy"
+      ],
+      "winner": [
+        "Hani",
+        "Rocky",
+        "dopamine",
+        "dong9",
+        "Rupark"
+      ],
+      "score": "4:2"
+    },
+    {
+      "date": "2025-09-29",
+      "map": "투혼",
+      "player1": "Winter",
+      "player2": "dopamine",
+      "winner": "Winter",
+      "score": "1:0"
+    },
+    {
+      "date": "2025-09-29",
+      "map": "투혼",
+      "player1": "Strive",
+      "player2": "Rupark",
+      "winner": "Strive",
+      "score": "2:0"
+    },
+    {
+      "date": "2025-09-29",
+      "map": "투혼",
+      "player1": "Friend",
+      "player2": "Rocky",
+      "winner": "Rocky",
+      "score": "2:1"
+    },
+    {
+      "date": "2025-09-29",
+      "map": "투혼",
+      "player1": "coolguy",
+      "player2": "Hani",
+      "winner": "Hani",
+      "score": "2:2"
+    },
+    {
+      "date": "2025-09-29",
+      "map": "4:4헌터",
+      "team1": [
+        "Veeny",
+        "Strive",
+        "Friend",
+        "Winter"
+      ],
+      "team2": [
+        "dong9",
+        "Hani",
+        "Rupark",
+        "Rocky"
+      ],
+      "winner": [
+        "Veeny",
+        "Strive",
+        "Friend",
+        "Winter"
+      ],
+      "score": "2:4"
+    },
+    {
+      "date": "2025-10-01",
+      "map": "Matchday",
+      "team1": [
+        "Veeny",
+        "Gdragon",
+        "Skidashi",
+        "Miny"
+      ],
+      "team2": [
+        "Friend",
+        "Zeze",
+        "Rocky",
+        "Rupark"
+      ],
+      "winner": [
+        "Friend",
+        "Zeze",
+        "Rocky",
+        "Rupark"
+      ],
+      "score": "3:4"
+    },
+    {
+      "date": "2025-10-01",
+      "map": "투혼",
+      "player1": "Veeny",
+      "player2": "Friend",
+      "winner": "Friend",
+      "score": "0:1"
+    },
+    {
+      "date": "2025-10-01",
+      "map": "투혼",
+      "player1": "Gdragon",
+      "player2": "Zeze",
+      "winner": "Zeze",
+      "score": "0:2"
+    },
+    {
+      "date": "2025-10-01",
+      "map": "투혼",
+      "player1": "Skidashi",
+      "player2": "Rocky",
+      "winner": "Rocky",
+      "score": "1:2"
+    },
+    {
+      "date": "2025-10-01",
+      "map": "투혼",
+      "player1": "Miny",
+      "player2": "Rupark",
+      "winner": "Rupark",
+      "score": "1:3"
+    },
+    {
+      "date": "2025-10-01",
+      "map": "4:4헌터",
+      "team1": [
+        "Veeny",
+        "Gdragon",
+        "Skidashi",
+        "Miny"
+      ],
+      "team2": [
+        "Friend",
+        "Zeze",
+        "Rocky",
+        "Rupark"
+      ],
+      "winner": [
+        "Friend",
+        "Zeze",
+        "Rocky",
+        "Rupark"
+      ],
+      "score": "2:3"
+    },
+    {
+      "date": "2025-10-01",
+      "map": "3:3생컨",
+      "team1": [
+        "Veeny",
+        "Gdragon",
+        "Skidashi"
+      ],
+      "team2": [
+        "Rupark",
+        "Zeze",
+        "Friend"
+      ],
+      "winner": null,
+      "score": "3:3"
+    },
+    {
+      "date": "2025-10-01",
+      "map": "투혼(에이스)",
+      "player1": "Miny",
+      "player2": "Zeze",
+      "winner": "Zeze",
+      "score": "3:4"
+    },
+    {
+      "date": "2025-10-02",
+      "map": "투혼",
+      "player1": "Hani",
+      "player2": "Skidashi",
+      "winner": "Hani",
+      "score": "1:0"
+    },
+    {
+      "date": "2025-10-02",
+      "map": "투혼",
+      "player1": "Macho",
+      "player2": "Strive",
+      "winner": "Strive",
+      "score": "1:1"
+    },
+    {
+      "date": "2025-10-02",
+      "map": "투혼",
+      "player1": "dong9",
+      "player2": "Attaboy",
+      "winner": "dong9",
+      "score": "2:1"
+    },
+    {
+      "date": "2025-10-02",
+      "map": "투혼",
+      "player1": "Rupark",
+      "player2": "Winter",
+      "winner": "Winter",
+      "score": "2:2"
+    },
+    {
+      "date": "2025-10-02",
+      "map": "투혼",
+      "player1": "IN",
+      "player2": "Templar",
+      "winner": "Templar",
+      "score": "2:3"
+    },
+    {
+      "date": "2025-10-02",
+      "map": "4:4헌터",
+      "team1": [
+        "Macho",
+        "dong9",
+        "Rupark",
+        "IN"
+      ],
+      "team2": [
+        "Skidashi",
+        "Strive",
+        "Attaboy",
+        "Winter"
+      ],
+      "winner": null,
+      "score": "3:3"
+    },
+    {
+      "date": "2025-10-02",
+      "map": "3:3생컨",
+      "team1": [
+        "dong9",
+        "Macho",
+        "Hani"
+      ],
+      "team2": [
+        "Winter",
+        "Strive",
+        "Templar"
+      ],
+      "winner": [
+        "dong9",
+        "Macho",
+        "Hani"
+      ],
+      "score": "4:3"
+    },
+    {
+      "date": "2025-10-02",
+      "map": "투혼(에이스)",
+      "player1": "Rupark",
+      "player2": "Skidashi",
+      "winner": "Rupark",
+      "score": "5:3"
+    }
+  ],
+  "generated_at": "2025-10-15T13:24:03.983070",
+  "anomalies": []
+}
