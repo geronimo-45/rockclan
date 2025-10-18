@@ -6,10 +6,11 @@
   <title>RockClan Records</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='24' fill='%23222236'/%3E%3Cpath d='M82 30 56 64l26 34-18 0-26-34 26-34z' fill='%23ff6a00'/%3E%3C/svg%3E">
 
-  <!-- ✅ React / ReactDOM / Recharts (순서 중요) -->
+  <!-- ✅ React / ReactDOM / Recharts (안정 CDN, 순서 중요) -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+  <!-- ✅ 교체된 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.0/umd/Recharts.min.js"></script>
 
   <style>
     :root{ --bg1:#0b0710;--bg2:#14050a;--accent:#ff6a00;--muted:#a7a0a8;--card:rgba(255,255,255,0.03); }
@@ -95,7 +96,6 @@
   </main>
 
 <script>
-  // 탭 전환
   document.querySelectorAll('nav .tab').forEach(btn=>{
     btn.addEventListener('click', e=>{
       document.querySelectorAll('nav .tab').forEach(b=>b.classList.remove('active'));
@@ -141,8 +141,7 @@
         if(m.winner===m.player1){calcEloChange(p1,p2,1,false);p1.win++;p2.loss++;}
         else if(m.winner===m.player2){calcEloChange(p1,p2,0,false);p2.win++;p1.loss++;}
         p1.played++; p2.played++;
-        pushHistory(m.player1,p1.elo);
-        pushHistory(m.player2,p2.elo);
+        pushHistory(m.player1,p1.elo); pushHistory(m.player2,p2.elo);
         continue;
       }
       if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
@@ -159,10 +158,10 @@
         team2.forEach(p=>{p.elo+=diffB;p.played++;if(!resultA)p.win++;else p.loss++;pushHistory(p.id,p.elo);});
       }
     }
+
     renderEloChart(eloHistory);
   }
 
-  // ✅ 안전한 window.Recharts 참조 버전
   function renderEloChart(eloHistory){
     const container=document.getElementById("chart");
     if(!container) return;
@@ -186,10 +185,7 @@
       </div>
     `;
 
-    const {
-      LineChart, Line, XAxis, YAxis,
-      CartesianGrid, Tooltip, Legend, ResponsiveContainer
-    } = window.Recharts || {};
+    const {LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer} = window.Recharts || {};
 
     if(!LineChart){ 
       document.getElementById("eloChartArea").innerHTML =
@@ -198,7 +194,6 @@
     }
 
     const palette=["#ff6a00","#4ade80","#60a5fa","#f472b6","#facc15","#38bdf8","#a78bfa","#fb923c","#22d3ee","#94a3b8"];
-
     function draw(selectedIds){
       const area=document.getElementById("eloChartArea");
       if(!selectedIds||selectedIds.length===0){
@@ -230,7 +225,6 @@
           )
         ),area);
     }
-
     const select=document.getElementById("eloPlayerSelect");
     select.addEventListener("change",()=>{
       const selected=Array.from(select.selectedOptions).map(o=>o.value);
