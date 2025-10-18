@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RockClan Records</title>
 
-  <!-- React / ReactDOM / PropTypes / Recharts (UMD) -->
+  <!-- React / ReactDOM / Recharts -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.0/umd/Recharts.min.js"></script>
 
   <style>
-    :root{ --bg1:#0b0710;--bg2:#14050a;--accent:#ff6a00;--muted:#a7a0a8;--card:rgba(255,255,255,0.03); }
+    :root{--bg1:#0b0710;--bg2:#14050a;--accent:#ff6a00;--muted:#a7a0a8;--card:rgba(255,255,255,0.03);}
     *{box-sizing:border-box}
     body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;margin:0;color:#eee;background:linear-gradient(180deg,var(--bg1),var(--bg2));}
     header{padding:20px;text-align:center;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));box-shadow:0 6px 30px rgba(0,0,0,0.5)}
@@ -32,15 +32,16 @@
     .tier-Stone{color:#8b8b8b}.tier-Bronze{color:#cd7f32}.tier-Silver{color:#c0c0c0}.tier-Gold{color:#ffd700}.tier-Diamond{color:#67e8f9}.tier-Legend{color:#ff7f50}
     .muted{color:var(--muted)}
     .match{border:1px solid rgba(255,255,255,0.08);padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);margin-bottom:10px}
-    .match-header{font-weight:700;margin-bottom:6px}
-    .match-item{color:#ddd;font-size:14px;margin:4px 0}
+    .match-header{font-weight:700;margin-bottom:6px;cursor:pointer;color:#ffb347}
+    .match-item{color:#ddd;font-size:14px;margin:4px 0;padding-left:8px}
+    .hidden{display:none;}
   </style>
 </head>
 
 <body>
   <header>
     <h1>RockClan Records</h1>
-    <div class="sub">클랜원 랭킹 • 기록실 • ELO 설명 • 변동 그래프</div>
+    <div class="sub">클랜원 랭킹 • 기록실 • ELO 시스템 설명 • 변동 그래프</div>
   </header>
 
   <nav>
@@ -55,7 +56,6 @@
     <section id="players" class="active">
       <div class="card">
         <h2 style="margin:6px 0;color:var(--accent)">클랜원 랭킹</h2>
-        <div class="muted" style="font-size:13px;margin-bottom:6px">※ "Match" 맵(헤더)은 공식 전적·ELO 계산에서 제외됩니다.</div>
         <table id="players-table">
           <thead><tr><th>Rank</th><th>ID</th><th>종족</th><th>티어</th><th>ELO</th><th>승</th><th>패</th><th>승률</th></tr></thead>
           <tbody></tbody>
@@ -71,17 +71,48 @@
       </div>
     </section>
 
-    <!-- ELO 설명 (원본 유지: 요약만 한 줄 안내, 본문은 기존 파일 그대로 쓰셨다면 그대로 두셔도 됩니다) -->
+    <!-- ELO 시스템 설명 -->
     <section id="elo-info">
       <div class="card">
-        <h2 style="margin:6px 0;color:var(--accent)">ELO 시스템 설명</h2>
-        <p style="line-height:1.6;color:#ddd">
-          RockClan의 ELO는 티어 보정(Stone~Legend)을 적용하며, K=12(1:1)/K=8(팀전)로 계산합니다. "Match" 맵(헤더)은 공식 계산에서 제외됩니다.
+        <h2 style="color:#ff6a00;margin:6px 0;">ELO 시스템 설명</h2>
+        <p style="color:#ddd;line-height:1.6;">
+          RockClan의 ELO 시스템은 단순한 점수 차이뿐 아니라 <b>티어(Tier) 보정</b>을 포함하여 실제 실력 격차를 반영합니다.<br>
+          모든 계산은 기록실(match) 데이터를 기반으로 자동 수행됩니다.
+        </p>
+        <ul style="line-height:1.6;color:#ddd;">
+          <li>초기 ELO: 신규 플레이어는 1000점으로 시작합니다.</li>
+          <li>K 값:<br>
+            - 개인전(1:1): <b>K=12</b><br>
+            - 팀전(2:2, 3:3, 4:4 등): <b>K=8</b>
+          </li>
+          <li>티어 인덱스 보정:<br>
+            Stone=0, Bronze=1, Silver=2, Gold=3, Diamond=4, Legend=5
+          </li>
+          <li>실제 계산은 다음과 같습니다:<br>
+            <code>EffectiveElo = ELO + (TierIndex × 40)</code>
+          </li>
+          <li>예상 승률은 두 플레이어의 EffectiveElo 차이를 기준으로 계산됩니다.</li>
+          <li>경기 결과는 예상 승률 대비 실제 승패 차이만큼 ELO가 변동됩니다.</li>
+        </ul>
+        <h3 style="color:#ff6a00;margin-top:20px;">📘 ELO 계산 예시</h3>
+        <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:14px;color:#ccc;">
+          <thead><tr style="color:#ffb347;"><th>상황</th><th>ELO 차이</th><th>티어 차이</th><th>예상 승률</th><th>승리 시</th><th>패배 시</th></tr></thead>
+          <tbody>
+            <tr><td>1:1 (동티어, 동일 ELO)</td><td>0</td><td>0</td><td>50%</td><td>+6</td><td>-6</td></tr>
+            <tr><td>Silver(2) vs Gold(3), 동점</td><td>0</td><td>+1</td><td>46%</td><td>+7</td><td>-5</td></tr>
+            <tr><td>Gold(3) vs Silver(2), 동점</td><td>0</td><td>-1</td><td>54%</td><td>+5</td><td>-7</td></tr>
+            <tr><td>팀전 (평균 동티어)</td><td>0</td><td>0</td><td>50%</td><td>+4</td><td>-4</td></tr>
+            <tr><td>팀전 (상대팀 평균 Diamond ↑)</td><td>-150</td><td>+2</td><td>32%</td><td>+6</td><td>-3</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:13px;color:#999;margin-top:6px;">
+          ※ ELO 계산식: <code>NewElo = OldElo + K × (Actual - Expected)</code><br>
+          ※ 티어 인덱스 보정으로 상위 티어를 이길 경우 상승폭이 더 커집니다.
         </p>
       </div>
     </section>
 
-    <!-- ELO 변동 그래프 -->
+    <!-- ELO 그래프 -->
     <section id="chart">
       <div class="card">
         <h2 style="margin:6px 0;color:var(--accent)">ELO 변동 그래프</h2>
@@ -92,9 +123,8 @@
   </main>
 
 <script>
-  // 탭 전환
   document.querySelectorAll('nav .tab').forEach(btn=>{
-    btn.addEventListener('click', e=>{
+    btn.addEventListener('click',e=>{
       document.querySelectorAll('nav .tab').forEach(b=>b.classList.remove('active'));
       e.currentTarget.classList.add('active');
       document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));
@@ -102,215 +132,96 @@
     });
   });
 
-  // 데이터 로드 & 병합
   async function loadData(){
-    const safe=async(url)=>{try{const r=await fetch(url,{cache:'no-cache'});return r.ok?await r.json():{players:[],matches:[]};}catch{return{players:[],matches:[]}}};
-    const base=await safe('data.json'), oct=await safe('data_oct.json');
+    const safe=async(u)=>{try{const r=await fetch(u,{cache:'no-cache'});return r.ok?await r.json():{players:[],matches:[]}}catch{return{players:[],matches:[]}}};
+    const base=await safe('data.json'),oct=await safe('data_oct.json');
     base.matches=(base.matches||[]).concat(oct.matches||[]);
-    const seen=new Set((base.players||[]).map(p=>p.id));
-    (oct.players||[]).forEach(p=>{if(!seen.has(p.id))base.players.push(p);});
+    const seen=new Set(base.players.map(p=>p.id)); (oct.players||[]).forEach(p=>{if(!seen.has(p.id))base.players.push(p)});
     return base;
   }
 
   const TierOrder=['Stone','Bronze','Silver','Gold','Diamond','Legend'];
-  const getTierIndex=t=>Math.max(0, TierOrder.indexOf(t||'Silver'));
-
-  // 날짜 문자열(YYYY-MM-DD)을 X축 표기를 위한 MM/DD로 변환
-  const toMMDD = d => {
-    if(!d) return '';
-    // 데이터는 YYYY-MM-DD 형태임
-    const [y,m,day] = d.split('-');
-    return `${m}/${day}`;
-  };
+  const getTierIndex=t=>Math.max(0,TierOrder.indexOf(t||'Silver'));
+  const toMMDD=d=>d?d.split('-').slice(1).join('/'):'';
 
   async function start(){
     const data=await loadData();
-
-    // -------- ELO 계산(공식) --------
-    // "map":"Match" 행은 ELO/랭킹/그래프 계산에서 제외하고, 기록실 표시에는 포함
-    const playersMeta = new Map((data.players||[]).map(p=>[p.id, p]));
-    const stat=new Map(); // {id, elo, tier, race, win, loss, played}
-    const ensure=id=>{
-      if(stat.has(id)) return stat.get(id);
-      const meta=playersMeta.get(id)||{};
-      const o={id, elo:1000, tier:meta.tier||'Silver', race:meta.race||'Protoss', win:0, loss:0, played:0};
-      stat.set(id,o); return o;
-    };
-
-    // 그래프용: 날짜별 최신 ELO
-    const eloByDate = {}; // id -> { 'MM/DD': elo }
-
-    const calcElo = (A,B,result,isTeam)=>{
-      const K=isTeam?8:12;
-      const effA=A.elo + getTierIndex(A.tier)*40;
-      const effB=B.elo + getTierIndex(B.tier)*40;
-      const expA=1/(1+Math.pow(10,(effB-effA)/400));
-      const delta=K*(result-expA);
-      A.elo+=delta; B.elo-=delta;
-    };
-
-    // 날짜 순으로 처리
-    const matches = (data.matches||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-
-    for(const m of matches){
-      // 공식 계산 제외 조건
-      if (!m.map || m.map === 'Match') continue;
-
-      const mmdd = toMMDD(m.date);
-      // 1:1
-      if(m.player1 && m.player2){
-        const p1=ensure(m.player1), p2=ensure(m.player2);
-        if(m.winner===m.player1){ calcElo(p1,p2,1,false); p1.win++; p2.loss++; }
-        else if(m.winner===m.player2){ calcElo(p1,p2,0,false); p2.win++; p1.loss++; }
-        p1.played++; p2.played++;
-        (eloByDate[p1.id] ||= {})[mmdd]=p1.elo;
-        (eloByDate[p2.id] ||= {})[mmdd]=p2.elo;
+    const playersMeta=new Map(data.players.map(p=>[p.id,p]));
+    const stat=new Map(),eloByDate={};
+    const ensure=id=>{if(stat.has(id))return stat.get(id);const p=playersMeta.get(id)||{};const o={id,elo:1000,tier:p.tier||'Silver',race:p.race||'Protoss',win:0,loss:0,played:0};stat.set(id,o);return o;};
+    const calc=(A,B,res,isTeam)=>{const K=isTeam?8:12;const effA=A.elo+getTierIndex(A.tier)*40;const effB=B.elo+getTierIndex(B.tier)*40;const expA=1/(1+10**((effB-effA)/400));const delta=K*(res-expA);A.elo+=delta;B.elo-=delta;};
+    const matches=data.matches.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+    for(const m of matches){if(!m.map||m.map==='Match')continue;const d=toMMDD(m.date);
+      if(m.player1&&m.player2){const p1=ensure(m.player1),p2=ensure(m.player2);
+        if(m.winner===m.player1){calc(p1,p2,1,false);p1.win++;p2.loss++;}else if(m.winner===m.player2){calc(p1,p2,0,false);p2.win++;p1.loss++;}
+        p1.played++;p2.played++;(eloByDate[p1.id]??={})[d]=Math.round(p1.elo);(eloByDate[p2.id]??={})[d]=Math.round(p2.elo);
       }
-      // 팀전
-      if(Array.isArray(m.team1) && Array.isArray(m.team2)){
-        const T1=m.team1.map(ensure), T2=m.team2.map(ensure);
-        const winners = Array.isArray(m.winner)? m.winner : [];
-        const win1 = winners.some(x=>m.team1.includes(x)) ? 1 : 0;
-        // 평균 Elo 기반
-        const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length, avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
-        const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
-        calcElo(dA,dB,win1,true);
-        const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
-        T1.forEach(p=>{ p.elo+=diffA; (win1?p.win++:p.loss++); p.played++; (eloByDate[p.id] ||= {})[mmdd]=p.elo; });
-        T2.forEach(p=>{ p.elo+=diffB; (!win1?p.win++:p.loss++); p.played++; (eloByDate[p.id] ||= {})[mmdd]=p.elo; });
-      }
-    }
-
-    // -------- 랭킹 표시 (ELO/승패는 공식 경기만) --------
+      if(Array.isArray(m.team1)&&Array.isArray(m.team2)){const T1=m.team1.map(ensure),T2=m.team2.map(ensure);
+        const winArr=Array.isArray(m.winner)?m.winner:[],win1=winArr.some(x=>m.team1.includes(x))?1:0;
+        const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length,avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
+        const dA={elo:avg1,tier:'Silver'},dB={elo:avg2,tier:'Silver'};calc(dA,dB,win1,true);
+        const diffA=dA.elo-avg1,diffB=dB.elo-avg2;
+        T1.forEach(p=>{p.elo+=diffA;p.played++;win1?p.win++:p.loss++;(eloByDate[p.id]??={})[d]=Math.round(p.elo);});
+        T2.forEach(p=>{p.elo+=diffB;p.played++;!win1?p.win++:p.loss++;(eloByDate[p.id]??={})[d]=Math.round(p.elo);});
+      }}
     const tbody=document.querySelector('#players-table tbody');
-    const rows=[...stat.values()]
-      .map(p=>({ ...p, winrate: p.played? ((p.win/p.played)*100).toFixed(1):'0.0' }))
-      .sort((a,b)=>b.elo-a.elo);
-    tbody.innerHTML = rows.map((p,i)=>`
-      <tr>
-        <td>${i+1}</td>
-        <td>${p.id}</td>
-        <td>${p.race}</td>
-        <td class="tier-${p.tier}">${p.tier}</td>
-        <td>${Math.round(p.elo)}</td>
-        <td>${p.win}</td>
-        <td>${p.loss}</td>
-        <td>${p.winrate}%</td>
-      </tr>
-    `).join('');
+    tbody.innerHTML=[...stat.values()].map((p,i)=>{const w=p.played?((p.win/p.played)*100).toFixed(1):'0.0';return`<tr><td>${i+1}</td><td>${p.id}</td><td>${p.race}</td><td class="tier-${p.tier}">${p.tier}</td><td>${Math.round(p.elo)}</td><td>${p.win}</td><td>${p.loss}</td><td>${w}%</td></tr>`;}).join('');
 
-    // -------- 기록실 표시 (Match 헤더 포함, 그대로 보여주기) --------
-    const list = document.getElementById('match-list');
-    let curDate=null, curBox=null;
-    list.innerHTML='';
+    // 기록실: 날짜별 접힘
+    const list=document.getElementById('match-list');
+    let curDate=null,curBox=null;
     for(const m of matches){
-      // 날짜 그룹 카드
       if(m.date!==curDate){
         curDate=m.date;
         curBox=document.createElement('div');
         curBox.className='match';
-        const title=document.createElement('div');
-        title.className='match-header';
-        title.textContent=`${curDate}`;
-        curBox.appendChild(title);
+        const hdr=document.createElement('div');
+        hdr.className='match-header';
+        hdr.textContent=`${curDate}`;
+        const inner=document.createElement('div');
+        inner.className='match-inner hidden';
+        hdr.addEventListener('click',()=>inner.classList.toggle('hidden'));
+        curBox.appendChild(hdr);
+        curBox.appendChild(inner);
         list.appendChild(curBox);
       }
-      // 헤더("map":"Match")는 머리글로 깔끔히 노출
+      const wrap=curBox.querySelector('.match-inner');
       if(m.map==='Match'){
-        const hdr=document.createElement('div');
-        const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
-        const score = m.score || '';
-        hdr.className='match-item';
-        hdr.style.color='#a8e0a8';
-        hdr.textContent=`[Match] 승자: ${win}${score?` | 스코어: ${score}`:''}`;
-        curBox.appendChild(hdr);
-        continue;
-      }
-      // 1:1
-      if(m.player1 && m.player2){
         const line=document.createElement('div');
-        line.className='match-item';
-        line.textContent=`${m.map||'-'} — ${m.player1} vs ${m.player2} | 승자: ${m.winner||'-'}${m.score?` | ${m.score}`:''}`;
-        curBox.appendChild(line);
+        const win=Array.isArray(m.winner)?m.winner.join(', '):(m.winner||'-');
+        line.textContent=`[Match] 승자: ${win}${m.score?` | 스코어: ${m.score}`:''}`;
+        line.style.color='#a8e0a8';line.className='match-item';
+        wrap.appendChild(line);continue;
       }
-      // 팀전
-      if(Array.isArray(m.team1) && Array.isArray(m.team2)){
-        const line=document.createElement('div');
-        line.className='match-item';
-        const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
-        line.textContent=`${m.map||'-'} — [ ${m.team1.join(', ')} ] vs [ ${m.team2.join(', ')} ] | 승자: ${win}${m.score?` | ${m.score}`:''}`;
-        curBox.appendChild(line);
-      }
+      if(m.player1&&m.player2){const l=document.createElement('div');l.className='match-item';l.textContent=`${m.map} — ${m.player1} vs ${m.player2} | 승자: ${m.winner||'-'}${m.score?` | ${m.score}`:''}`;wrap.appendChild(l);}
+      if(Array.isArray(m.team1)&&Array.isArray(m.team2)){const l=document.createElement('div');l.className='match-item';const win=Array.isArray(m.winner)?m.winner.join(', '):(m.winner||'-');l.textContent=`${m.map} — [${m.team1.join(', ')}] vs [${m.team2.join(', ')}] | 승자: ${win}${m.score?` | ${m.score}`:''}`;wrap.appendChild(l);}
     }
 
-    // -------- ELO 변동 그래프 --------
-    renderEloChart(eloByDate);
+    renderChart(eloByDate);
   }
 
-  function renderEloChart(eloByDate){
-    const container=document.getElementById("elo-chart-container");
-    if(!container) return;
-
-    container.innerHTML=`
-      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-        <div>
-          <div style="font-size:13px;color:#aaa;margin-bottom:6px">비교할 플레이어 선택 (Ctrl/⌘ 다중 선택)</div>
-          <select id="eloPlayerSelect" multiple size="10"
-            style="min-width:220px;height:200px;padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-            ${Object.keys(eloByDate).sort().map(id=>`<option value="${id}">${id}</option>`).join("")}
-          </select>
-        </div>
-        <div id="eloChartArea" style="flex:1;min-width:320px;width:100%;height:460px"></div>
-      </div>
-    `;
-
-    const {LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer} = window.Recharts || {};
-    if(!LineChart){
-      document.getElementById("eloChartArea").innerHTML = `<div style='color:#f66'>Recharts 로드 실패</div>`;
-      return;
-    }
-
+  function renderChart(eloByDate){
+    const c=document.getElementById('elo-chart-container');
+    c.innerHTML=`<div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+      <div><div style="font-size:13px;color:#aaa;margin-bottom:6px">비교할 플레이어 선택 (Ctrl/⌘ 다중 선택)</div>
+      <select id="eloPlayerSelect" multiple size="10" style="min-width:220px;height:200px;padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
+      ${Object.keys(eloByDate).sort().map(id=>`<option value="${id}">${id}</option>`).join('')}</select></div>
+      <div id="eloChartArea" style="flex:1;min-width:320px;width:100%;height:460px"></div></div>`;
+    const {LineChart,Line,XAxis,YAxis,CartesianGrid,Tooltip,Legend,ResponsiveContainer}=window.Recharts;
     const palette=["#ff6a00","#4ade80","#60a5fa","#f472b6","#facc15","#38bdf8","#a78bfa","#fb923c","#22d3ee","#94a3b8"];
-
-    function draw(sel){
-      const area=document.getElementById("eloChartArea");
-      if(sel.length===0){ area.innerHTML=`<div class="muted">왼쪽에서 1명 이상 선택하세요.</div>`; return; }
-      // 모든 날짜 수집(문자열 MM/DD 정렬)
-      const allDates=[...new Set(sel.flatMap(id=>Object.keys(eloByDate[id]||{})))].sort((a,b)=>{
-        const [am,ad]=a.split('/').map(Number), [bm,bd]=b.split('/').map(Number);
-        return am===bm? ad-bd : am-bm;
-      });
-      const rows=allDates.map(date=>{
-        const r={date};
-        sel.forEach(id=>r[id]=eloByDate[id]?.[date]??null);
-        return r;
-      });
-
-      ReactDOM.render(
-        React.createElement(
-          ResponsiveContainer,{width:"100%",height:460},
-          React.createElement(
-            LineChart,{data:rows,margin:{top:20,right:30,left:0,bottom:0}},
-            React.createElement(CartesianGrid,{strokeDasharray:"3 3",stroke:"rgba(255,255,255,0.12)"}),
-            React.createElement(XAxis,{dataKey:"date",stroke:"#aaa",tick:{fontSize:12}}),
-            React.createElement(YAxis,{stroke:"#aaa",domain:[800,1200],tick:{fontSize:12}}),
-            React.createElement(Tooltip,{contentStyle:{backgroundColor:"#1a1a22",border:"1px solid #333"}}),
-            React.createElement(Legend,null),
-            ...sel.map((id,idx)=>
-              React.createElement(Line,{
-                key:id,type:"monotone",dataKey:id,name:id,
-                stroke:palette[idx%palette.length],dot:false,strokeWidth:2,isAnimationActive:false
-              })
-            )
-          )
-        ), area
-      );
-    }
-
-    document.getElementById("eloPlayerSelect").addEventListener("change",e=>{
-      const sel=[...e.target.selectedOptions].map(o=>o.value);
-      draw(sel);
-    });
+    function draw(sel){const a=document.getElementById("eloChartArea");if(sel.length===0){a.innerHTML=`<div class="muted">왼쪽에서 1명 이상 선택하세요.</div>`;return;}
+      const all=[...new Set(sel.flatMap(id=>Object.keys(eloByDate[id]||{})))].sort((a,b)=>{const [am,ad]=a.split('/').map(Number),[bm,bd]=b.split('/').map(Number);return am===bm?ad-bd:am-bm;});
+      const rows=all.map(d=>{const r={date:d};sel.forEach(id=>r[id]=eloByDate[id]?.[d]??null);return r;});
+      ReactDOM.render(React.createElement(ResponsiveContainer,{width:"100%",height:460},
+        React.createElement(LineChart,{data:rows,margin:{top:20,right:30,left:0,bottom:0}},
+          React.createElement(CartesianGrid,{strokeDasharray:"3 3",stroke:"rgba(255,255,255,0.12)"}),
+          React.createElement(XAxis,{dataKey:"date",stroke:"#aaa",tick:{fontSize:12}}),
+          React.createElement(YAxis,{stroke:"#aaa",domain:[800,1200],tick:{fontSize:12}}),
+          React.createElement(Tooltip,{formatter:(v)=>Math.round(v),contentStyle:{backgroundColor:"#1a1a22",border:"1px solid #333"}}),
+          React.createElement(Legend,null),
+          ...sel.map((id,i)=>React.createElement(Line,{key:id,type:"monotone",dataKey:id,name:id,stroke:palette[i%palette.length],dot:false,strokeWidth:2,isAnimationActive:false}))
+        )),a);}
+    document.getElementById("eloPlayerSelect").addEventListener("change",e=>{const s=[...e.target.selectedOptions].map(o=>o.value);draw(s);});
   }
 
   start();
