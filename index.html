@@ -32,11 +32,6 @@
     tr:hover{background:rgba(255,255,255,0.03)}
     .tier-Stone{color:#8b8b8b}.tier-Bronze{color:#cd7f32}.tier-Silver{color:#c0c0c0}.tier-Gold{color:#ffd700}.tier-Diamond{color:#67e8f9}.tier-Legend{color:#ff7f50}
     .muted{color:var(--muted)}
-    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-    .filters > *{flex:1 1 160px}
-    .match{border:1px solid rgba(255,255,255,0.08);padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);margin-bottom:10px;cursor:pointer}
-    .details{display:none;margin-top:8px;font-size:14px;color:#ddd}
-    .details.active{display:block}
   </style>
 </head>
 
@@ -54,24 +49,34 @@
   </nav>
 
   <main>
-    <!-- 기존 섹션들 (당신의 원본 유지) -->
     <section id="players" class="active">
-      <!-- ... 기존 내용 그대로 ... -->
+      <div class="card">
+        <h2 style="margin:6px 0;color:var(--accent)">클랜원 랭킹</h2>
+        <table id="players-table">
+          <thead><tr><th>Rank</th><th>ID</th><th>종족</th><th>티어</th><th>ELO</th><th>승</th><th>패</th><th>승률</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="muted" style="font-size:13px;margin-top:6px">※ "Match" 맵은 공식 전적에서 제외됩니다.</div>
+      </div>
     </section>
 
     <section id="records">
-      <!-- ... 기존 내용 그대로 ... -->
+      <div class="card">
+        <h2 style="margin:6px 0;color:var(--accent)">기록실</h2>
+        <div id="match-list"></div>
+      </div>
     </section>
 
     <section id="elo-info">
-      <!-- ... 기존 설명 그대로 ... -->
+      <div class="card">
+        <h2 style="margin:6px 0;color:var(--accent)">ELO 시스템 설명</h2>
+        <p style="line-height:1.6;color:#ddd">모든 계산은 match 데이터를 기반으로 자동 수행되며, "Match" 맵은 공식 점수 계산에서 제외됩니다.</p>
+      </div>
     </section>
 
-    <!-- ✅ 추가된 ELO 변동 그래프 섹션 -->
     <section id="chart">
       <div class="card">
         <h2 style="margin:6px 0;color:var(--accent)">ELO 변동 그래프</h2>
-        <div class="muted">클랜원들의 ELO 점수 변화를 날짜 기준으로 비교합니다.</div>
         <div id="elo-chart-container" style="margin-top:16px;"></div>
       </div>
     </section>
@@ -88,12 +93,8 @@
     });
   });
 
-  // JSON 로드
   async function loadData(){
-    const safe=async(url)=>{
-      try{const r=await fetch(url,{cache:'no-cache'});return r.ok?await r.json():{players:[],matches:[]};}
-      catch{return{players:[],matches:[]}}
-    };
+    const safe=async(url)=>{try{const r=await fetch(url,{cache:'no-cache'});return r.ok?await r.json():{players:[],matches:[]};}catch{return{players:[],matches:[]}}};
     const base=await safe('data.json'), oct=await safe('data_oct.json');
     base.matches=(base.matches||[]).concat(oct.matches||[]);
     const seen=new Set(base.players.map(p=>p.id));
@@ -103,63 +104,6 @@
 
   const getTierIndex=t=>['Stone','Bronze','Silver','Gold','Diamond','Legend'].indexOf(t)||0;
 
-  function renderEloChart(eloHistory){
-    const container=document.getElementById("elo-chart-container");
-    if(!container) return;
-
-    container.innerHTML=`
-      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-        <div>
-          <div style="font-size:13px;color:#aaa;margin-bottom:6px">비교할 플레이어 선택 (Ctrl/⌘ 다중 선택)</div>
-          <select id="eloPlayerSelect" multiple size="10"
-            style="min-width:220px;height:200px;padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-            ${Object.keys(eloHistory).sort().map(id=>`<option value="${id}">${id}</option>`).join("")}
-          </select>
-        </div>
-        <div id="eloChartArea" style="flex:1;min-width:320px;width:100%;height:460px"></div>
-      </div>
-    `;
-
-    const {LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer} = window.Recharts;
-    const palette=["#ff6a00","#4ade80","#60a5fa","#f472b6","#facc15","#38bdf8","#a78bfa","#fb923c","#22d3ee","#94a3b8"];
-
-    function draw(selected){
-      const area=document.getElementById("eloChartArea");
-      if(selected.length===0){area.innerHTML=`<div class="muted">왼쪽에서 1명 이상 선택해주세요.</div>`;return;}
-      const allDates=[...new Set(selected.flatMap(id=>Object.keys(eloHistory[id]||{})))].sort();
-      const rows=allDates.map(date=>{
-        const r={date};
-        selected.forEach(id=>r[id]=eloHistory[id]?.[date]??null);
-        return r;
-      });
-
-      ReactDOM.render(
-        React.createElement(
-          ResponsiveContainer,{width:"100%",height:460},
-          React.createElement(
-            LineChart,{data:rows,margin:{top:20,right:30,left:0,bottom:0}},
-            React.createElement(CartesianGrid,{strokeDasharray:"3 3",stroke:"rgba(255,255,255,0.12)"}),
-            React.createElement(XAxis,{dataKey:"date",stroke:"#aaa",tick:{fontSize:12}}),
-            React.createElement(YAxis,{stroke:"#aaa",domain:[800,1200],tick:{fontSize:12}}),
-            React.createElement(Tooltip,{contentStyle:{backgroundColor:"#1a1a22",border:"1px solid #333"}}),
-            React.createElement(Legend,null),
-            ...selected.map((id,idx)=>
-              React.createElement(Line,{
-                key:id,type:"monotone",dataKey:id,name:id,
-                stroke:palette[idx%palette.length],dot:false,strokeWidth:2,isAnimationActive:false
-              })
-            )
-          )
-        ),area);
-    }
-
-    document.getElementById("eloPlayerSelect").addEventListener("change",e=>{
-      const selected=[...e.target.selectedOptions].map(o=>o.value);
-      draw(selected);
-    });
-  }
-
-  // ELO 계산 포함 전체 렌더 (당신의 원본 로직 유지)
   async function start(){
     const data=await loadData();
     const stat=new Map(), eloHistory={};
@@ -167,8 +111,7 @@
       if(stat.has(id)) return stat.get(id);
       const p=(data.players||[]).find(x=>x.id===id)||{};
       const obj={id,elo:1000,tier:p.tier||'Silver',race:p.race||'Protoss',win:0,loss:0,played:0};
-      stat.set(id,obj);
-      return obj;
+      stat.set(id,obj);return obj;
     };
     const push=(id,date,elo)=>{
       if(!eloHistory[id]) eloHistory[id]={};
@@ -183,8 +126,9 @@
       A.elo+=delta;B.elo-=delta;
     };
 
+    // ✅ 수정된 부분: "map":"Match" 데이터는 ELO 계산에서 제외
     for(const m of data.matches){
-      if(m.map==='Match') continue;
+      if (!m.map || m.map === 'Match') continue;
       const date=m.date||'??';
       if(m.player1&&m.player2){
         const p1=ensure(m.player1),p2=ensure(m.player2);
@@ -193,21 +137,77 @@
         p1.played++;p2.played++;
         push(m.player1,date,p1.elo);push(m.player2,date,p2.elo);
       }
-      if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
-        const t1=m.team1.map(ensure),t2=m.team2.map(ensure);
-        const win1=(m.winner||[]).some(x=>m.team1.includes(x));
-        const rA=win1?1:0;
-        const avgA=t1.reduce((a,b)=>a+b.elo,0)/t1.length;
-        const avgB=t2.reduce((a,b)=>a+b.elo,0)/t2.length;
-        const dA={elo:avgA,tier:'Silver'},dB={elo:avgB,tier:'Silver'};
-        calc(dA,dB,rA,true);
-        const diffA=dA.elo-avgA,diffB=dB.elo-avgB;
-        t1.forEach(p=>{p.elo+=diffA;(rA?p.win++:p.loss++);p.played++;push(p.id,date,p.elo);});
-        t2.forEach(p=>{p.elo+=diffB;(!rA?p.win++:p.loss++);p.played++;push(p.id,date,p.elo);});
-      }
     }
 
+    // ✅ 클랜원 랭킹 표시
+    const tbody=document.querySelector("#players-table tbody");
+    const arr=Array.from(stat.values()).map(p=>{
+      const winrate=p.played?((p.win/p.played)*100).toFixed(1):"0.0";
+      return {...p,winrate};
+    }).sort((a,b)=>b.elo-a.elo);
+    tbody.innerHTML=arr.map((p,i)=>`
+      <tr><td>${i+1}</td><td>${p.id}</td><td>${p.race}</td>
+      <td class="tier-${p.tier}">${p.tier}</td><td>${p.elo.toFixed(0)}</td>
+      <td>${p.win}</td><td>${p.loss}</td><td>${p.winrate}%</td></tr>
+    `).join("");
+
+    // ✅ 기록실 (Match 포함)
+    const list=document.getElementById("match-list");
+    list.innerHTML=data.matches.map((m,i)=>`
+      <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.1)">
+        <b>#${i+1}</b> ${m.map||''} - 
+        ${(m.player1&&m.player2)?`${m.player1} vs ${m.player2}`:''}
+        <div style="color:#aaa">Winner: ${m.winner||'-'}</div>
+      </div>
+    `).join("");
+
+    // ✅ ELO 그래프 렌더링
     renderEloChart(eloHistory);
+  }
+
+  function renderEloChart(eloHistory){
+    const container=document.getElementById("elo-chart-container");
+    if(!container) return;
+    container.innerHTML=`<div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:13px;color:#aaa;margin-bottom:6px">비교할 플레이어 선택 (Ctrl/⌘ 다중 선택)</div>
+        <select id="eloPlayerSelect" multiple size="10"
+          style="min-width:220px;height:200px;padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
+          ${Object.keys(eloHistory).sort().map(id=>`<option value="${id}">${id}</option>`).join("")}
+        </select>
+      </div>
+      <div id="eloChartArea" style="flex:1;min-width:320px;width:100%;height:460px"></div>
+    </div>`;
+
+    const {LineChart,Line,XAxis,YAxis,CartesianGrid,Tooltip,Legend,ResponsiveContainer}=window.Recharts;
+    const palette=["#ff6a00","#4ade80","#60a5fa","#f472b6","#facc15","#38bdf8","#a78bfa","#fb923c"];
+    function draw(sel){
+      const area=document.getElementById("eloChartArea");
+      if(sel.length===0){area.innerHTML=`<div class="muted">왼쪽에서 플레이어 선택</div>`;return;}
+      const allDates=[...new Set(sel.flatMap(id=>Object.keys(eloHistory[id]||{})))].sort();
+      const rows=allDates.map(date=>{
+        const r={date}; sel.forEach(id=>r[id]=eloHistory[id]?.[date]??null); return r;
+      });
+      ReactDOM.render(
+        React.createElement(
+          ResponsiveContainer,{width:"100%",height:460},
+          React.createElement(LineChart,{data:rows,margin:{top:20,right:30,left:0,bottom:0}},
+            React.createElement(CartesianGrid,{strokeDasharray:"3 3",stroke:"rgba(255,255,255,0.12)"}),
+            React.createElement(XAxis,{dataKey:"date",stroke:"#aaa",tick:{fontSize:12}}),
+            React.createElement(YAxis,{stroke:"#aaa",domain:[800,1200],tick:{fontSize:12}}),
+            React.createElement(Tooltip,{contentStyle:{backgroundColor:"#1a1a22",border:"1px solid #333"}}),
+            React.createElement(Legend,null),
+            ...sel.map((id,idx)=>React.createElement(Line,{
+              key:id,type:"monotone",dataKey:id,name:id,
+              stroke:palette[idx%palette.length],dot:false,strokeWidth:2,isAnimationActive:false
+            }))
+          )
+        ),area);
+    }
+    document.getElementById("eloPlayerSelect").addEventListener("change",e=>{
+      const sel=[...e.target.selectedOptions].map(o=>o.value);
+      draw(sel);
+    });
   }
 
   start();
