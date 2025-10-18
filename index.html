@@ -1,5 +1,244 @@
 <!doctype html>
-<html lang='ko'>
-<head><meta charset='utf-8'><title>RockClan Records</title></head>
-<body><h1>✅ RockClan Records 정상 구동</h1><p>data.json 로드 성공!</p></body>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RockClan Records</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='24' fill='%23222236'/%3E%3Cpath d='M82 30 56 64l26 34-18 0-26-34 26-34z' fill='%23ff6a00'/%3E%3C/svg%3E">
+
+  <!-- ✅ React / ReactDOM / Recharts (순서 중요) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+
+  <style>
+    :root{ --bg1:#0b0710;--bg2:#14050a;--accent:#ff6a00;--muted:#a7a0a8;--card:rgba(255,255,255,0.03); }
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;margin:0;color:#eee;background:linear-gradient(180deg,var(--bg1),var(--bg2));}
+    header{padding:20px;text-align:center;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));box-shadow:0 6px 30px rgba(0,0,0,0.5)}
+    header h1{margin:0;color:var(--accent)}
+    header .sub{color:var(--muted);font-size:13px;margin-top:6px}
+    nav{display:flex;gap:10px;justify-content:center;padding:10px;background:#14141a;position:sticky;top:0;z-index:2}
+    nav button{background:#1a1a22;border:1px solid #232532;color:#ddd;padding:10px 14px;border-radius:10px;cursor:pointer}
+    nav button.active{background:var(--accent);color:#111}
+    main{max-width:1100px;margin:18px auto;padding:0 16px}
+    section{display:none}
+    section.active{display:block}
+    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);margin-bottom:16px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);text-align:center}
+    th{color:var(--muted);font-size:12px;text-transform:uppercase}
+    tr:hover{background:rgba(255,255,255,0.03)}
+    .tier-Stone{color:#8b8b8b}.tier-Bronze{color:#cd7f32}.tier-Silver{color:#c0c0c0}.tier-Gold{color:#ffd700}.tier-Diamond{color:#67e8f9}.tier-Legend{color:#ff7f50}
+    .muted{color:var(--muted)}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .filters > *{flex:1 1 160px}
+    .note{font-size:12px;color:#aaa;margin-top:6px}
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>RockClan Records</h1>
+    <div class="sub">클랜원 랭킹 • 기록실 • ELO 설명 • 변동 그래프</div>
+  </header>
+
+  <nav>
+    <button class="tab active" data-tab="players">클랜원 랭킹</button>
+    <button class="tab" data-tab="records">기록실</button>
+    <button class="tab" data-tab="elo-info">ELO 시스템 설명</button>
+    <button class="tab" data-tab="chart">ELO 변동 그래프</button>
+  </nav>
+
+  <main>
+    <section id="players" class="active">
+      <div class="card">
+        <h2 style="margin:6px 0;color:var(--accent)">클랜원 랭킹</h2>
+        <div class="filters">
+          <input id="search" placeholder="id 검색" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff">
+          <select id="raceFilter" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff">
+            <option value="">종족 전체</option><option>Protoss</option><option>Terran</option><option>Zerg</option><option>Random</option>
+          </select>
+          <select id="tierFilter" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff">
+            <option value="">티어 전체</option><option>Stone</option><option>Bronze</option><option>Silver</option><option>Gold</option><option>Diamond</option><option>Legend</option>
+          </select>
+        </div>
+        <div class="muted" style="font-size:13px;margin-bottom:6px">전체 인원, 종족/티어, 현재 ELO, 승률(%) — <span id="counts"></span></div>
+        <table id="players-table">
+          <thead><tr><th>Rank</th><th>ID</th><th>종족</th><th>티어</th><th>ELO</th><th>승</th><th>패</th><th>승률</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="note">* 승/패/승률은 기록실(match)을 기반으로 자동 재계산됩니다.</div>
+      </div>
+    </section>
+
+    <section id="records">
+      <div class="card">
+        <h2 style="margin:6px 0;color:var(--accent)">기록실 (클릭하여 접기/펼치기)</h2>
+        <div id="match-list"></div>
+      </div>
+    </section>
+
+    <section id="elo-info">
+      <div class="card">
+        <h2 style="margin:6px 0;color:var(--accent)">ELO 시스템 설명</h2>
+        <p style="line-height:1.6;color:#ddd">모든 계산은 match 데이터를 기반으로 자동 수행됩니다.</p>
+      </div>
+    </section>
+
+    <section id="chart">
+      <div class="card">
+        <h2 style="margin:6px 0;color:var(--accent)">ELO 변동 그래프</h2>
+        <div class="muted">계산된 match 기반 ELO 변화 그래프를 표시합니다.</div>
+      </div>
+    </section>
+  </main>
+
+<script>
+  // 탭 전환
+  document.querySelectorAll('nav .tab').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      document.querySelectorAll('nav .tab').forEach(b=>b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));
+      document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
+    });
+  });
+
+  function start(){
+    const safeLoad=url=>fetch(url,{cache:'no-cache'}).then(r=>r.ok?r.json():{players:[],matches:[]}).catch(()=>({players:[],matches:[]}));
+    Promise.all([safeLoad('data.json'),safeLoad('data_oct.json')])
+      .then(([base,oct])=>{
+        base.matches=(base.matches||[]).concat(oct.matches||[]);
+        const seen=new Set((base.players||[]).map(p=>p.id));
+        (oct.players||[]).forEach(p=>{if(!seen.has(p.id))base.players.push(p);});
+        renderAll(base);
+      })
+      .catch(e=>console.error('로드 실패',e));
+  }
+
+  const getTierIndex=t=>['Stone','Bronze','Silver','Gold','Diamond','Legend'].indexOf(t)||0;
+
+  function renderAll(data){
+    const stat=new Map();
+    const ensure=id=>stat.get(id)||stat.set(id,{played:0,win:0,loss:0,elo:1000,tier:'Silver'}).get(id);
+    const eloHistory={};
+    const pushHistory=(id,elo)=>{if(!eloHistory[id])eloHistory[id]=[elo];else eloHistory[id].push(elo);};
+
+    const calcEloChange=(A,B,result,isTeam)=>{
+      const K=isTeam?8:12;
+      const effA=A.elo+getTierIndex(A.tier)*40;
+      const effB=B.elo+getTierIndex(B.tier)*40;
+      const expectedA=1/(1+Math.pow(10,(effB-effA)/400));
+      const delta=K*(result-expectedA);
+      A.elo+=delta; B.elo-=delta;
+    };
+
+    for(const m of data.matches){
+      if(m.map==='Match') continue;
+      if(m.player1&&m.player2){
+        const p1=ensure(m.player1), p2=ensure(m.player2);
+        if(m.winner===m.player1){calcEloChange(p1,p2,1,false);p1.win++;p2.loss++;}
+        else if(m.winner===m.player2){calcEloChange(p1,p2,0,false);p2.win++;p1.loss++;}
+        p1.played++; p2.played++;
+        pushHistory(m.player1,p1.elo);
+        pushHistory(m.player2,p2.elo);
+        continue;
+      }
+      if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
+        const team1=m.team1.map(id=>ensure(id));
+        const team2=m.team2.map(id=>ensure(id));
+        const win1=(m.winner||[]).some(x=>m.team1.includes(x));
+        const resultA=win1?1:0;
+        const avgA=team1.reduce((a,b)=>a+b.elo,0)/team1.length;
+        const avgB=team2.reduce((a,b)=>a+b.elo,0)/team2.length;
+        const dummyA={elo:avgA,tier:'Silver'}, dummyB={elo:avgB,tier:'Silver'};
+        calcEloChange(dummyA,dummyB,resultA,true);
+        const diffA=dummyA.elo-avgA, diffB=dummyB.elo-avgB;
+        team1.forEach(p=>{p.elo+=diffA;p.played++;if(resultA)p.win++;else p.loss++;pushHistory(p.id,p.elo);});
+        team2.forEach(p=>{p.elo+=diffB;p.played++;if(!resultA)p.win++;else p.loss++;pushHistory(p.id,p.elo);});
+      }
+    }
+    renderEloChart(eloHistory);
+  }
+
+  // ✅ 안전한 window.Recharts 참조 버전
+  function renderEloChart(eloHistory){
+    const container=document.getElementById("chart");
+    if(!container) return;
+    let mount=document.getElementById("eloChartMount");
+    if(!mount){
+      mount=document.createElement("div");
+      mount.id="eloChartMount";
+      mount.style.marginTop="10px";
+      container.querySelector(".card")?.appendChild(mount);
+    }
+    mount.innerHTML=`
+      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:13px;color:#aaa;margin-bottom:6px">비교할 플레이어 선택 (Ctrl/⌘ 로 다중 선택)</div>
+          <select id="eloPlayerSelect" multiple size="10"
+            style="min-width:220px;height:200px;padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
+            ${Object.keys(eloHistory).sort().map(id=>`<option value="${id}">${id}</option>`).join("")}
+          </select>
+        </div>
+        <div id="eloChartArea" style="flex:1;min-width:320px;width:100%;height:460px"></div>
+      </div>
+    `;
+
+    const {
+      LineChart, Line, XAxis, YAxis,
+      CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    } = window.Recharts || {};
+
+    if(!LineChart){ 
+      document.getElementById("eloChartArea").innerHTML =
+        `<div style='color:#f66'>⚠️ Recharts 라이브러리가 아직 로드되지 않았습니다.</div>`;
+      return;
+    }
+
+    const palette=["#ff6a00","#4ade80","#60a5fa","#f472b6","#facc15","#38bdf8","#a78bfa","#fb923c","#22d3ee","#94a3b8"];
+
+    function draw(selectedIds){
+      const area=document.getElementById("eloChartArea");
+      if(!selectedIds||selectedIds.length===0){
+        area.innerHTML=`<div class="muted">왼쪽 목록에서 1명 이상 선택하면 비교 그래프가 표시됩니다.</div>`;
+        return;
+      }
+      const maxLen=Math.max(...selectedIds.map(id=>(eloHistory[id]?.length||0)));
+      const rows=Array.from({length:maxLen},(_,i)=>{
+        const row={game:i};
+        selectedIds.forEach(id=>{row[id]=(eloHistory[id]||[])[i]??null;});
+        return row;
+      });
+      ReactDOM.render(
+        React.createElement(
+          ResponsiveContainer,{width:"100%",height:460},
+          React.createElement(
+            LineChart,{data:rows,margin:{top:20,right:30,left:0,bottom:0}},
+            React.createElement(CartesianGrid,{strokeDasharray:"3 3",stroke:"rgba(255,255,255,0.12)"}),
+            React.createElement(XAxis,{dataKey:"game",stroke:"#aaa",tick:{fontSize:12}}),
+            React.createElement(YAxis,{stroke:"#aaa",tick:{fontSize:12}}),
+            React.createElement(Tooltip,{contentStyle:{backgroundColor:"#1a1a22",border:"1px solid #333"}}),
+            React.createElement(Legend,null),
+            ...selectedIds.map((id,idx)=>
+              React.createElement(Line,{
+                key:id,type:"monotone",dataKey:id,name:id,
+                stroke:palette[idx%palette.length],dot:false,strokeWidth:2,isAnimationActive:false
+              })
+            )
+          )
+        ),area);
+    }
+
+    const select=document.getElementById("eloPlayerSelect");
+    select.addEventListener("change",()=>{
+      const selected=Array.from(select.selectedOptions).map(o=>o.value);
+      draw(selected);
+    });
+  }
+
+  start();
+</script>
+</body>
 </html>
