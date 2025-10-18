@@ -142,8 +142,22 @@
   const toMMDD=d=>d?d.split('-').slice(1).join('/'):'';
 
   async function loadData(){
-    const safe=async(u)=>{try{const r=await fetch(u,{cache:'no-cache'});return r.ok?await r.json():{players:[],matches:[]}}catch{return{players:[],matches:[]}}};
-    const base=await safe('./data.json'), oct=await safe('./data_oct.json');
+const safe = async (url) => {
+  try {
+    const res = await fetch(url + '?v=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch (err) {
+      console.warn('JSON 파싱 실패, text:', text.slice(0, 200));
+      return { players: [], matches: [] };
+    }
+  } catch (e) {
+    console.error('로드 실패', url, e);
+    return { players: [], matches: [] };
+  }
+};    const base=await safe('./data.json'), oct=await safe('./data_oct.json');
     base.matches=(base.matches||[]).concat(oct.matches||[]);
     const seen=new Set(base.players.map(p=>p.id));(oct.players||[]).forEach(p=>{if(!seen.has(p.id))base.players.push(p)});
     return base;
