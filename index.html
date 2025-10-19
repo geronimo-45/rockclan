@@ -5,20 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RockClan Records</title>
 
-  <!-- ✅ React / ReactDOM -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" defer></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" defer></script>
+  <!-- ✅ React / ReactDOM / Recharts (동기 로드: defer 제거!) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.10.3/umd/Recharts.min.js"></script>
 
-  <!-- ✅ PropTypes -->
-  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js" defer></script>
-
-  <!-- ✅ 안정 버전 Recharts -->
-  <script src="https://cdn.jsdelivr.net/npm/recharts@2.10.3/umd/Recharts.min.js" defer></script>
-
-  <!-- ✅ Chart.js (팝업 ELO 그래프용) -->
+  <!-- ✅ Chart.js (팝업용) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- favicon 404 억제 -->
+  <!-- favicon 404 방지 -->
   <link rel="icon" type="image/x-icon" href="data:;base64,iVBORw0KGgo=">
 
   <style>
@@ -50,7 +46,7 @@
     .match-item{color:#ddd;font-size:14px;margin:4px 0;padding-left:8px}
     .hidden{display:none;}
 
-    /* 🔹 팝업 모달 스타일 */
+    /* 🔹 팝업 스타일 */
     .modal{position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.6);padding-top:60px;display:none}
     .modal-content{background:#1a1a22;margin:auto;padding:20px;border-radius:12px;width:70%;max-height:80%;overflow-y:auto;color:#eee;box-shadow:0 0 20px rgba(0,0,0,.6)}
     .close{float:right;font-size:28px;cursor:pointer;color:#aaa}
@@ -59,8 +55,8 @@
 </head>
 
 <body>
-  <!-- 🟧 기존 사이트 내용 전부 동일 -->
-  <!-- ... (클랜원 랭킹, 기록실, ELO 설명, 그래프 섹션 등 원본 그대로) ... -->
+  <!-- ✅ 기존 본문 내용 (랭킹, 기록실, 설명, 그래프 전부 그대로) -->
+  <!-- ✅ 여기엔 변경 없음 -->
 
   <!-- 🔹 팝업 HTML -->
   <div id="playerModal" class="modal">
@@ -68,26 +64,27 @@
       <span id="closeModal" class="close">&times;</span>
       <h2 id="modalPlayerName" style="color:var(--accent);margin-top:0;"></h2>
       <div id="modalPlayerInfo" style="font-size:14px;margin-bottom:12px;color:#ccc;"></div>
-      <canvas id="modalEloChart" width="600" height="250" style="background:#111;border-radius:8px;margin-bottom:16px;"></canvas>
+      <canvas id="modalEloChart" width="600" height="250"
+        style="background:#111;border-radius:8px;margin-bottom:16px;"></canvas>
       <div id="modalMatchHistory" style="font-size:14px;color:#ddd;"></div>
     </div>
   </div>
 
-  <!-- ✅ 기존 script는 전부 그대로 -->
-  <!-- ✅ 맨 마지막 </script> 바로 위에 아래 블록 추가 -->
+  <!-- ✅ 기존 script 모두 유지 -->
+  <!-- ✅ 마지막 부분에 이 블록만 추가 -->
   <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const tbody = document.querySelector('#players-table tbody');
-    if (!tbody) return;
+  window.addEventListener('load', ()=>{
+    const tbody=document.querySelector('#players-table tbody');
+    if(!tbody)return;
 
-    tbody.addEventListener('click', e => {
-      const tr = e.target.closest('tr');
-      if (!tr) return;
-      const playerId = tr.children[1]?.textContent.trim();
-      if (playerId && window.__ROCK_DATA__) showPlayerModal(playerId, window.__ROCK_DATA__);
+    tbody.addEventListener('click',e=>{
+      const tr=e.target.closest('tr');
+      if(!tr)return;
+      const playerId=tr.children[1]?.textContent.trim();
+      if(playerId&&window.__ROCK_DATA__)showPlayerModal(playerId,window.__ROCK_DATA__);
     });
 
-    function showPlayerModal(playerId, data){
+    function showPlayerModal(playerId,data){
       const modal=document.getElementById('playerModal');
       const player=(data.players||[]).find(p=>p.id===playerId);
       if(!player)return;
@@ -97,10 +94,10 @@
       const calc=(A,B,res,isTeam)=>{
         const K=isTeam?8:12;
         const effA=A.elo+getTierIndex(A.tier)*40;
-        const effB=B.elo+getTierIndex(A.tier)*40;
+        const effB=B.elo+getTierIndex(B.tier)*40;
         const expectedA=1/(1+Math.pow(10,(effB-effA)/400));
         const delta=K*(res-expectedA);
-        A.elo+=delta; B.elo-=delta;
+        A.elo+=delta;B.elo-=delta;
       };
 
       const stat=new Map();
@@ -111,11 +108,10 @@
         stat.set(id,o);return o;
       };
 
-      const matches=(data.matches||[]).filter(m=>m.map!=="Match").slice()
-        .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+      const matches=(data.matches||[]).filter(m=>m.map!=="Match").slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
       for(const m of matches){
         if(m.player1&&m.player2){
-          const p1=ensure(m.player1), p2=ensure(m.player2);
+          const p1=ensure(m.player1),p2=ensure(m.player2);
           const res=(m.winner===m.player1)?1:(m.winner===m.player2)?0:null;
           if(res!==null){
             calc(p1,p2,res,false);
@@ -124,7 +120,7 @@
           }
         }
         if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
-          const T1=m.team1.map(ensure), T2=m.team2.map(ensure);
+          const T1=m.team1.map(ensure),T2=m.team2.map(ensure);
           const winners=Array.isArray(m.winner)?m.winner:[];
           const win1=winners.some(x=>m.team1.includes(x))?1:0;
           const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
