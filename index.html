@@ -197,8 +197,12 @@
   const toMMDD=d=>d?d.split('-').slice(1).join('/'):'';
 
   async function start(){
-    const base=await safe('./data.json');
-    const oct=await safe('./data_oct.json');
+// ✅ GitHub Pages 환경에서도 확실히 동작하도록 경로 보정
+const pathPrefix = window.location.pathname.includes('/rockclan')
+  ? '/rockclan/'
+  : './';
+const base = await safe(`${pathPrefix}data.json`);
+const oct  = await safe(`${pathPrefix}data_oct.json`);
     base.matches=(base.matches||[]).concat(oct.matches||[]);
     const seen=new Set(base.players.map(p=>p.id));
     (oct.players||[]).forEach(p=>{if(!seen.has(p.id))base.players.push(p)});
