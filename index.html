@@ -95,21 +95,119 @@
     </section>
 
     <!-- ELO 설명 (원본 스타일 유지) -->
-    <section id="elo-info">
-      <div class="card">
-        <h2 style="color:#ff6a00;margin:6px 0;">ELO 시스템 설명</h2>
-        <p style="color:#ddd;line-height:1.6;">
-          RockClan의 ELO 시스템은 <b>티어(Tier) 보정</b>을 포함해 실제 실력 격차를 반영합니다. 모든 계산은 기록실(match) 데이터를 기반으로 자동 수행됩니다.
-        </p>
-        <ul style="line-height:1.6;color:#ddd;">
-          <li>초기 ELO: 1000점</li>
-          <li>K 값: 개인전(1:1) <b>12</b> / 팀전 <b>8</b></li>
-          <li>티어 인덱스: Stone=0, Bronze=1, Silver=2, Gold=3, Diamond=4, Legend=5</li>
-          <li>EffectiveElo = ELO + (TierIndex × 40)</li>
-          <li>NewElo = OldElo + K × (Actual - Expected)</li>
+<section id="elo-info">
+  <div class="card">
+    <h2 style="margin:6px 0;color:var(--accent)">ELO 시스템 설명</h2>
+
+    <p style="line-height:1.6;color:#ddd">
+      RockClan의 ELO 시스템은 단순한 점수 차이뿐 아니라 <b>티어(Tier) 보정</b>을 포함하여 실제 실력 격차를 반영합니다.<br>
+      모든 계산은 기록실(match) 데이터를 기반으로 자동 수행됩니다.
+    </p>
+
+    <ul style="line-height:1.8;color:#ccc;margin-left:12px">
+      <li><b>초기 ELO</b>: 신규 플레이어는 1000점으로 시작합니다.</li>
+      <li><b>K 값</b>:
+        <ul>
+          <li>개인전(1:1): <b>K = 12</b></li>
+          <li>팀전(2:2, 3:3, 4:4 등): <b>K = 8</b></li>
         </ul>
+      </li>
+      <li><b>티어 인덱스 보정</b>:
+        <ul>
+          <li>Stone=0, Bronze=1, Silver=2, Gold=3, Diamond=4, Legend=5</li>
+          <li>실제 계산은 <code>EffectiveElo = ELO + (TierIndex × 40)</code> 으로 수행됩니다.</li>
+        </ul>
+      </li>
+      <li>예상 승률은 두 플레이어의 <b>EffectiveElo</b> 차이를 기준으로 계산됩니다.</li>
+      <li>경기 결과는 예상 승률 대비 실제 승패 차이만큼 ELO가 변동합니다.</li>
+    </ul>
+
+    <h3 style="margin-top:16px;color:var(--accent)">📈 ELO 계산 예시</h3>
+    <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:14px;color:#ddd">
+      <thead>
+        <tr style="background:rgba(255,255,255,0.05)">
+          <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">상황</th>
+          <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">ELO 차이</th>
+          <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">티어 차이</th>
+          <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">예상 승률</th>
+          <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">승리 시</th>
+          <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">패배 시</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:6px;border:1px solid rgba(255,255,255,0.1)">1:1 (동티어, 동일 ELO)</td><td>0</td><td>0</td><td>50%</td><td>+6</td><td>−6</td></tr>
+        <tr><td style="padding:6px;border:1px solid rgba(255,255,255,0.1)">Silver(2) vs Gold(3)</td><td>0</td><td>+1</td><td>46%</td><td>+7</td><td>−5</td></tr>
+        <tr><td style="padding:6px;border:1px solid rgba(255,255,255,0.1)">Gold(3) vs Silver(2)</td><td>0</td><td>−1</td><td>54%</td><td>+5</td><td>−7</td></tr>
+        <tr><td style="padding:6px;border:1px solid rgba(255,255,255,0.1)">팀전 (평균 동티어)</td><td>0</td><td>0</td><td>50%</td><td>+4</td><td>−4</td></tr>
+        <tr><td style="padding:6px;border:1px solid rgba(255,255,255,0.1)">팀전 (상대팀 평균 Diamond↑)</td><td>−150</td><td>+2</td><td>32%</td><td>+6</td><td>−3</td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:10px;color:#999">
+      ※ ELO 계산식: <code>NewElo = OldElo + K × (Actual − Expected)</code><br>
+      ※ 티어 인덱스 보정으로 인해 상위 티어를 이길 경우 상승폭이 더 커집니다.
+    </p>
+
+    <!-- 🔹 시뮬레이터 -->
+    <h3 style="margin-top:30px;color:var(--accent)">🧮 ELO 계산 시뮬레이터</h3>
+    <div style="color:#ddd;font-size:14px;line-height:1.8;">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px;">
+        <label>플레이어 A ELO <input id="eloA" type="number" value="1000" style="width:80px;margin-left:6px;padding:4px;background:#111;border:1px solid #333;color:#fff;"></label>
+        <label>티어
+          <select id="tierA" style="padding:4px;background:#111;border:1px solid #333;color:#fff;">
+            <option>Stone</option><option>Bronze</option><option selected>Silver</option><option>Gold</option><option>Diamond</option><option>Legend</option>
+          </select>
+        </label>
+        <span style="margin:0 12px;">vs</span>
+        <label>플레이어 B ELO <input id="eloB" type="number" value="1000" style="width:80px;margin-left:6px;padding:4px;background:#111;border:1px solid #333;color:#fff;"></label>
+        <label>티어
+          <select id="tierB" style="padding:4px;background:#111;border:1px solid #333;color:#fff;">
+            <option>Stone</option><option>Bronze</option><option>Silver</option><option selected>Gold</option><option>Diamond</option><option>Legend</option>
+          </select>
+        </label>
+        <label style="margin-left:16px;">경기 타입
+          <select id="gameType" style="padding:4px;background:#111;border:1px solid #333;color:#fff;">
+            <option value="1v1" selected>1:1</option>
+            <option value="team">팀전</option>
+          </select>
+        </label>
+        <button id="calcBtn" style="margin-left:12px;padding:6px 12px;border:none;border-radius:6px;background:var(--accent);color:#111;cursor:pointer;">계산</button>
       </div>
-    </section>
+
+      <div id="simResult" style="margin-top:10px;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;background:rgba(255,255,255,0.03);">
+        계산 결과가 여기에 표시됩니다.
+      </div>
+    </div>
+
+    <script>
+      document.getElementById("calcBtn").addEventListener("click",()=>{
+        const getTierIndex=t=>["Stone","Bronze","Silver","Gold","Diamond","Legend"].indexOf(t);
+        const eloA=parseFloat(document.getElementById("eloA").value||1000);
+        const eloB=parseFloat(document.getElementById("eloB").value||1000);
+        const tierA=document.getElementById("tierA").value;
+        const tierB=document.getElementById("tierB").value;
+        const gameType=document.getElementById("gameType").value;
+        const K=(gameType==="team")?8:12;
+
+        const effA=eloA+getTierIndex(tierA)*40;
+        const effB=eloB+getTierIndex(tierB)*40;
+        const expectedA=1/(1+Math.pow(10,(effB-effA)/400));
+        const deltaWin = K*(1-expectedA);
+        const deltaLose = -K*(expectedA);
+        const winPct=(expectedA*100).toFixed(1);
+
+        document.getElementById("simResult").innerHTML=`
+          <div><b>예상 승률</b>: A ${winPct}% / B ${(100-expectedA*100).toFixed(1)}%</div>
+          <div><b>K값</b>: ${K}</div>
+          <div><b>A 승리 시</b>: A +${deltaWin.toFixed(2)} / B ${deltaLose.toFixed(2)}</div>
+          <div><b>B 승리 시</b>: A ${(-deltaWin).toFixed(2)} / B +${(-deltaLose).toFixed(2)}</div>
+        `;
+      });
+    </script>
+
+  </div>
+</section>
+
 
     <!-- 그래프 -->
     <section id="chart">
