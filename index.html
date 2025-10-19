@@ -61,6 +61,16 @@
     <button class="tab" data-tab="elo-info">ELO 시스템 설명</button>
     <button class="tab" data-tab="chart">ELO 변동 그래프</button>
   </nav>
+<!-- 🔹 플레이어 히스토리 팝업 -->
+<div id="playerModal" class="modal" style="position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.6);padding-top:60px;display:none;">
+  <div class="modal-content" style="background:#1a1a22;margin:auto;padding:20px;border-radius:12px;width:70%;max-height:80%;overflow-y:auto;color:#eee;box-shadow:0 0 20px rgba(0,0,0,.6)">
+    <span id="closeModal" class="close" style="float:right;font-size:28px;cursor:pointer;color:#aaa">&times;</span>
+    <h2 id="modalPlayerName" style="color:#ff6a00;margin-top:0;"></h2>
+    <div id="modalPlayerInfo" style="font-size:14px;margin-bottom:12px;color:#ccc;"></div>
+    <canvas id="modalEloChart" width="600" height="250" style="background:#111;border-radius:8px;margin-bottom:16px;"></canvas>
+    <div id="modalMatchHistory" style="font-size:14px;color:#ddd;"></div>
+  </div>
+</div>
 
   <main>
     <!-- 랭킹 -->
@@ -473,5 +483,102 @@
     }
   });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+  const tbody=document.querySelector('#players-table tbody');
+  if(!tbody)return;
+
+  tbody.addEventListener('click',e=>{
+    const tr=e.target.closest('tr');
+    if(!tr)return;
+    const playerId=tr.children[1]?.textContent.trim();
+    if(playerId) showPlayerModal(playerId);
+  });
+
+  async function showPlayerModal(playerId){
+    // 현재 메모리 데이터 재활용
+    const base=await fetch('data.json?v='+Date.now()).then(r=>r.json()).catch(()=>({players:[],matches:[]}));
+    const oct=await fetch('data_oct.json?v='+Date.now()).then(r=>r.json()).catch(()=>({players:[],matches:[]}));
+    base.matches=(base.matches||[]).concat(oct.matches||[]);
+    const seen=new Set(base.players.map(p=>p.id));
+    (oct.players||[]).forEach(p=>{if(!seen.has(p.id))base.players.push(p);});
+
+    const player=base.players.find(p=>p.id===playerId);
+    if(!player)return;
+
+    // ELO 계산
+    const TierOrder=['Stone','Bronze','Silver','Gold','Diamond','Legend'];
+    const getTierIndex=t=>Math.max(0,TierOrder.indexOf(t||'Silver'));
+    const calc=(A,B,res,isTeam)=>{
+      const K=isTeam?8:12;
+      const effA=A.elo+getTierIndex(A.tier)*40;
+      const effB=B.elo+getTierIndex(B.tier)*40;
+      const expectedA=1/(1+Math.pow(10,(effB-effA)/400));
+      const delta=K*(res-expectedA);
+      A.elo+=delta;B.elo-=delta;
+    };
+    const stat=new Map();
+    const ensure=(id)=>{
+      if(stat.has(id))return stat.get(id);
+      const meta=(base.players||[]).find(p=>p.id===id)||{};
+      const o={id,tier:meta.tier||'Silver',race:meta.race||'Protoss',elo:1000,history:[1000]};
+      stat.set(id,o);return o;
+    };
+
+    const matches=(base.matches||[]).filter(m=>m.map!=="Match").slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+    for(const m of matches){
+      if(m.player1&&m.player2){
+        const p1=ensure(m.player1),p2=ensure(m.player2);
+        const res=(m.winner===m.player1)?1:(m.winner===m.player2)?0:null;
+        if(res!==null){calc(p1,p2,res,false);p1.history.push(Math.round(p1.elo));p2.history.push(Math.round(p2.elo));}
+      }
+      if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
+        const T1=m.team1.map(ensure),T2=m.team2.map(ensure);
+        const winners=Array.isArray(m.winner)?m.winner:[];
+        const win1=winners.some(x=>m.team1.includes(x))?1:0;
+        const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
+        const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
+        const dA={elo:avg1,tier:'Silver'},dB={elo:avg2,tier:'Silver'};
+        calc(dA,dB,win1,true);
+        const diffA=dA.elo-avg1,diffB=dB.elo-avg2;
+        T1.forEach(p=>{p.elo+=diffA;p.history.push(Math.round(p.elo));});
+        T2.forEach(p=>{p.elo+=diffB;p.history.push(Math.round(p.elo));});
+      }
+    }
+
+    const target=stat.get(playerId);
+    if(!target){alert("경기 기록이 없습니다.");return;}
+
+    document.getElementById('modalPlayerName').textContent=player.id;
+    document.getElementById('modalPlayerInfo').innerHTML=
+      `<b>Race:</b> ${player.race} | <b>Tier:</b> ${player.tier} | <b>현재 ELO:</b> ${Math.round(target.elo)} (${target.history.length-1}경기)`;
+
+    const ctx=document.getElementById('modalEloChart').getContext('2d');
+    if(window.modalChart)window.modalChart.destroy();
+    window.modalChart=new Chart(ctx,{
+      type:'line',
+      data:{labels:target.history.map((_,i)=>i),datasets:[{label:'ELO',data:target.history,borderColor:'#ff6a00',borderWidth:2,fill:false,tension:0.3}]},
+      options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#ccc'}}}}
+    });
+
+    const playerMatches=matches.filter(m=>
+      (m.player1===playerId||m.player2===playerId||(Array.isArray(m.team1)&&m.team1.includes(playerId))||(Array.isArray(m.team2)&&m.team2.includes(playerId)))
+    );
+    document.getElementById('modalMatchHistory').innerHTML=
+      playerMatches.map(m=>{
+        const isWin=(m.winner===playerId)||(Array.isArray(m.winner)&&m.winner.includes(playerId));
+        return `<div style="margin:4px 0;">${m.date} | ${m.map} | <b style="color:${isWin?'#4ade80':'#f87171'}">${isWin?'승':'패'}</b>${m.score?` | ${m.score}`:''}</div>`;
+      }).join('')||'경기 기록 없음';
+
+    const modal=document.getElementById('playerModal');
+    modal.style.display='block';
+    document.getElementById('closeModal').onclick=()=>modal.style.display='none';
+    window.onclick=(e)=>{if(e.target===modal)modal.style.display='none';};
+    window.addEventListener('keydown',(e)=>{if(e.key==='Escape')modal.style.display='none';},{once:true});
+  }
+});
+</script>
+
 </body>
 </html>
