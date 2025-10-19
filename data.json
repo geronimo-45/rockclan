@@ -35,11 +35,6 @@
   {"id":"dalsun2","race":"Protoss","tier":"Diamond"},
   {"id":"qooqoo","race":"Zerg","tier":"Silver"},
   {"id":"eun","race":"Protoss","tier":"Bronze"}
-]
-        },
-  {"id":"dalsun2","race":"Protoss","tier":"Diamond","elo":1000,"played":0,"win":0,"loss":0,"history":[1000]},
-  {"id":"qooqoo","race":"Zerg","tier":"Silver","elo":1000,"played":0,"win":0,"loss":0,"history":[1000]},
-  {"id":"eun","race":"Protoss","tier":"Bronze","elo":1000,"played":0,"win":0,"loss":0,"history":[1000]}
     ],
     "matches": [
   {"date":"2025-09-01","map":"Match","team1":["Zeze","Rupark","Miny","coolguy"],"team2":["Veeny","Gdragon","Rocky","Hyunho"],"winner":["Veeny","Gdragon","Rocky","Hyunho"],"score":"4:1"},
