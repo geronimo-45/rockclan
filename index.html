@@ -5,21 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RockClan Records</title>
 
-<!-- React / ReactDOM -->
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- ✅ React / ReactDOM (반드시 최상단) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
-<!-- ✅ PropTypes (전역 window.PropTypes 제공) -->
-<script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <!-- ✅ PropTypes (Recharts보다 반드시 먼저 선언되어야 함) -->
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
 
-<!-- ✅ 안정 버전 Recharts (2.10.3) -->
-<script src="https://cdn.jsdelivr.net/npm/recharts@2.10.3/umd/Recharts.min.js"></script>
+  <!-- ✅ 예비: PropTypes 폴리필 (혹시 CDN이 느릴 경우 대비용) -->
+  <script>
+    if (!window.PropTypes) {
+      window.PropTypes = {
+        oneOfType: () => () => null,
+        oneOf: () => () => null,
+        string: () => null,
+        number: () => null,
+        array: () => null,
+        object: () => null,
+        func: () => null,
+        bool: () => null,
+        shape: () => () => null,
+        node: () => null,
+        element: () => null
+      };
+      console.log("⚠️ PropTypes 폴리필 적용됨");
+    }
+  </script>
 
-<!-- (선택) 안전 확인용: 전역 확인 로그 -->
-<script>
-  console.log('PropTypes?', !!window.PropTypes);
-  console.log('Recharts?', !!window.Recharts);
-</script>
+  <!-- ✅ 안정 버전 Recharts (2.10.3) — 캐시 무효화 쿼리 포함 -->
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.10.3/umd/Recharts.min.js?v=2"></script>
+
+  <!-- ✅ 안전 확인 로그 -->
+  <script>
+    console.log("✅ PropTypes loaded:", !!window.PropTypes);
+    console.log("✅ oneOfType:", typeof window.PropTypes?.oneOfType);
+    console.log("✅ Recharts loaded:", !!window.Recharts);
+  </script>
+
+  <!-- favicon 404 방지 -->
+  <link rel="icon" type="image/x-icon" href="data:;base64,iVBORw0KGgo=">
 
   <style>
     :root {
@@ -59,6 +83,7 @@
     .hidden{display:none;}
   </style>
 </head>
+
 
 <body>
   <header>
