@@ -51,26 +51,16 @@
     .hidden{display:none;}
 
     /* 🔹 모달 스타일 */
-    .modal {
-      display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%;
-      background-color:rgba(0,0,0,0.6); padding-top:60px;
-    }
-    .modal-content {
-      background-color:#1a1a22; margin:auto; padding:20px; border-radius:12px; width:70%; max-height:80%;
-      overflow-y:auto; color:#eee; box-shadow:0 0 20px rgba(0,0,0,0.6);
-    }
-    .close {
-      float:right; font-size:28px; cursor:pointer; color:#aaa;
-    }
-    .close:hover { color:#fff; }
+    .modal{position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.6);padding-top:60px;display:none}
+    .modal-content{background:#1a1a22;margin:auto;padding:20px;border-radius:12px;width:70%;max-height:80%;overflow-y:auto;color:#eee;box-shadow:0 0 20px rgba(0,0,0,.6)}
+    .close{float:right;font-size:28px;cursor:pointer;color:#aaa}
+    .close:hover{color:#fff}
   </style>
 </head>
 
 <body>
-  <!-- 기존 body 내용 동일 -->
-  <!-- ... (생략: 당신이 준 원본 코드 전체 유지) ... -->
-
-  <!-- 🔹 플레이어 히스토리 모달 추가 -->
+  <!-- 🟧 기존 body 전체는 동일 (랭킹, 기록실, 설명, 그래프 그대로) -->
+  <!-- 아래는 새로 추가된 팝업만 -->
   <div id="playerModal" class="modal">
     <div class="modal-content">
       <span id="closeModal" class="close">&times;</span>
@@ -81,33 +71,38 @@
     </div>
   </div>
 
-  <!-- ✅ 기존 script 유지 -->
+  <!-- ✅ 기존 script 유지 + 아래 추가 -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    /* ⚙️ 기존 코드 동일 — 중략 (start(), renderAll 등 유지) */
 
-    // renderAll 내부 마지막 부분 아래에 추가
-    const originalRenderAll = renderAll;
-    renderAll = function(data){
-      originalRenderAll(data);
-      // 🔹 테이블 행 클릭 이벤트 등록
-      setTimeout(()=>{
-        document.querySelectorAll('#players-table tbody tr').forEach(tr=>{
-          tr.addEventListener('click',()=>{
-            const playerId = tr.children[1].textContent.trim();
-            showPlayerModal(playerId, data);
-          });
-        });
-      },300);
+    // ✅ 전역 데이터 핀 추가 (기존 start 내부에 포함)
+    async function start(){
+      const base = await safe(path('data.json'));
+      const oct  = await safe(path('data_oct.json'));
+      base.matches = (base.matches||[]).concat(oct.matches||[]);
+      const seen = new Set((base.players||[]).map(p=>p.id));
+      (oct.players||[]).forEach(p=>{ if(!seen.has(p.id)) base.players.push(p); });
+
+      window.__ROCK_DATA__ = base; // ✅ 팝업에서 참조용
+      renderAll(base);
     }
 
-    // 🔹 플레이어 히스토리 모달 함수
+    // ✅ 클릭 이벤트 위임 (renderAll 이후에도 안전)
+    document.querySelector('#players-table tbody').addEventListener('click', e=>{
+      const tr = e.target.closest('tr');
+      if(!tr) return;
+      const idCell = tr.children[1];
+      if(!idCell) return;
+      const playerId = idCell.textContent.trim();
+      if(window.__ROCK_DATA__) showPlayerModal(playerId, window.__ROCK_DATA__);
+    });
+
+    // ✅ 팝업 함수
     function showPlayerModal(playerId, data){
       const modal=document.getElementById('playerModal');
-      const player=data.players.find(p=>p.id===playerId);
-      if(!player) return;
+      const player=(data.players||[]).find(p=>p.id===playerId);
+      if(!player)return;
 
-      const statMap=new Map();
       const TierOrder=['Stone','Bronze','Silver','Gold','Diamond','Legend'];
       const getTierIndex=t=>Math.max(0,TierOrder.indexOf(t||'Silver'));
       const calc=(A,B,res,isTeam)=>{
@@ -119,22 +114,23 @@
         A.elo+=delta; B.elo-=delta;
       };
 
+      const stat=new Map();
       const ensure=(id)=>{
-        if(statMap.has(id))return statMap.get(id);
-        const meta=data.players.find(p=>p.id===id)||{};
+        if(stat.has(id))return stat.get(id);
+        const meta=(data.players||[]).find(p=>p.id===id)||{};
         const o={id,tier:meta.tier||'Silver',race:meta.race||'Protoss',elo:1000,history:[1000]};
-        statMap.set(id,o);return o;
+        stat.set(id,o);return o;
       };
 
-      const matches=(data.matches||[]).filter(m=>m.map!=="Match");
-      matches.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-
+      const matches=(data.matches||[]).filter(m=>m.map!=="Match").slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
       for(const m of matches){
         if(m.player1&&m.player2){
           const p1=ensure(m.player1), p2=ensure(m.player2);
-          const win=(m.winner===m.player1)?1:(m.winner===m.player2)?0:null;
-          if(win!==null){ calc(p1,p2,win,false);
-            p1.history.push(Math.round(p1.elo)); p2.history.push(Math.round(p2.elo));
+          const res=(m.winner===m.player1)?1:(m.winner===m.player2)?0:null;
+          if(res!==null){
+            calc(p1,p2,res,false);
+            p1.history.push(Math.round(p1.elo));
+            p2.history.push(Math.round(p2.elo));
           }
         }
         if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
@@ -151,56 +147,43 @@
         }
       }
 
-      const target=statMap.get(playerId);
+      const target=stat.get(playerId);
       if(!target){alert("경기 기록이 없습니다.");return;}
 
-      // 🔹 모달 내용 구성
       document.getElementById('modalPlayerName').textContent=player.id;
-      document.getElementById('modalPlayerInfo').innerHTML=
-        `<b>Race:</b> ${player.race} | <b>Tier:</b> ${player.tier} | <b>현재 ELO:</b> ${Math.round(target.elo)} (${target.history.length-1}경기)`;
+      document.getElementById('modalPlayerInfo').innerHTML=`<b>Race:</b> ${player.race} | <b>Tier:</b> ${player.tier} | <b>현재 ELO:</b> ${Math.round(target.elo)} (${target.history.length-1}경기)`;
 
-      // 🔹 ELO 히스토리 차트
       const ctx=document.getElementById('modalEloChart').getContext('2d');
-      if(window.modalChart) window.modalChart.destroy();
+      if(window.modalChart)window.modalChart.destroy();
       window.modalChart=new Chart(ctx,{
         type:'line',
         data:{
           labels:target.history.map((_,i)=>i),
-          datasets:[{
-            label:'ELO',
-            data:target.history,
-            borderColor:'#ff6a00',
-            borderWidth:2,
-            fill:false,
-            tension:0.3
-          }]
+          datasets:[{label:'ELO',data:target.history,borderColor:'#ff6a00',borderWidth:2,fill:false,tension:0.3}]
         },
         options:{
           scales:{
-            y:{beginAtZero:false,ticks:{color:'#ccc'},grid:{color:'rgba(255,255,255,0.1)'}},
+            y:{ticks:{color:'#ccc'},grid:{color:'rgba(255,255,255,0.1)'}},
             x:{ticks:{color:'#ccc'},grid:{color:'rgba(255,255,255,0.1)'}}
           },
           plugins:{legend:{display:false}}
         }
       });
 
-      // 🔹 경기 히스토리 목록
       const playerMatches=matches.filter(m=>
-        (m.player1===playerId||m.player2===playerId||
-         (Array.isArray(m.team1)&&m.team1.includes(playerId))||
-         (Array.isArray(m.team2)&&m.team2.includes(playerId)))
+        (m.player1===playerId||m.player2===playerId||(Array.isArray(m.team1)&&m.team1.includes(playerId))||(Array.isArray(m.team2)&&m.team2.includes(playerId)))
       );
-      const html=playerMatches.map(m=>{
+      document.getElementById('modalMatchHistory').innerHTML=playerMatches.map(m=>{
         const isWin=(m.winner===playerId)||(Array.isArray(m.winner)&&m.winner.includes(playerId));
-        return `<div style="margin:4px 0;">${m.date} | ${m.map} | <b style="color:${isWin?'#4ade80':'#f87171'};">${isWin?'승':'패'}</b> ${m.score?`| ${m.score}`:''}</div>`;
-      }).join('');
-      document.getElementById('modalMatchHistory').innerHTML=html||'경기 기록 없음';
+        return `<div style="margin:4px 0;">${m.date} | ${m.map} | <b style="color:${isWin?'#4ade80':'#f87171'}">${isWin?'승':'패'}</b>${m.score?` | ${m.score}`:''}</div>`;
+      }).join('')||'경기 기록 없음';
 
-      // 모달 표시 / 닫기
       modal.style.display='block';
       document.getElementById('closeModal').onclick=()=>modal.style.display='none';
-      window.onclick=(e)=>{ if(e.target===modal) modal.style.display='none'; };
+      window.onclick=(e)=>{if(e.target===modal)modal.style.display='none';};
+      window.addEventListener('keydown',(e)=>{if(e.key==='Escape')modal.style.display='none';},{once:true});
     }
+
   });
   </script>
 </body>
