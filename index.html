@@ -496,8 +496,20 @@ document.addEventListener('DOMContentLoaded', ()=>{
     if(playerId) showPlayerModal(playerId);
   });
 
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+  const tbody=document.querySelector('#players-table tbody');
+  if(!tbody)return;
+
+  tbody.addEventListener('click',e=>{
+    const tr=e.target.closest('tr');
+    if(!tr)return;
+    const playerId=tr.children[1]?.textContent.trim();
+    if(playerId) showPlayerModal(playerId);
+  });
+
   async function showPlayerModal(playerId){
-    // 현재 메모리 데이터 재활용
+    // 데이터 로드 (기존 그대로)
     const base=await fetch('data.json?v='+Date.now()).then(r=>r.json()).catch(()=>({players:[],matches:[]}));
     const oct=await fetch('data_oct.json?v='+Date.now()).then(r=>r.json()).catch(()=>({players:[],matches:[]}));
     base.matches=(base.matches||[]).concat(oct.matches||[]);
@@ -507,7 +519,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const player=base.players.find(p=>p.id===playerId);
     if(!player)return;
 
-    // ELO 계산
+    // ELO 계산 유틸 (기존과 동일)
     const TierOrder=['Stone','Bronze','Silver','Gold','Diamond','Legend'];
     const getTierIndex=t=>Math.max(0,TierOrder.indexOf(t||'Silver'));
     const calc=(A,B,res,isTeam)=>{
@@ -518,6 +530,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const delta=K*(res-expectedA);
       A.elo+=delta;B.elo-=delta;
     };
+
+    // 선수 상태 맵과 ensure (기존과 동일)
     const stat=new Map();
     const ensure=(id)=>{
       if(stat.has(id))return stat.get(id);
@@ -526,34 +540,99 @@ document.addEventListener('DOMContentLoaded', ()=>{
       stat.set(id,o);return o;
     };
 
-    const matches=(base.matches||[]).filter(m=>m.map!=="Match").slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+    // 날짜순 매치 (map:"Match" 제외) — 팝업용 상세 로그를 동시에 구축
+    const matches=(base.matches||[])
+      .filter(m=>m.map!=="Match")
+      .slice()
+      .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+
+    const playerLog=[]; // [{date,map,opponentText,isWin,eloAfter,delta}]
+
     for(const m of matches){
-      if(m.player1&&m.player2){
-        const p1=ensure(m.player1),p2=ensure(m.player2);
+      // 1:1
+      if(m.player1 && m.player2){
+        const p1=ensure(m.player1), p2=ensure(m.player2);
         const res=(m.winner===m.player1)?1:(m.winner===m.player2)?0:null;
-        if(res!==null){calc(p1,p2,res,false);p1.history.push(Math.round(p1.elo));p2.history.push(Math.round(p2.elo));}
+
+        // 내 경기라면 사전 ELO와 상대 확보
+        let involved=false, eloBefore=0, opponentText='';
+        if(m.player1===playerId){involved=true; eloBefore=p1.elo; opponentText=m.player2;}
+        else if(m.player2===playerId){involved=true; eloBefore=p2.elo; opponentText=m.player1;}
+
+        // 계산 적용
+        if(res!==null){
+          calc(p1,p2,res,false);
+          p1.history.push(Math.round(p1.elo));
+          p2.history.push(Math.round(p2.elo));
+        }
+
+        // 로그 적재 (경기 직후 기준)
+        if(involved){
+          const after = (m.player1===playerId)? p1.elo : p2.elo;
+          const isWin = (m.winner===playerId);
+          playerLog.push({
+            date: m.date,
+            map: m.map || '-',
+            opponentText,
+            isWin,
+            eloAfter: Math.round(after),
+            delta: Math.round(after - eloBefore)
+          });
+        }
       }
-      if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
-        const T1=m.team1.map(ensure),T2=m.team2.map(ensure);
-        const winners=Array.isArray(m.winner)?m.winner:[];
-        const win1=winners.some(x=>m.team1.includes(x))?1:0;
-        const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
-        const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
-        const dA={elo:avg1,tier:'Silver'},dB={elo:avg2,tier:'Silver'};
+
+      // 팀전
+      if(Array.isArray(m.team1) && Array.isArray(m.team2)){
+        const T1=m.team1.map(ensure), T2=m.team2.map(ensure);
+        const winners = Array.isArray(m.winner)? m.winner : [];
+        const win1 = winners.some(x=>m.team1.includes(x)) ? 1 : 0;
+
+        // 내 경기 여부/사전 ELO/상대편
+        const inTeam1 = m.team1.includes(playerId);
+        const inTeam2 = m.team2.includes(playerId);
+        const involved = inTeam1 || inTeam2;
+
+        let eloBefore=0, opponentText='';
+        if(involved){
+          const me = inTeam1 ? T1.find(p=>p.id===playerId) : T2.find(p=>p.id===playerId);
+          eloBefore = me.elo;
+          opponentText = (inTeam1 ? m.team2 : m.team1).join(', ');
+        }
+
+        // 팀 평균으로 계산 후 diff 분배
+        const avg1 = T1.reduce((a,b)=>a+b.elo,0)/T1.length;
+        const avg2 = T2.reduce((a,b)=>a+b.elo,0)/T2.length;
+        const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
         calc(dA,dB,win1,true);
-        const diffA=dA.elo-avg1,diffB=dB.elo-avg2;
-        T1.forEach(p=>{p.elo+=diffA;p.history.push(Math.round(p.elo));});
-        T2.forEach(p=>{p.elo+=diffB;p.history.push(Math.round(p.elo));});
+        const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
+
+        T1.forEach(p=>{p.elo+=diffA; p.history.push(Math.round(p.elo));});
+        T2.forEach(p=>{p.elo+=diffB; p.history.push(Math.round(p.elo));});
+
+        if(involved){
+          const meAfter = (inTeam1 ? T1 : T2).find(p=>p.id===playerId).elo;
+          const isWin = inTeam1 ? !!win1 : !win1;
+          playerLog.push({
+            date: m.date,
+            map: m.map || '-',
+            opponentText,
+            isWin,
+            eloAfter: Math.round(meAfter),
+            delta: Math.round(meAfter - eloBefore)
+          });
+        }
       }
     }
 
     const target=stat.get(playerId);
     if(!target){alert("경기 기록이 없습니다.");return;}
 
+    // 헤더 정보
     document.getElementById('modalPlayerName').textContent=player.id;
     document.getElementById('modalPlayerInfo').innerHTML=
       `<b>Race:</b> ${player.race} | <b>Tier:</b> ${player.tier} | <b>현재 ELO:</b> ${Math.round(target.elo)} (${target.history.length-1}경기)`;
 
+    // 차트 (그대로)
     const ctx=document.getElementById('modalEloChart').getContext('2d');
     if(window.modalChart)window.modalChart.destroy();
     window.modalChart=new Chart(ctx,{
@@ -562,40 +641,21 @@ document.addEventListener('DOMContentLoaded', ()=>{
       options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#ccc'}}}}
     });
 
-    const playerMatches=matches.filter(m=>
-      (m.player1===playerId||m.player2===playerId||(Array.isArray(m.team1)&&m.team1.includes(playerId))||(Array.isArray(m.team2)&&m.team2.includes(playerId)))
-    );
-document.getElementById('modalMatchHistory').innerHTML =
-  playerMatches.map(m => {
-    const isWin = (m.winner === playerId) || (Array.isArray(m.winner) && m.winner.includes(playerId));
+    // 🔹 팝업 리스트: 날짜 | 맵 | vs 상대 | 승/패 | ELO 변동 | (현재 ELO: NNNN)
+    document.getElementById('modalMatchHistory').innerHTML =
+      (playerLog.length? playerLog : []).map(row=>{
+        const color = row.isWin ? '#4ade80' : '#f87171';
+        const deltaText = (row.delta>0? `+${row.delta}` : `${row.delta}`);
+        return `<div style="margin:4px 0;">
+          ${row.date} | ${row.map}
+          ${row.opponentText ? ` | vs ${row.opponentText}` : ''}
+          | <b style="color:${color}">${row.isWin ? '승' : '패'}</b>
+          | <span style="color:${color}">${deltaText}</span>
+          <span style="color:#aaa"> (현재 ELO: ${row.eloAfter})</span>
+        </div>`;
+      }).join('') : '경기 기록 없음';
 
-    // 🔹 상대 정보 추출
-    let opponentText = '';
-    if (m.player1 && m.player2) { // 1:1
-      opponentText = (m.player1 === playerId) ? m.player2 : m.player1;
-    } else if (Array.isArray(m.team1) && Array.isArray(m.team2)) { // 팀전
-      const myTeam = m.team1.includes(playerId) ? m.team1 : m.team2;
-      const oppTeam = m.team1.includes(playerId) ? m.team2 : m.team1;
-      opponentText = oppTeam.join(', ');
-    }
-
-    // 🔹 ELO 변동 계산
-    const hist = stat.get(playerId)?.history || [];
-    const eloAfter = hist[hist.length - 1] ?? 1000;
-    const eloBefore = hist[hist.length - 2] ?? eloAfter;
-    const delta = eloAfter - eloBefore;
-    const deltaText = delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
-    const deltaColor = isWin ? '#4ade80' : '#f87171';
-
-    return `<div style="margin:4px 0;">
-      ${m.date} | ${m.map}
-      ${opponentText ? ` | vs ${opponentText}` : ''}
-      | <b style="color:${isWin ? '#4ade80' : '#f87171'}">${isWin ? '승' : '패'}</b>
-      | <span style="color:${deltaColor}">${deltaText}</span>
-    </div>`;
-  }).join('') || '경기 기록 없음';
-
-
+    // 모달 오픈/닫기 (그대로)
     const modal=document.getElementById('playerModal');
     modal.style.display='block';
     document.getElementById('closeModal').onclick=()=>modal.style.display='none';
@@ -604,6 +664,7 @@ document.getElementById('modalMatchHistory').innerHTML =
   }
 });
 </script>
+
 
 </body>
 </html>
