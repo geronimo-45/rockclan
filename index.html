@@ -496,17 +496,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
     if(playerId) showPlayerModal(playerId);
   });
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  const tbody=document.querySelector('#players-table tbody');
-  if(!tbody)return;
-
-  tbody.addEventListener('click',e=>{
-    const tr=e.target.closest('tr');
-    if(!tr)return;
-    const playerId=tr.children[1]?.textContent.trim();
-    if(playerId) showPlayerModal(playerId);
-  });
-
   async function showPlayerModal(playerId){
     // 데이터 로드 (기존 그대로)
     const base=await fetch('data.json?v='+Date.now()).then(r=>r.json()).catch(()=>({players:[],matches:[]}));
