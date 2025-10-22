@@ -565,11 +565,27 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const playerMatches=matches.filter(m=>
       (m.player1===playerId||m.player2===playerId||(Array.isArray(m.team1)&&m.team1.includes(playerId))||(Array.isArray(m.team2)&&m.team2.includes(playerId)))
     );
-    document.getElementById('modalMatchHistory').innerHTML=
-      playerMatches.map(m=>{
-        const isWin=(m.winner===playerId)||(Array.isArray(m.winner)&&m.winner.includes(playerId));
-        return `<div style="margin:4px 0;">${m.date} | ${m.map} | <b style="color:${isWin?'#4ade80':'#f87171'}">${isWin?'승':'패'}</b>${m.score?` | ${m.score}`:''}</div>`;
-      }).join('')||'경기 기록 없음';
+document.getElementById('modalMatchHistory').innerHTML=
+  playerMatches.map(m=>{
+    const isWin=(m.winner===playerId)||(Array.isArray(m.winner)&&m.winner.includes(playerId));
+
+    // 🔹 상대 정보 추출
+    let opponentText='';
+    if(m.player1 && m.player2){ // 1:1
+      opponentText = (m.player1===playerId) ? m.player2 : m.player1;
+    } else if(Array.isArray(m.team1) && Array.isArray(m.team2)){ // 팀전
+      const myTeam = m.team1.includes(playerId) ? m.team1 : m.team2;
+      const oppTeam = m.team1.includes(playerId) ? m.team2 : m.team1;
+      opponentText = oppTeam.join(', ');
+    }
+
+    return `<div style="margin:4px 0;">
+      ${m.date} | ${m.map}
+      ${opponentText ? ` | vs ${opponentText}` : ''}
+      | <b style="color:${isWin?'#4ade80':'#f87171'}">${isWin?'승':'패'}</b>
+      ${m.score?` | ${m.score}`:''}
+    </div>`;
+  }).join('') || '경기 기록 없음';
 
     const modal=document.getElementById('playerModal');
     modal.style.display='block';
