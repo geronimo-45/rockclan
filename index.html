@@ -229,428 +229,398 @@
     </section>
   </main>
 
-  <!-- ✅ 모든 스크립트는 DOMContentLoaded 이후 안전하게 실행 -->
-  <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // 탭 전환 (원본 로직 보존)
-    document.querySelectorAll('nav .tab').forEach(btn=>{
-      btn.addEventListener('click', e=>{
-        document.querySelectorAll('nav .tab').forEach(b=>b.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-        document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));
-        document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
-      });
-    });
+  <!-- ✅ Chart.js 로드 (defer 추가) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
-    // ---------- 안전 로더: CORS/MIME/캐시 우회 + 경로 자동 ----------
-    const safe = async (url) => {
-      try {
-        const res = await fetch(url + (url.includes('?')?'&':'?') + 'v=' + Date.now(), { cache: 'no-store' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const txt = await res.text();
-        try { return JSON.parse(txt); }
-        catch (e) { console.error('❌ JSON 파싱 실패:', url, txt.slice(0,200)); return {players:[], matches:[]}; }
-      } catch (e) {
-        console.error('❌ 로드 실패:', url, e);
-        return {players:[], matches:[]};
-      }
-    };
-
-    // 현재 문서 폴더 기준 절대경로 생성 (rockclan/ 여부와 무관하게 동작)
-    const basePath = location.pathname.replace(/[^\/]*$/, ''); // 마지막 파일명 제거
-    const path = (name) => basePath + name;
-
-    // ---------- ELO 계산 준비 ----------
-    const TierOrder=['Stone','Bronze','Silver','Gold','Diamond','Legend'];
-    const getTierIndex = t => Math.max(0, TierOrder.indexOf(t||'Silver'));
-    const toMMDD = d => d ? d.split('-').slice(1).join('/') : '';
-
-    // 필터 상태
-    const $search = document.getElementById('search');
-    const $race   = document.getElementById('raceFilter');
-    const $tier   = document.getElementById('tierFilter');
-
-    // ---------- 메인 시작 ----------
-    start();
-
-    async function start(){
-      // 데이터 로드
-      const base = await safe(path('data.json'));
-      const oct  = await safe(path('data_oct.json'));
-
-      // 병합
-      base.matches = (base.matches||[]).concat(oct.matches||[]);
-      const seen = new Set((base.players||[]).map(p=>p.id));
-      (oct.players||[]).forEach(p=>{ if(!seen.has(p.id)) base.players.push(p); });
-
-      // 렌더
-      renderAll(base);
-    }
-
-    function renderAll(data){
-      // 메타 맵
-      const playersMeta = new Map((data.players||[]).map(p=>[p.id,p]));
-
-      // 누적 스탯 & 그래프용
-      const stat = new Map();
-      const eloByDate = {}; // { id: { 'MM/DD': eloInt } }
-
-      const ensure = (id)=>{
-        if(stat.has(id)) return stat.get(id);
-        const m=playersMeta.get(id)||{};
-        const o={ id, elo:1000, tier:m.tier||'Silver', race:m.race||'Protoss', win:0, loss:0, played:0 };
-        stat.set(id,o); return o;
-      };
-
-      const calc = (A,B,res,isTeam)=>{
-        const K = isTeam? 8 : 12;
-        const effA = A.elo + getTierIndex(A.tier)*40;
-        const effB = B.elo + getTierIndex(B.tier)*40;
-        const expectedA = 1/(1+Math.pow(10,(effB-effA)/400));
-        const delta = K*(res-expectedA);
-        A.elo += delta; B.elo -= delta;
-      };
-
-      // 날짜순 처리
-      const matches = (data.matches||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-
-      // ▶ "map":"Match" 는 계산/랭킹/그래프 제외, 기록실에는 표시
-      for(const m of matches){
-        if(!m.map || m.map==='Match') continue;
-        const d = toMMDD(m.date);
-
-        // 1v1
-        if(m.player1 && m.player2){
-          const p1=ensure(m.player1), p2=ensure(m.player2);
-          if(m.winner===m.player1){ calc(p1,p2,1,false); p1.win++; p2.loss++; }
-          else if(m.winner===m.player2){ calc(p1,p2,0,false); p2.win++; p1.loss++; }
-          p1.played++; p2.played++;
-          (eloByDate[p1.id]??={})[d]=Math.round(p1.elo);
-          (eloByDate[p2.id]??={})[d]=Math.round(p2.elo);
-        }
-
-        // 팀전
-        if(Array.isArray(m.team1) && Array.isArray(m.team2)){
-          const T1=m.team1.map(ensure), T2=m.team2.map(ensure);
-          const winners = Array.isArray(m.winner)? m.winner : [];
-          const win1 = winners.some(x=>m.team1.includes(x)) ? 1 : 0;
-
-          const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
-          const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
-          const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
-          calc(dA,dB,win1,true);
-          const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
-
-          T1.forEach(p=>{ p.elo+=diffA; p.played++; win1?p.win++:p.loss++; (eloByDate[p.id]??={})[d]=Math.round(p.elo); });
-          T2.forEach(p=>{ p.elo+=diffB; p.played++; !win1?p.win++:p.loss++; (eloByDate[p.id]??={})[d]=Math.round(p.elo); });
-        }
-      }
-
-      // --- 랭킹 표시 (ELO 내림차순) + 필터 ---
-      const tbody = document.querySelector('#players-table tbody');
-      const allRows = [...stat.values()].sort((a,b)=>b.elo-a.elo);
-
-      function applyFilters(){
-        const q = ($search.value||'').trim().toLowerCase();
-        const r = $race.value||'';
-        const t = $tier.value||'';
-
-        const filtered = allRows.filter(p=>{
-          if(q && !p.id.toLowerCase().includes(q)) return false;
-          if(r && p.race!==r) return false;
-          if(t && p.tier!==t) return false;
-          return true;
-        });
-
-        tbody.innerHTML = filtered.map((p,i)=>{
-          const wr = p.played? ((p.win/p.played)*100).toFixed(1) : '0.0';
-          return `<tr>
-            <td>${i+1}</td><td>${p.id}</td><td>${p.race}</td>
-            <td class="tier-${p.tier}">${p.tier}</td>
-            <td>${Math.round(p.elo)}</td><td>${p.win}</td><td>${p.loss}</td><td>${wr}%</td>
-          </tr>`;
-        }).join('');
-      }
-      ['input','change'].forEach(ev=>{
-        $search.addEventListener(ev,applyFilters);
-        $race.addEventListener(ev,applyFilters);
-        $tier.addEventListener(ev,applyFilters);
-      });
-      applyFilters();
-
-      // --- 기록실: 기본 접힘 + 날짜 헤더에 Match n게임 ---
-      const list = document.getElementById('match-list');
-      list.innerHTML='';
-      let curDate=null, box=null, mCount=0;
-
-      const flushHeader = ()=>{ if(box && mCount>0){ box.querySelector('.match-header').textContent += ` (Match ${mCount}게임)`; } };
-
-      for(const m of matches){
-        if(m.date!==curDate){
-          flushHeader();
-          curDate=m.date; mCount=0;
-          box=document.createElement('div');
-          box.className='match';
-          const hdr=document.createElement('div');
-          hdr.className='match-header';
-          hdr.textContent=`${curDate}`;
-          const inner=document.createElement('div');
-          inner.className='match-inner hidden';
-          hdr.addEventListener('click',()=>inner.classList.toggle('hidden'));
-          box.appendChild(hdr); box.appendChild(inner);
-          list.appendChild(box);
-        }
-        const wrap=box.querySelector('.match-inner');
-        if(m.map==='Match'){
-          mCount++;
-          const line=document.createElement('div');
-          line.className='match-item';
-          line.style.color='#a8e0a8';
-          const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
-          line.textContent=`[Match] 승자: ${win}${m.score?` | 스코어: ${m.score}`:''}`;
-          wrap.appendChild(line);
-          continue;
-        }
-        if(m.player1&&m.player2){
-          const l=document.createElement('div'); l.className='match-item';
-          l.textContent=`${m.map||'-'} — ${m.player1} vs ${m.player2} | 승자: ${m.winner||'-'}${m.score?` | ${m.score}`:''}`;
-          wrap.appendChild(l);
-        }
-        if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
-          const l=document.createElement('div'); l.className='match-item';
-          const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
-          l.textContent=`${m.map||'-'} — [${m.team1.join(', ')}] vs [${m.team2.join(', ')}] | 승자: ${win}${m.score?` | ${m.score}`:''}`;
-          wrap.appendChild(l);
-        }
-      }
-      flushHeader();
-
-      // --- 그래프 렌더 ---
-      renderChart(eloByDate);
-    }
-
-    function renderChart(eloByDate){
-      const container=document.getElementById('elo-chart-container');
-      container.innerHTML = `
-        <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-          <div>
-            <div style="font-size:13px;color:#aaa;margin-bottom:6px">비교할 플레이어 선택 (Ctrl/⌘ 다중 선택)</div>
-            <select id="eloPlayerSelect" multiple size="10"
-              style="min-width:220px;height:200px;padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-              ${Object.keys(eloByDate).sort().map(id=>`<option value="${id}">${id}</option>`).join('')}
-            </select>
-          </div>
-          <div id="eloChartArea" style="flex:1;min-width:320px;width:100%;height:460px"></div>
-        </div>
-      `;
-
-      const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = window.Recharts || {};
-      const area = document.getElementById('eloChartArea');
-      if(!LineChart){ area.innerHTML=`<div class="muted">Recharts가 아직 로드되지 않았습니다.</div>`; return; }
-
-      const palette=["#ff6a00","#4ade80","#60a5fa","#f472b6","#facc15","#38bdf8","#a78bfa","#fb923c","#22d3ee","#94a3b8"];
-
-      function draw(sel){
-        if(!sel.length){ area.innerHTML=`<div class="muted">왼쪽에서 1명 이상 선택하세요.</div>`; return; }
-        const dates=[...new Set(sel.flatMap(id=>Object.keys(eloByDate[id]||{})))].sort((a,b)=>{
-          const [am,ad]=a.split('/').map(Number), [bm,bd]=b.split('/').map(Number);
-          return am===bm? ad-bd : am-bm;
-        });
-        const rows=dates.map(d=>{ const r={date:d}; sel.forEach(id=>r[id]=eloByDate[id]?.[d]??null); return r; });
-
-        ReactDOM.render(
-          React.createElement(
-            ResponsiveContainer,{width:"100%",height:460},
-            React.createElement(LineChart,{data:rows,margin:{top:20,right:30,left:0,bottom:0}},
-              React.createElement(CartesianGrid,{strokeDasharray:"3 3",stroke:"rgba(255,255,255,0.12)"}),
-              React.createElement(XAxis,{dataKey:"date",stroke:"#aaa",tick:{fontSize:12}}),
-              React.createElement(YAxis,{stroke:"#aaa",domain:[800,1200],tick:{fontSize:12}}),
-              React.createElement(Tooltip,{formatter:v=>Math.round(v),contentStyle:{backgroundColor:"#1a1a22",border:"1px solid #333"}}),
-              React.createElement(Legend,null),
-              ...sel.map((id,i)=>React.createElement(Line,{
-                key:id, type:"monotone", dataKey:id, name:id,
-                stroke:palette[i%palette.length], dot:false, strokeWidth:2, isAnimationActive:false
-              }))
-            )
-          ), area
-        );
-      }
-
-      document.getElementById('eloPlayerSelect').addEventListener('change', e=>{
-        const sel=[...e.target.selectedOptions].map(o=>o.value);
-        draw(sel);
-      });
-    }
-  });
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- ✅ 스크립트 시작 -->
 <script>
-document.addEventListener('DOMContentLoaded', ()=>{
-  const tbody=document.querySelector('#players-table tbody');
-  if(!tbody)return;
-
-  tbody.addEventListener('click',e=>{
-    const tr=e.target.closest('tr');
-    if(!tr)return;
-    const playerId=tr.children[1]?.textContent.trim();
-    if(playerId) showPlayerModal(playerId);
+(function(){
+  // --- 탭 전환 ---
+  document.querySelectorAll('nav .tab').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      document.querySelectorAll('nav .tab').forEach(b=>b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));
+      document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
+    });
   });
 
-  async function showPlayerModal(playerId){
-    // 데이터 로드 (기존 그대로)
-    const base=await fetch('data.json?v='+Date.now()).then(r=>r.json()).catch(()=>({players:[],matches:[]}));
-    const oct=await fetch('data_oct.json?v='+Date.now()).then(r=>r.json()).catch(()=>({players:[],matches:[]}));
-    base.matches=(base.matches||[]).concat(oct.matches||[]);
-    const seen=new Set(base.players.map(p=>p.id));
-    (oct.players||[]).forEach(p=>{if(!seen.has(p.id))base.players.push(p);});
+  // --- 안전 로더 (기존 유지) ---
+  const safe = async (url) => {
+    try {
+      const res = await fetch(url + (url.includes('?')?'&':'?') + 'v=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const txt = await res.text();
+      try { return JSON.parse(txt); }
+      catch (e) { console.error('❌ JSON 파싱 실패:', url, txt.slice(0,200)); return {players:[], matches:[]}; }
+    } catch (e) {
+      console.error('❌ 로드 실패:', url, e);
+      return {players:[], matches:[]};
+    }
+  };
 
-    const player=base.players.find(p=>p.id===playerId);
-    if(!player)return;
+  const basePath = location.pathname.replace(/[^\/]*$/, '');
+  const path = (name) => basePath + name;
 
-    // ELO 계산 유틸 (기존과 동일)
-    const TierOrder=['Stone','Bronze','Silver','Gold','Diamond','Legend'];
-    const getTierIndex=t=>Math.max(0,TierOrder.indexOf(t||'Silver'));
-    const calc=(A,B,res,isTeam)=>{
-      const K=isTeam?8:12;
-      const effA=A.elo+getTierIndex(A.tier)*40;
-      const effB=B.elo+getTierIndex(B.tier)*40;
-      const expectedA=1/(1+Math.pow(10,(effB-effA)/400));
-      const delta=K*(res-expectedA);
-      A.elo+=delta;B.elo-=delta;
+  const TierOrder=['Stone','Bronze','Silver','Gold','Diamond','Legend'];
+  const getTierIndex = t => Math.max(0, TierOrder.indexOf(t||'Silver'));
+  const toMMDD = d => d ? d.split('-').slice(1).join('/') : '';
+
+  const $search = document.getElementById('search');
+  const $race   = document.getElementById('raceFilter');
+  const $tier   = document.getElementById('tierFilter');
+
+  start();
+
+  async function start(){
+    const base = await safe(path('data.json'));
+    const oct  = await safe(path('data_oct.json'));
+
+    base.matches = (base.matches||[]).concat(oct.matches||[]);
+    const seen = new Set((base.players||[]).map(p=>p.id));
+    (oct.players||[]).forEach(p=>{ if(!seen.has(p.id)) base.players.push(p); });
+
+    renderAll(base);
+  }
+
+  function renderAll(data){
+    const playersMeta = new Map((data.players||[]).map(p=>[p.id,p]));
+    const stat = new Map();
+    const eloByDate = {};
+
+    const ensure = (id)=>{
+      if(stat.has(id)) return stat.get(id);
+      const m=playersMeta.get(id)||{};
+      const o={ id, elo:1000, tier:m.tier||'Silver', race:m.race||'Protoss', win:0, loss:0, played:0 };
+      stat.set(id,o); return o;
     };
 
-    // 선수 상태 맵과 ensure (기존과 동일)
-    const stat=new Map();
-    const ensure=(id)=>{
-      if(stat.has(id))return stat.get(id);
-      const meta=(base.players||[]).find(p=>p.id===id)||{};
-      const o={id,tier:meta.tier||'Silver',race:meta.race||'Protoss',elo:1000,history:[1000]};
-      stat.set(id,o);return o;
+    const calc = (A,B,res,isTeam)=>{
+      const K = isTeam? 8 : 12;
+      const effA = A.elo + getTierIndex(A.tier)*40;
+      const effB = B.elo + getTierIndex(B.tier)*40;
+      const expectedA = 1/(1+Math.pow(10,(effB-effA)/400));
+      const delta = K*(res-expectedA);
+      A.elo += delta; B.elo -= delta;
     };
 
-    // 날짜순 매치 (map:"Match" 제외) — 팝업용 상세 로그를 동시에 구축
-    const matches=(base.matches||[])
-      .filter(m=>m.map!=="Match")
-      .slice()
-      .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-
-    const playerLog=[]; // [{date,map,opponentText,isWin,eloAfter,delta}]
+    const matches = (data.matches||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
 
     for(const m of matches){
-      // 1:1
+      if(!m.map || m.map==='Match') continue;
+      const d = toMMDD(m.date);
+
       if(m.player1 && m.player2){
         const p1=ensure(m.player1), p2=ensure(m.player2);
-        const res=(m.winner===m.player1)?1:(m.winner===m.player2)?0:null;
-
-        // 내 경기라면 사전 ELO와 상대 확보
-        let involved=false, eloBefore=0, opponentText='';
-        if(m.player1===playerId){involved=true; eloBefore=p1.elo; opponentText=m.player2;}
-        else if(m.player2===playerId){involved=true; eloBefore=p2.elo; opponentText=m.player1;}
-
-        // 계산 적용
-        if(res!==null){
-          calc(p1,p2,res,false);
-          p1.history.push(Math.round(p1.elo));
-          p2.history.push(Math.round(p2.elo));
-        }
-
-        // 로그 적재 (경기 직후 기준)
-        if(involved){
-          const after = (m.player1===playerId)? p1.elo : p2.elo;
-          const isWin = (m.winner===playerId);
-          playerLog.push({
-            date: m.date,
-            map: m.map || '-',
-            opponentText,
-            isWin,
-            eloAfter: Math.round(after),
-            delta: Math.round(after - eloBefore)
-          });
-        }
+        if(m.winner===m.player1){ calc(p1,p2,1,false); p1.win++; p2.loss++; }
+        else if(m.winner===m.player2){ calc(p1,p2,0,false); p2.win++; p1.loss++; }
+        p1.played++; p2.played++;
+        (eloByDate[p1.id]??={})[d]=Math.round(p1.elo);
+        (eloByDate[p2.id]??={})[d]=Math.round(p2.elo);
       }
 
-      // 팀전
       if(Array.isArray(m.team1) && Array.isArray(m.team2)){
         const T1=m.team1.map(ensure), T2=m.team2.map(ensure);
         const winners = Array.isArray(m.winner)? m.winner : [];
         const win1 = winners.some(x=>m.team1.includes(x)) ? 1 : 0;
 
-        // 내 경기 여부/사전 ELO/상대편
-        const inTeam1 = m.team1.includes(playerId);
-        const inTeam2 = m.team2.includes(playerId);
-        const involved = inTeam1 || inTeam2;
-
-        let eloBefore=0, opponentText='';
-        if(involved){
-          const me = inTeam1 ? T1.find(p=>p.id===playerId) : T2.find(p=>p.id===playerId);
-          eloBefore = me.elo;
-          opponentText = (inTeam1 ? m.team2 : m.team1).join(', ');
-        }
-
-        // 팀 평균으로 계산 후 diff 분배
-        const avg1 = T1.reduce((a,b)=>a+b.elo,0)/T1.length;
-        const avg2 = T2.reduce((a,b)=>a+b.elo,0)/T2.length;
+        const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
+        const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
         const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
         calc(dA,dB,win1,true);
         const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
 
-        T1.forEach(p=>{p.elo+=diffA; p.history.push(Math.round(p.elo));});
-        T2.forEach(p=>{p.elo+=diffB; p.history.push(Math.round(p.elo));});
-
-        if(involved){
-          const meAfter = (inTeam1 ? T1 : T2).find(p=>p.id===playerId).elo;
-          const isWin = inTeam1 ? !!win1 : !win1;
-          playerLog.push({
-            date: m.date,
-            map: m.map || '-',
-            opponentText,
-            isWin,
-            eloAfter: Math.round(meAfter),
-            delta: Math.round(meAfter - eloBefore)
-          });
-        }
+        T1.forEach(p=>{ p.elo+=diffA; p.played++; win1?p.win++:p.loss++; (eloByDate[p.id]??={})[d]=Math.round(p.elo); });
+        T2.forEach(p=>{ p.elo+=diffB; p.played++; !win1?p.win++:p.loss++; (eloByDate[p.id]??={})[d]=Math.round(p.elo); });
       }
     }
 
-    const target=stat.get(playerId);
-    if(!target){alert("경기 기록이 없습니다.");return;}
+    const tbody = document.querySelector('#players-table tbody');
+    const allRows = [...stat.values()].sort((a,b)=>b.elo-a.elo);
 
-    // 헤더 정보
-    document.getElementById('modalPlayerName').textContent=player.id;
-    document.getElementById('modalPlayerInfo').innerHTML=
-      `<b>Race:</b> ${player.race} | <b>Tier:</b> ${player.tier} | <b>현재 ELO:</b> ${Math.round(target.elo)} (${target.history.length-1}경기)`;
+    function applyFilters(){
+      const q = ($search.value||'').trim().toLowerCase();
+      const r = $race.value||'';
+      const t = $tier.value||'';
 
-    // 차트 (그대로)
-    const ctx=document.getElementById('modalEloChart').getContext('2d');
-    if(window.modalChart)window.modalChart.destroy();
-    window.modalChart=new Chart(ctx,{
-      type:'line',
-      data:{labels:target.history.map((_,i)=>i),datasets:[{label:'ELO',data:target.history,borderColor:'#ff6a00',borderWidth:2,fill:false,tension:0.3}]},
-      options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#ccc'}}}}
+      const filtered = allRows.filter(p=>{
+        if(q && !p.id.toLowerCase().includes(q)) return false;
+        if(r && p.race!==r) return false;
+        if(t && p.tier!==t) return false;
+        return true;
+      });
+
+      tbody.innerHTML = filtered.map((p,i)=>{
+        const wr = p.played? ((p.win/p.played)*100).toFixed(1) : '0.0';
+        return `<tr>
+          <td>${i+1}</td><td>${p.id}</td><td>${p.race}</td>
+          <td class="tier-${p.tier}">${p.tier}</td>
+          <td>${Math.round(p.elo)}</td><td>${p.win}</td><td>${p.loss}</td><td>${wr}%</td>
+        </tr>`;
+      }).join('');
+    }
+    ['input','change'].forEach(ev=>{
+      $search.addEventListener(ev,applyFilters);
+      $race.addEventListener(ev,applyFilters);
+      $tier.addEventListener(ev,applyFilters);
     });
+    applyFilters();
 
-    // 🔹 팝업 리스트: 날짜 | 맵 | vs 상대 | 승/패 | ELO 변동 | (현재 ELO: NNNN)
-    document.getElementById('modalMatchHistory').innerHTML =
-      (playerLog.length? playerLog : []).map(row=>{
-        const color = row.isWin ? '#4ade80' : '#f87171';
-        const deltaText = (row.delta>0? `+${row.delta}` : `${row.delta}`);
-        return `<div style="margin:4px 0;">
-          ${row.date} | ${row.map}
-          ${row.opponentText ? ` | vs ${row.opponentText}` : ''}
-          | <b style="color:${color}">${row.isWin ? '승' : '패'}</b>
-          | <span style="color:${color}">${deltaText}</span>
-          <span style="color:#aaa"> (현재 ELO: ${row.eloAfter})</span>
-        </div>`;
-      }).join('') : '경기 기록 없음';
+    // --- 기록실 ---
+    const list = document.getElementById('match-list');
+    list.innerHTML='';
+    let curDate=null, box=null, mCount=0;
+    const flushHeader = ()=>{ if(box && mCount>0){ box.querySelector('.match-header').textContent += ` (Match ${mCount}게임)`; } };
 
-    // 모달 오픈/닫기 (그대로)
-    const modal=document.getElementById('playerModal');
-    modal.style.display='block';
-    document.getElementById('closeModal').onclick=()=>modal.style.display='none';
-    window.onclick=(e)=>{if(e.target===modal)modal.style.display='none';};
-    window.addEventListener('keydown',(e)=>{if(e.key==='Escape')modal.style.display='none';},{once:true});
+    for(const m of matches){
+      if(m.date!==curDate){
+        flushHeader();
+        curDate=m.date; mCount=0;
+        box=document.createElement('div');
+        box.className='match';
+        const hdr=document.createElement('div');
+        hdr.className='match-header';
+        hdr.textContent=`${curDate}`;
+        const inner=document.createElement('div');
+        inner.className='match-inner hidden';
+        hdr.addEventListener('click',()=>inner.classList.toggle('hidden'));
+        box.appendChild(hdr); box.appendChild(inner);
+        list.appendChild(box);
+      }
+      const wrap=box.querySelector('.match-inner');
+      if(m.map==='Match'){
+        mCount++;
+        const line=document.createElement('div');
+        line.className='match-item';
+        line.style.color='#a8e0a8';
+        const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
+        line.textContent=`[Match] 승자: ${win}${m.score?` | 스코어: ${m.score}`:''}`;
+        wrap.appendChild(line);
+        continue;
+      }
+      if(m.player1&&m.player2){
+        const l=document.createElement('div'); l.className='match-item';
+        l.textContent=`${m.map||'-'} — ${m.player1} vs ${m.player2} | 승자: ${m.winner||'-'}${m.score?` | ${m.score}`:''}`;
+        wrap.appendChild(l);
+      }
+      if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
+        const l=document.createElement('div'); l.className='match-item';
+        const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
+        l.textContent=`${m.map||'-'} — [${m.team1.join(', ')}] vs [${m.team2.join(', ')}] | 승자: ${win}${m.score?` | ${m.score}`:''}`;
+        wrap.appendChild(l);
+      }
+    }
+    flushHeader();
+
+    // --- 그래프 ---
+    renderChart(eloByDate);
   }
-});
+
+  function renderChart(eloByDate){
+    const container=document.getElementById('elo-chart-container');
+    container.innerHTML = `
+      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:13px;color:#aaa;margin-bottom:6px">비교할 플레이어 선택 (Ctrl/⌘ 다중 선택)</div>
+          <select id="eloPlayerSelect" multiple size="10"
+            style="min-width:220px;height:200px;padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
+            ${Object.keys(eloByDate).sort().map(id=>`<option value="${id}">${id}</option>`).join('')}
+          </select>
+        </div>
+        <div id="eloChartArea" style="flex:1;min-width:320px;width:100%;height:460px"></div>
+      </div>
+    `;
+
+    const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = window.Recharts || {};
+    const area = document.getElementById('eloChartArea');
+    if(!LineChart){ area.innerHTML=`<div class="muted">Recharts가 아직 로드되지 않았습니다.</div>`; return; }
+
+    const palette=["#ff6a00","#4ade80","#60a5fa","#f472b6","#facc15","#38bdf8","#a78bfa","#fb923c","#22d3ee","#94a3b8"];
+
+    function draw(sel){
+      if(!sel.length){ area.innerHTML=`<div class="muted">왼쪽에서 1명 이상 선택하세요.</div>`; return; }
+      const dates=[...new Set(sel.flatMap(id=>Object.keys(eloByDate[id]||{})))].sort((a,b)=>{
+        const [am,ad]=a.split('/').map(Number), [bm,bd]=b.split('/').map(Number);
+        return am===bm? ad-bd : am-bm;
+      });
+      const rows=dates.map(d=>{ const r={date:d}; sel.forEach(id=>r[id]=eloByDate[id]?.[d]??null); return r; });
+
+      ReactDOM.render(
+        React.createElement(
+          ResponsiveContainer,{width:"100%",height:460},
+          React.createElement(LineChart,{data:rows,margin:{top:20,right:30,left:0,bottom:0}},
+            React.createElement(CartesianGrid,{strokeDasharray:"3 3",stroke:"rgba(255,255,255,0.12)"}),
+            React.createElement(XAxis,{dataKey:"date",stroke:"#aaa",tick:{fontSize:12}}),
+            React.createElement(YAxis,{stroke:"#aaa",domain:[800,1200],tick:{fontSize:12}}),
+            React.createElement(Tooltip,{formatter:v=>Math.round(v),contentStyle:{backgroundColor:"#1a1a22",border:"1px solid #333"}}),
+            React.createElement(Legend,null),
+            ...sel.map((id,i)=>React.createElement(Line,{
+              key:id, type:"monotone", dataKey:id, name:id,
+              stroke:palette[i%palette.length], dot:false, strokeWidth:2, isAnimationActive:false
+            }))
+          )
+        ), area
+      );
+    }
+
+    document.getElementById('eloPlayerSelect').addEventListener('change', e=>{
+      const sel=[...e.target.selectedOptions].map(o=>o.value);
+      draw(sel);
+    });
+  }
+
+  // --- 팝업 로직 ---
+  const tbody = document.querySelector('#players-table tbody');
+  if(!tbody) return;
+
+  tbody.addEventListener('click', async e=>{
+    const tr = e.target.closest('tr');
+    if(!tr) return;
+    const playerId = tr.children[1]?.textContent.trim();
+    if(!playerId) return;
+    await showPlayerModal(playerId);
+  });
+
+  async function showPlayerModal(playerId){
+    try {
+      const base = await fetch('data.json?v='+Date.now()).then(r=>r.json()).catch(()=>({players:[],matches:[]}));
+      const oct  = await fetch('data_oct.json?v='+Date.now()).then(r=>r.json()).catch(()=>({players:[],matches:[]}));
+      base.matches = (base.matches||[]).concat(oct.matches||[]);
+      const seen = new Set(base.players.map(p=>p.id));
+      (oct.players||[]).forEach(p=>{ if(!seen.has(p.id)) base.players.push(p); });
+
+      const player = base.players.find(p=>p.id===playerId);
+      if(!player){ alert('플레이어 데이터를 찾을 수 없습니다.'); return; }
+
+      const TierOrder=['Stone','Bronze','Silver','Gold','Diamond','Legend'];
+      const getTierIndex=t=>Math.max(0,TierOrder.indexOf(t||'Silver'));
+      const calc=(A,B,res,isTeam)=>{
+        const K=isTeam?8:12;
+        const effA=A.elo+getTierIndex(A.tier)*40;
+        const effB=B.elo+getTierIndex(B.tier)*40;
+        const expectedA=1/(1+Math.pow(10,(effB-effA)/400));
+        const delta=K*(res-expectedA);
+        A.elo+=delta;B.elo-=delta;
+      };
+
+      const stat=new Map();
+      const ensure=(id)=>{
+        if(stat.has(id))return stat.get(id);
+        const meta=(base.players||[]).find(p=>p.id===id)||{};
+        const o={id,tier:meta.tier||'Silver',race:meta.race||'Protoss',elo:1000,history:[1000]};
+        stat.set(id,o);return o;
+      };
+
+      const matches=(base.matches||[])
+        .filter(m=>m.map!=="Match")
+        .slice()
+        .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+
+      const playerLog=[];
+
+      for(const m of matches){
+        if(m.player1 && m.player2){
+          const p1=ensure(m.player1), p2=ensure(m.player2);
+          const res=(m.winner===m.player1)?1:(m.winner===m.player2)?0:null;
+          let involved=false, eloBefore=0, opponentText='';
+          if(m.player1===playerId){involved=true; eloBefore=p1.elo; opponentText=m.player2;}
+          else if(m.player2===playerId){involved=true; eloBefore=p2.elo; opponentText=m.player1;}
+          if(res!==null){
+            calc(p1,p2,res,false);
+            p1.history.push(Math.round(p1.elo));
+            p2.history.push(Math.round(p2.elo));
+          }
+          if(involved){
+            const after=(m.player1===playerId)?p1.elo:p2.elo;
+            const isWin=(m.winner===playerId);
+            playerLog.push({date:m.date,map:m.map||'-',opponentText,isWin,eloAfter:Math.round(after),delta:Math.round(after-eloBefore)});
+          }
+        }
+
+        if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
+          const T1=m.team1.map(ensure), T2=m.team2.map(ensure);
+          const winners=Array.isArray(m.winner)?m.winner:[];
+          const win1=winners.some(x=>m.team1.includes(x))?1:0;
+          const inTeam1=m.team1.includes(playerId), inTeam2=m.team2.includes(playerId);
+          const involved=inTeam1||inTeam2;
+          let eloBefore=0, opponentText='';
+          if(involved){
+            const me=inTeam1?T1.find(p=>p.id===playerId):T2.find(p=>p.id===playerId);
+            eloBefore=me.elo;
+            opponentText=(inTeam1?m.team2:m.team1).join(', ');
+          }
+          const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
+          const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
+          const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
+          calc(dA,dB,win1,true);
+          const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
+          T1.forEach(p=>{p.elo+=diffA;p.history.push(Math.round(p.elo));});
+          T2.forEach(p=>{p.elo+=diffB;p.history.push(Math.round(p.elo));});
+          if(involved){
+            const meAfter=(inTeam1?T1:T2).find(p=>p.id===playerId).elo;
+            const isWin=inTeam1?!!win1:!win1;
+            playerLog.push({
+              date:m.date,
+              map:m.map || '-',
+              opponentText,
+              isWin,
+              eloAfter:Math.round(meAfter),
+              delta:Math.round(meAfter - eloBefore)
+            });
+          }
+        }
+      }
+
+      const target=stat.get(playerId);
+      if(!target){ alert('경기 기록이 없습니다.'); return; }
+
+      // --- 팝업 헤더 정보 ---
+      document.getElementById('modalPlayerName').textContent=player.id;
+      document.getElementById('modalPlayerInfo').innerHTML=
+        `<b>Race:</b> ${player.race} | <b>Tier:</b> ${player.tier} | <b>현재 ELO:</b> ${Math.round(target.elo)} (${target.history.length-1}경기)`;
+
+      // --- ELO 변화 차트 ---
+      const ctx=document.getElementById('modalEloChart').getContext('2d');
+      if(window.modalChart)window.modalChart.destroy();
+      window.modalChart=new Chart(ctx,{
+        type:'line',
+        data:{
+          labels:target.history.map((_,i)=>i),
+          datasets:[{label:'ELO',data:target.history,borderColor:'#ff6a00',borderWidth:2,fill:false,tension:0.3}]
+        },
+        options:{
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#ccc'}},
+            y:{ticks:{color:'#ccc'}}
+          }
+        }
+      });
+
+      // --- 경기 로그 표시 (ELO 변동 포함) ---
+      document.getElementById('modalMatchHistory').innerHTML =
+        (playerLog.length? playerLog : []).map(row=>{
+          const color = row.isWin ? '#4ade80' : '#f87171';
+          const deltaText = (row.delta>0? `+${row.delta}` : `${row.delta}`);
+          return `<div style="margin:4px 0;">
+            ${row.date} | ${row.map}
+            ${row.opponentText ? ` | vs ${row.opponentText}` : ''}
+            | <b style="color:${color}">${row.isWin ? '승' : '패'}</b>
+            | <span style="color:${color}">${deltaText}</span>
+            <span style="color:#aaa"> (현재 ELO: ${row.eloAfter})</span>
+          </div>`;
+        }).join('') || '경기 기록 없음';
+
+      // --- 팝업 제어 ---
+      const modal=document.getElementById('playerModal');
+      modal.style.display='block';
+      document.getElementById('closeModal').onclick=()=>modal.style.display='none';
+      window.onclick=(e)=>{if(e.target===modal)modal.style.display='none';};
+      window.addEventListener('keydown',(e)=>{if(e.key==='Escape')modal.style.display='none';},{once:true});
+    } 
+    catch(err){ console.error('팝업 로직 오류:', err); }
+  }
+})();
 </script>
 
 
