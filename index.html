@@ -578,6 +578,47 @@
       document.getElementById('modalPlayerName').textContent=player.id;
       document.getElementById('modalPlayerInfo').innerHTML=
         `<b>Race:</b> ${player.race} | <b>Tier:</b> ${player.tier} | <b>현재 ELO:</b> ${Math.round(target.elo)} (${target.history.length-1}경기)`;
+// --- 세부 전적 계산 ---
+let soloWin=0, soloLoss=0, teamWin=0, teamLoss=0;
+let scWin=0, scLoss=0, htWin=0, htLoss=0;
+
+for(const m of matches){
+  const isSolo = m.player1 && m.player2;
+  const isTeam = Array.isArray(m.team1) && Array.isArray(m.team2);
+  const isSC = (m.map||'').includes('생컨');
+  const isHT = (m.map||'').includes('헌터');
+
+  if(isSolo && (m.player1===playerId || m.player2===playerId)){
+    const isWin = m.winner===playerId;
+    isWin ? soloWin++ : soloLoss++;
+    if(isSC) isWin ? scWin++ : scLoss++;
+    if(isHT) isWin ? htWin++ : htLoss++;
+  }
+
+  if(isTeam && ((m.team1||[]).includes(playerId) || (m.team2||[]).includes(playerId))){
+    const isTeam1 = m.team1.includes(playerId);
+    const winners = Array.isArray(m.winner)? m.winner : [];
+    const win1 = winners.some(x=>m.team1.includes(x)) ? 1 : 0;
+    const isWin = isTeam1 ? !!win1 : !win1;
+    isWin ? teamWin++ : teamLoss++;
+    if(isSC) isWin ? scWin++ : scLoss++;
+    if(isHT) isWin ? htWin++ : htLoss++;
+  }
+}
+
+// --- 통계 정보 문자열 ---
+const statsHTML = `
+  <div style="margin:10px 0 14px 0;color:#ccc;font-size:14px;">
+    🧾 <b>개인전:</b> ${soloWin}승 ${soloLoss}패,
+    <b>팀전:</b> ${teamWin}승 ${teamLoss}패
+    <span style="color:#888">(팀전은 생컨·헌터 모두 포함)</span><br>
+    ⚔️ <b>생컨:</b> ${scWin}승 ${scLoss}패,
+    <b>헌터:</b> ${htWin}승 ${htLoss}패
+  </div>
+`;
+
+// --- 그래프 위에 삽입 ---
+document.getElementById('modalPlayerInfo').insertAdjacentHTML('afterend', statsHTML);
 
       // --- ELO 변화 차트 ---
       const ctx=document.getElementById('modalEloChart').getContext('2d');
