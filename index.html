@@ -581,13 +581,28 @@
 // --- 세부 전적 계산 ---
 let soloWin=0, soloLoss=0, teamWin=0, teamLoss=0;
 let scWin=0, scLoss=0, htWin=0, htLoss=0;
+let proWin=0, proLoss=0; // ✅ 프로리그 전적
 
-for (const m of matches) {
+for (const m of base.matches || []) {
   const isSolo = !!(m.player1 && m.player2);
   const isTeam = Array.isArray(m.team1) && Array.isArray(m.team2);
   const isSC = (m.map||'').includes('생컨');
   const isHT = (m.map||'').includes('헌터');
 
+  // ✅ 프로리그 ("Match" 표시)
+  if (m.map === "Match" && Array.isArray(m.team1) && Array.isArray(m.team2)) {
+    const inT1 = m.team1.includes(playerId);
+    const inT2 = m.team2.includes(playerId);
+    if (!inT1 && !inT2) continue;
+
+    const winners = Array.isArray(m.winner) ? m.winner : [];
+    const win1 = winners.some(x => m.team1.includes(x)) ? 1 : 0;
+    const isWin = inT1 ? !!win1 : !win1;
+    isWin ? proWin++ : proLoss++;
+    continue; // 프로리그는 일반전/팀전 집계에 포함되지 않음
+  }
+
+  // ✅ 일반전
   if (isSolo && (m.player1===playerId || m.player2===playerId)) {
     const isWin = (m.winner===playerId);
     isWin ? soloWin++ : soloLoss++;
@@ -606,7 +621,7 @@ for (const m of matches) {
   }
 }
 
-// --- 통계 영역: 중복 삽입 방지용 고정 엘리먼트 사용 ---
+// --- 통계 영역: 중복 삽입 방지용 고정 엘리먼트 ---
 let statsEl = document.getElementById('modalStats');
 if (!statsEl) {
   statsEl = document.createElement('div');
@@ -614,21 +629,22 @@ if (!statsEl) {
   statsEl.style.margin = '10px 0 14px 0';
   statsEl.style.color = '#ccc';
   statsEl.style.fontSize = '14px';
-  // 기본정보 바로 아래에 고정 배치
   const infoEl = document.getElementById('modalPlayerInfo');
   infoEl.insertAdjacentElement('afterend', statsEl);
 }
 
-// --- 통계 내용 갱신(덮어쓰기) ---
+// --- 통계 내용 갱신 ---
 statsEl.innerHTML = `
   <div>
+    🏆 <b>프로리그:</b> ${proWin}승 ${proLoss}패<br>
     <b>개인전:</b> ${soloWin}승 ${soloLoss}패,
     <b>팀전:</b> ${teamWin}승 ${teamLoss}패
     <span style="color:#888">(팀전은 생컨·헌터 모두 포함)</span><br>
     <b>생컨:</b> ${scWin}승 ${scLoss}패,
-    <b>헌터:</b> ${htWin}승 ${htLoss}패</span>
+    <b>헌터:</b> ${htWin}승 ${htLoss}패
   </div>
 `;
+
 
       // --- ELO 변화 차트 ---
       const ctx=document.getElementById('modalEloChart').getContext('2d');
