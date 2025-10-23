@@ -34,8 +34,8 @@
   {"id":"dopamine","race":"Zerg","tier":"Diamond"},
   {"id":"dalsun2","race":"Protoss","tier":"Diamond"},
   {"id":"qooqoo","race":"Zerg","tier":"Silver"},
-  {"id":"eun","race":"Protoss","tier":"Silver"},
-  {"id":"ToTo","race":"Protoss","tier":"Diamond"}
+  {"id":"ToTo","race":"Protoss","tier":"Diamond"},
+  {"id":"eun","race":"Protoss","tier":"Silver"}
     ],
     "matches": [
   {"date":"2025-09-01","map":"Match","team1":["Zeze","Rupark","Miny","coolguy"],"team2":["Veeny","Gdragon","Rocky","Hyunho"],"winner":["Veeny","Gdragon","Rocky","Hyunho"],"score":"4:1"},
