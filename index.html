@@ -335,11 +335,17 @@
       }
     }
 
-    const tbody = document.querySelector('#players-table tbody');
-    const allRows = [...stat.values()].sort((a,b)=>b.elo-a.elo);
-    // 🔹 특정 ID 제외 (wonder 숨기기)
-     allRows = allRows.filter(p => p.id !== 'wonder');
-     allRows = allRows.filter(p => p.id !== 'ceta');
+// --- 랭킹 표시 (ELO 내림차순) + 필터 ---
+const tbody = document.querySelector('#players-table tbody');
+
+// 🔧 const → let 로 변경하고, 숨김 필터 적용
+let allRows = [...stat.values()].sort((a,b)=>b.elo-a.elo);
+
+// 숨길 ID 목록 (탈퇴 회원 목록)
+const HIDE = new Set(['wonder', 'ceta']);
+
+// 탈퇴 회원 숨기기
+allRows = allRows.filter(p => !HIDE.has(p.id));
 
     function applyFilters(){
       const q = ($search.value||'').trim().toLowerCase();
