@@ -342,7 +342,7 @@ const tbody = document.querySelector('#players-table tbody');
 let allRows = [...stat.values()].sort((a,b)=>b.elo-a.elo);
 
 // 숨길 ID 목록 (탈퇴 회원 목록)
-const HIDE = new Set(['wonder', 'ceta']);
+const HIDE = new Set(['Wonder', 'ceta']);
 
 // 탈퇴 회원 숨기기
 allRows = allRows.filter(p => !HIDE.has(p.id));
