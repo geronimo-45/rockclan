@@ -427,13 +427,21 @@ allRows = allRows.filter(p => !HIDE.has(p.id));
 
   function renderChart(eloByDate){
     const container=document.getElementById('elo-chart-container');
-    container.innerHTML = `
-      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-        <div>
-          <div style="font-size:13px;color:#aaa;margin-bottom:6px">비교할 플레이어 선택 (Ctrl/⌘ 다중 선택)</div>
-          <select id="eloPlayerSelect" multiple size="10"
-            style="min-width:220px;height:200px;padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-            ${Object.keys(eloByDate).sort().map(id=>`<option value="${id}">${id}</option>`).join('')}
+    
+  // 🔹 숨길 ID 목록 정의
+  const HIDE = new Set(['Wonder', 'ceta']);
+
+  container.innerHTML = `
+    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:13px;color:#aaa;margin-bottom:6px">비교할 플레이어 선택 (Ctrl/⌘ 다중 선택)</div>
+        <select id="eloPlayerSelect" multiple size="10"
+          style="min-width:220px;height:200px;padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
+          ${Object.keys(eloByDate)
+              .filter(id => !HIDE.has(id))   // 🔹 숨길 ID 제외
+              .sort()
+              .map(id => `<option value="${id}">${id}</option>`)
+              .join('')}
           </select>
         </div>
         <div id="eloChartArea" style="flex:1;min-width:320px;width:100%;height:460px"></div>
