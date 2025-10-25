@@ -270,18 +270,33 @@
   const $race   = document.getElementById('raceFilter');
   const $tier   = document.getElementById('tierFilter');
 
-  start();
+start();
 
-  async function start(){
-    const base = await safe(path('data.json'));
-    const oct  = await safe(path('data_oct.json'));
+async function start() {
+  // 기본 데이터 로드
+  const base = await safe(path('data.json'));
 
-    base.matches = (base.matches||[]).concat(oct.matches||[]);
-    const seen = new Set((base.players||[]).map(p=>p.id));
-    (oct.players||[]).forEach(p=>{ if(!seen.has(p.id)) base.players.push(p); });
+  // 🔹 추가 달 데이터 목록 (필요시 여기에만 추가하면 됨)
+  const months = ['oct', 'nov']; // 예: ['oct', 'nov', 'dec', 'jan'] 형태로 확장 가능
 
-    renderAll(base);
+  // 🔹 각 달의 JSON 자동 병합
+  for (const m of months) {
+    try {
+      const data = await safe(path(`data_${m}.json`));
+      base.matches = (base.matches || []).concat(data.matches || []);
+      const seen = new Set((base.players || []).map(p => p.id));
+      (data.players || []).forEach(p => {
+        if (!seen.has(p.id)) base.players.push(p);
+      });
+    } catch (err) {
+      console.warn(`⚠️ data_${m}.json 로드 중 오류 발생:`, err);
+    }
   }
+
+  // 모든 데이터 병합 후 렌더
+  renderAll(base);
+}
+
 
   function renderAll(data){
     const playersMeta = new Map((data.players||[]).map(p=>[p.id,p]));
