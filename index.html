@@ -337,6 +337,9 @@
 
     const tbody = document.querySelector('#players-table tbody');
     const allRows = [...stat.values()].sort((a,b)=>b.elo-a.elo);
+    // 🔹 특정 ID 제외 (wonder 숨기기)
+     allRows = allRows.filter(p => p.id !== 'wonder');
+     allRows = allRows.filter(p => p.id !== 'ceta');
 
     function applyFilters(){
       const q = ($search.value||'').trim().toLowerCase();
