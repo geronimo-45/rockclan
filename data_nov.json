@@ -4,171 +4,30 @@
     {
       "date": "2025-11-01",
       "map": "Match",
-      "team1": [
-        "dong9",
-        "IN",
-        "Friend"
-      ],
-      "team2": [
-        "Rupark",
-        "Omaking",
-        "Miny"
-      ],
-      "winner": [
-        "dong9",
-        "IN",
-        "Friend"
-      ],
+      "team1": ["dong9", "IN", "Friend"],
+      "team2": ["Rupark", "5making", "Miny"],
+      "winner": ["dong9", "IN", "Friend"],
       "score": "3:2"
     },
-    {
-      "date": "2025-11-01",
-      "map": "투혼",
-      "player1": "IN",
-      "player2": "Miny",
-      "winner": "IN",
-      "score": "1:0"
-    },
-    {
-      "date": "2025-11-01",
-      "map": "투혼",
-      "player1": "Friend",
-      "player2": "Omaking",
-      "winner": "Omaking",
-      "score": "1:1"
-    },
-    {
-      "date": "2025-11-01",
-      "map": "투혼",
-      "player1": "dong9",
-      "player2": "Rupark",
-      "winner": "Rupark",
-      "score": "1:2"
-    },
-    {
-      "date": "2025-11-01",
-      "map": "3:3생컨",
-      "team1": [
-        "dong9",
-        "IN",
-        "Friend"
-      ],
-      "team2": [
-        "Rupark",
-        "Omaking",
-        "Miny"
-      ],
-      "winner": [
-        "dong9",
-        "IN",
-        "Friend"
-      ],
-      "score": "2:2"
-    },
-    {
-      "date": "2025-11-01",
-      "map": "3:3헌터",
-      "team1": [
-        "dong9",
-        "IN",
-        "Friend"
-      ],
-      "team2": [
-        "Rupark",
-        "Omaking",
-        "Miny"
-      ],
-      "winner": [
-        "dong9",
-        "IN",
-        "Friend"
-      ],
-      "score": "3:2"
-    },
+    {"date":"2025-11-01","map":"투혼","player1":"IN","player2":"Miny","winner":"IN","score":"1:0"},
+    {"date":"2025-11-01","map":"투혼","player1":"Friend","player2":"5making","winner":"5making","score":"1:1"},
+    {"date":"2025-11-01","map":"투혼","player1":"dong9","player2":"Rupark","winner":"Rupark","score":"1:2"},
+    {"date":"2025-11-01","map":"3:3생컨","team1":["dong9","IN","Friend"],"team2":["Rupark","5making","Miny"],"winner":["dong9","IN","Friend"],"score":"2:2"},
+    {"date":"2025-11-01","map":"3:3헌터","team1":["dong9","IN","Friend"],"team2":["Rupark","5making","Miny"],"winner":["dong9","IN","Friend"],"score":"3:2"},
+
     {
       "date": "2025-11-01",
       "map": "Match",
-      "team1": [
-        "dong9",
-        "IN",
-        "Hani"
-      ],
-      "team2": [
-        "Rupark",
-        "Omaking",
-        "Miny"
-      ],
-      "winner": [
-        "dong9",
-        "IN",
-        "Hani"
-      ],
+      "team1": ["dong9", "IN", "Hani"],
+      "team2": ["Rupark", "5making", "Miny"],
+      "winner": ["dong9", "IN", "Hani"],
       "score": "3:2"
     },
-    {
-      "date": "2025-11-01",
-      "map": "투혼",
-      "player1": "Hani",
-      "player2": "Miny",
-      "winner": "Hani",
-      "score": "1:0"
-    },
-    {
-      "date": "2025-11-01",
-      "map": "투혼",
-      "player1": "dong9",
-      "player2": "Rupark",
-      "winner": "dong9",
-      "score": "2:0"
-    },
-    {
-      "date": "2025-11-01",
-      "map": "투혼",
-      "player1": "IN",
-      "player2": "Omaking",
-      "winner": "Omaking",
-      "score": "2:1"
-    },
-    {
-      "date": "2025-11-01",
-      "map": "3:3헌터",
-      "team1": [
-        "dong9",
-        "IN",
-        "Hani"
-      ],
-      "team2": [
-        "Rupark",
-        "Omaking",
-        "Miny"
-      ],
-      "winner": [
-        "Rupark",
-        "Omaking",
-        "Miny"
-      ],
-      "score": "2:2"
-    },
-    {
-      "date": "2025-11-01",
-      "map": "3:3생컨",
-      "team1": [
-        "dong9",
-        "IN",
-        "Hani"
-      ],
-      "team2": [
-        "Rupark",
-        "Omaking",
-        "Miny"
-      ],
-      "winner": [
-        "dong9",
-        "IN",
-        "Hani"
-      ],
-      "score": "3:2"
-    }
+    {"date":"2025-11-01","map":"투혼","player1":"Hani","player2":"Miny","winner":"Hani","score":"1:0"},
+    {"date":"2025-11-01","map":"투혼","player1":"dong9","player2":"Rupark","winner":"dong9","score":"2:0"},
+    {"date":"2025-11-01","map":"투혼","player1":"IN","player2":"5making","winner":"5making","score":"2:1"},
+    {"date":"2025-11-01","map":"3:3헌터","team1":["dong9","IN","Hani"],"team2":["Rupark","5making","Miny"],"winner":["Rupark","5making","Miny"],"score":"2:2"},
+    {"date":"2025-11-01","map":"3:3생컨","team1":["dong9","IN","Hani"],"team2":["Rupark","5making","Miny"],"winner":["dong9","IN","Hani"],"score":"3:2"}
   ],
   "generated_at": "2025-11-02T00:00:00Z"
 }
