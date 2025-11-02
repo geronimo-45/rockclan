@@ -515,11 +515,18 @@ allRows = allRows.filter(p => !HIDE.has(p.id));
 
   async function showPlayerModal(playerId){
     try {
-      const base = await fetch('data.json?v='+Date.now()).then(r=>r.json()).catch(()=>({players:[],matches:[]}));
-      const oct  = await fetch('data_oct.json?v='+Date.now()).then(r=>r.json()).catch(()=>({players:[],matches:[]}));
-      base.matches = (base.matches||[]).concat(oct.matches||[]);
-      const seen = new Set(base.players.map(p=>p.id));
-      (oct.players||[]).forEach(p=>{ if(!seen.has(p.id)) base.players.push(p); });
+      // 1) 기본 + 월별 데이터 병합 (메인과 동일한 방식으로 통일)
+      const base = await safe(path('data.json'));
+
+      // ✅ 현재 포함 달 (필요 시 여기만 추가: 'dec','jan' …)
+      const months = ['oct','nov'];
+
+      for (const m of months) {
+        const add = await safe(path(`data_${m}.json`));
+        base.matches = (base.matches || []).concat(add.matches || []);
+        const seen = new Set((base.players || []).map(p => p.id));
+        (add.players || []).forEach(p => { if (!seen.has(p.id)) base.players.push(p); });
+      }
 
       const player = base.players.find(p=>p.id===playerId);
       if(!player){ alert('플레이어 데이터를 찾을 수 없습니다.'); return; }
@@ -610,73 +617,73 @@ allRows = allRows.filter(p => !HIDE.has(p.id));
       document.getElementById('modalPlayerName').textContent=player.id;
       document.getElementById('modalPlayerInfo').innerHTML=
         `<b>Race:</b> ${player.race} | <b>Tier:</b> ${player.tier} | <b>현재 ELO:</b> ${Math.round(target.elo)} (${target.history.length-1}경기)`;
-// --- 세부 전적 계산 ---
-let soloWin=0, soloLoss=0, teamWin=0, teamLoss=0;
-let scWin=0, scLoss=0, htWin=0, htLoss=0;
-let proWin=0, proLoss=0; // ✅ 프로리그 전적
 
-for (const m of base.matches || []) {
-  const isSolo = !!(m.player1 && m.player2);
-  const isTeam = Array.isArray(m.team1) && Array.isArray(m.team2);
-  const isSC = (m.map||'').includes('생컨');
-  const isHT = (m.map||'').includes('헌터');
+      // --- 세부 전적 계산 ---
+      let soloWin=0, soloLoss=0, teamWin=0, teamLoss=0;
+      let scWin=0, scLoss=0, htWin=0, htLoss=0;
+      let proWin=0, proLoss=0; // ✅ 프로리그 전적
 
-  // ✅ 프로리그 ("Match" 표시)
-  if (m.map === "Match" && Array.isArray(m.team1) && Array.isArray(m.team2)) {
-    const inT1 = m.team1.includes(playerId);
-    const inT2 = m.team2.includes(playerId);
-    if (!inT1 && !inT2) continue;
+      for (const m of base.matches || []) {
+        const isSolo = !!(m.player1 && m.player2);
+        const isTeam = Array.isArray(m.team1) && Array.isArray(m.team2);
+        const isSC = (m.map||'').includes('생컨');
+        const isHT = (m.map||'').includes('헌터');
 
-    const winners = Array.isArray(m.winner) ? m.winner : [];
-    const win1 = winners.some(x => m.team1.includes(x)) ? 1 : 0;
-    const isWin = inT1 ? !!win1 : !win1;
-    isWin ? proWin++ : proLoss++;
-    continue; // 프로리그는 일반전/팀전 집계에 포함되지 않음
-  }
+        // ✅ 프로리그 ("Match" 표시)
+        if (m.map === "Match" && Array.isArray(m.team1) && Array.isArray(m.team2)) {
+          const inT1 = m.team1.includes(playerId);
+          const inT2 = m.team2.includes(playerId);
+          if (!inT1 && !inT2) continue;
 
-  // ✅ 일반전
-  if (isSolo && (m.player1===playerId || m.player2===playerId)) {
-    const isWin = (m.winner===playerId);
-    isWin ? soloWin++ : soloLoss++;
-    if (isSC) (isWin ? scWin++ : scLoss++);
-    if (isHT) (isWin ? htWin++ : htLoss++);
-  }
+          const winners = Array.isArray(m.winner) ? m.winner : [];
+          const win1 = winners.some(x => m.team1.includes(x)) ? 1 : 0;
+          const isWin = inT1 ? !!win1 : !win1;
+          isWin ? proWin++ : proLoss++;
+          continue; // 프로리그는 일반전/팀전 집계에 포함되지 않음
+        }
 
-  if (isTeam && ((m.team1||[]).includes(playerId) || (m.team2||[]).includes(playerId))) {
-    const isTeam1 = m.team1.includes(playerId);
-    const winners = Array.isArray(m.winner) ? m.winner : [];
-    const win1 = winners.some(x => m.team1.includes(x)) ? 1 : 0;
-    const isWin = isTeam1 ? !!win1 : !win1;
-    isWin ? teamWin++ : teamLoss++;
-    if (isSC) (isWin ? scWin++ : scLoss++);
-    if (isHT) (isWin ? htWin++ : htLoss++);
-  }
-}
+        // ✅ 일반전
+        if (isSolo && (m.player1===playerId || m.player2===playerId)) {
+          const isWin = (m.winner===playerId);
+          isWin ? soloWin++ : soloLoss++;
+          if (isSC) (isWin ? scWin++ : scLoss++);
+          if (isHT) (isWin ? htWin++ : htLoss++);
+        }
 
-// --- 통계 영역: 중복 삽입 방지용 고정 엘리먼트 ---
-let statsEl = document.getElementById('modalStats');
-if (!statsEl) {
-  statsEl = document.createElement('div');
-  statsEl.id = 'modalStats';
-  statsEl.style.margin = '10px 0 14px 0';
-  statsEl.style.color = '#ccc';
-  statsEl.style.fontSize = '14px';
-  const infoEl = document.getElementById('modalPlayerInfo');
-  infoEl.insertAdjacentElement('afterend', statsEl);
-}
+        if (isTeam && ((m.team1||[]).includes(playerId) || (m.team2||[]).includes(playerId))) {
+          const isTeam1 = m.team1.includes(playerId);
+          const winners = Array.isArray(m.winner) ? m.winner : [];
+          const win1 = winners.some(x => m.team1.includes(x)) ? 1 : 0;
+          const isWin = isTeam1 ? !!win1 : !win1;
+          isWin ? teamWin++ : teamLoss++;
+          if (isSC) (isWin ? scWin++ : scLoss++);
+          if (isHT) (isWin ? htWin++ : htLoss++);
+        }
+      }
 
-// --- 통계 내용 갱신 ---
-statsEl.innerHTML = `
-  <div>
-    🏆 <b>프로리그:</b> ${proWin}승 ${proLoss}패<br>
-    <b>개인전:</b> ${soloWin}승 ${soloLoss}패,
-    <b>팀전:</b> ${teamWin}승 ${teamLoss}패
-    <span style="color:#888">(팀전은 생컨·헌터 모두 포함)</span><br>
-    <b>생컨:</b> ${scWin}승 ${scLoss}패,
-    <b>헌터:</b> ${htWin}승 ${htLoss}패
-  </div>
-`;
+      // --- 통계 영역: 중복 삽입 방지용 고정 엘리먼트 ---
+      let statsEl = document.getElementById('modalStats');
+      if (!statsEl) {
+        statsEl = document.createElement('div');
+        statsEl.id = 'modalStats';
+        statsEl.style.margin = '10px 0 14px 0';
+        statsEl.style.color = '#ccc';
+        statsEl.style.fontSize = '14px';
+        const infoEl = document.getElementById('modalPlayerInfo');
+        infoEl.insertAdjacentElement('afterend', statsEl);
+      }
 
+      // --- 통계 내용 갱신 ---
+      statsEl.innerHTML = `
+        <div>
+          🏆 <b>프로리그:</b> ${proWin}승 ${proLoss}패<br>
+          <b>개인전:</b> ${soloWin}승 ${soloLoss}패,
+          <b>팀전:</b> ${teamWin}승 ${teamLoss}패
+          <span style="color:#888">(팀전은 생컨·헌터 모두 포함)</span><br>
+          <b>생컨:</b> ${scWin}승 ${scLoss}패,
+          <b>헌터:</b> ${htWin}승 ${htLoss}패
+        </div>
+      `;
 
       // --- ELO 변화 차트 ---
       const ctx=document.getElementById('modalEloChart').getContext('2d');
@@ -721,6 +728,7 @@ statsEl.innerHTML = `
   }
 })();
 </script>
+
 
 </body>
 </html>
