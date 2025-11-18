@@ -98,7 +98,38 @@
     {"date":"2025-11-14","map":"리트머스","player1":"Pang","player2":"Veeny","winner":"Veeny","score":"0:1"},
     {"date":"2025-11-14","map":"도미네이터","player1":"Shinny","player2":"Strive","winner":"Shinny","score":"1:1"},
     {"date":"2025-11-14","map":"라데온","player1":"dalsun2","player2":"Rupark","winner":"dalsun2","score":"1:2"},
-    {"date":"2025-11-14","map":"3:3헌터","team1":["Shinny","Rupark","Pang"],"team2":["Strive","dalsun2","Veeny"],"winner":["Strive","dalsun2","Veeny"],"score":"1:3"}
+    {"date":"2025-11-14","map":"3:3헌터","team1":["Shinny","Rupark","Pang"],"team2":["Strive","dalsun2","Veeny"],"winner":["Strive","dalsun2","Veeny"],"score":"1:3"},
+    
+        {
+      "date": "2025-11-19",
+      "map": "Match",
+      "team1": ["Strive", "Veeny", "Friend", "Hyunho"],
+      "team2": ["Gdragon", "Attaboy", "Hani", "Miny"],
+      "winner": ["Strive", "Veeny", "Friend", "Hyunho"],
+      "score": "4:2"
+    },
+    {"date":"2025-11-19","map":"투혼","player1":"Strive","player2":"Gdragon","winner":"Strive","score":"1:0"},
+    {"date":"2025-11-19","map":"투혼","player1":"Friend","player2":"Hani","winner":"Hani","score":"1:1"},
+    {"date":"2025-11-19","map":"4:4헌터","team1":["Strive","Veeny","Friend","Hyunho"],"team2":["Gdragon","Attaboy","Hani","Miny"],"winner":["Gdragon","Attaboy","Hani","Miny"],"score":"1:2"},
+    {"date":"2025-11-19","map":"투혼","player1":"Hyunho","player2":"Attaboy","winner":"Hyunho","score":"2:2"},
+    {"date":"2025-11-19","map":"투혼","player1":"Veeny","player2":"Miny","winner":"Veeny","score":"3:2"},
+    {"date":"2025-11-19","map":"3:3생컨","team1":["Strive","Friend","Hyunho"],"team2":["Attaboy","Hani","Miny"],"winner":["Strive","Friend","Hyunho"],"score":"4:2"},
+
+    {
+      "date": "2025-11-19",
+      "map": "Match",
+      "team1": ["Strive", "Veeny", "Friend", "Hyunho"],
+      "team2": ["Gdragon", "Attaboy", "Hani", "Miny"],
+      "winner": ["Gdragon", "Attaboy", "Hani", "Miny"],
+      "score": "3:4"
+    },
+    {"date":"2025-11-19","map":"투혼","player1":"Hyunho","player2":"Attaboy","winner":"Attaboy","score":"0:1"},
+    {"date":"2025-11-19","map":"투혼","player1":"Strive","player2":"Gdragon","winner":"Gdragon","score":"0:2"},
+    {"date":"2025-11-19","map":"4:4헌터","team1":["Strive","Veeny","Friend","Hyunho"],"team2":["Gdragon","Attaboy","Hani","Miny"],"winner":["Strive","Veeny","Friend","Hyunho"],"score":"1:2"},
+    {"date":"2025-11-19","map":"투혼","player1":"Veeny","player2":"Miny","winner":"Veeny","score":"2:2"},
+    {"date":"2025-11-19","map":"투혼","player1":"Friend","player2":"Hani","winner":"Friend","score":"3:2"},
+    {"date":"2025-11-19","map":"3:3생컨","team1":["Strive","Friend","Hyunho"],"team2":["Miny","Gdragon","Attaboy"],"winner":["Miny","Gdragon","Attaboy"],"score":"3:3"},
+    {"date":"2025-11-19","map":"투혼(에결)","player1":"Strive","player2":"Gdragon","winner":"Gdragon","score":"3:4"}
 
 
   ],
