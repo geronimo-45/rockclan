@@ -1,0 +1,21 @@
+{
+  "month": "December 2025",
+  "matches": [
+    {
+      "date": "2025-12-01",
+      "map": "Match",
+      "team1": ["Strive", "Attaboy", "Pang", "Veeny"],
+      "team2": ["JeJu", "Gdragon", "dopamine", "Zeze"],
+      "winner": ["Strive", "Attaboy", "Pang", "Veeny"],
+      "score": "4:3"
+    },
+    {"date":"2025-12-01","map":"투혼","player1":"Pang","player2":"Zeze","winner":"Pang","score":"1:0"},
+    {"date":"2025-12-01","map":"투혼","player1":"Attaboy","player2":"JeJu","winner":"JeJu","score":"1:1"},
+    {"date":"2025-12-01","map":"투혼","player1":"Strive","player2":"Gdragon","winner":"Strive","score":"2:1"},
+    {"date":"2025-12-01","map":"투혼","player1":"Veeny","player2":"dopamine","winner":"dopamine","score":"2:2"},
+    {"date":"2025-12-01","map":"3:3생컨","team1":["Strive","Veeny","Pang"],"team2":["JeJu","Gdragon","Zeze"],"winner":["Strive","Veeny","Pang"],"score":"3:2"},
+    {"date":"2025-12-01","map":"4:4헌터","team1":["Strive","Attaboy","Pang","Veeny"],"team2":["JeJu","Gdragon","dopamine","Zeze"],"winner":["JeJu","Gdragon","dopamine","Zeze"],"score":"3:3"},
+    {"date":"2025-12-01","map":"투혼(에결)","player1":"Strive","player2":"Zeze","winner":"Strive","score":"4:3"}
+  ],
+  "generated_at": "2025-12-02T00:00:00Z"
+}
