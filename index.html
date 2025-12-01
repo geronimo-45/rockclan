@@ -391,51 +391,120 @@ allRows = allRows.filter(p => !HIDE.has(p.id));
     });
     applyFilters();
 
-    // --- 기록실 ---
-    const list = document.getElementById('match-list');
-    list.innerHTML='';
-    let curDate=null, box=null, mCount=0;
-    const flushHeader = ()=>{ if(box && mCount>0){ box.querySelector('.match-header').textContent += ` (Match ${mCount}게임)`; } };
+// --- 기록실 (월별 탭) ---
+const list = document.getElementById('match-list');
+const tabsWrap = document.getElementById('records-months');
 
-    for(const m of matches){
-      if(m.date!==curDate){
-        flushHeader();
-        curDate=m.date; mCount=0;
-        box=document.createElement('div');
-        box.className='match';
-        const hdr=document.createElement('div');
-        hdr.className='match-header';
-        hdr.textContent=`${curDate}`;
-        const inner=document.createElement('div');
-        inner.className='match-inner hidden';
-        hdr.addEventListener('click',()=>inner.classList.toggle('hidden'));
-        box.appendChild(hdr); box.appendChild(inner);
-        list.appendChild(box);
-      }
-      const wrap=box.querySelector('.match-inner');
-      if(m.map==='Match'){
-        mCount++;
-        const line=document.createElement('div');
-        line.className='match-item';
-        line.style.color='#a8e0a8';
-        const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
-        line.textContent=`[Match] 승자: ${win}${m.score?` | 스코어: ${m.score}`:''}`;
-        wrap.appendChild(line);
-        continue;
-      }
-      if(m.player1&&m.player2){
-        const l=document.createElement('div'); l.className='match-item';
-        l.textContent=`${m.map||'-'} — ${m.player1} vs ${m.player2} | 승자: ${m.winner||'-'}${m.score?` | ${m.score}`:''}`;
-        wrap.appendChild(l);
-      }
-      if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
-        const l=document.createElement('div'); l.className='match-item';
-        const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
-        l.textContent=`${m.map||'-'} — [${m.team1.join(', ')}] vs [${m.team2.join(', ')}] | 승자: ${win}${m.score?` | ${m.score}`:''}`;
-        wrap.appendChild(l);
-      }
+// 1) 월 키/라벨 함수
+const getMonthKey = (iso) => {
+  // iso: YYYY-MM-DD
+  if(!iso || !iso.includes('-')) return 'unknown';
+  const [y,m] = iso.split('-');
+  return `${y}-${m}`; // e.g. 2025-09
+};
+const getMonthLabel = (key) => {
+  // key: YYYY-MM
+  const [y,m] = key.split('-');
+  const yy = String(y).slice(2);             // '25'
+  const mm = String(parseInt(m,10));         // '9' (앞의 0 제거)
+  return `${yy}년 ${mm}월`;
+};
+
+// 2) 월 목록 만들기 (데이터 기반)
+const byMonth = new Map();
+for (const m of matches) {
+  const key = getMonthKey(m.date);
+  if (!byMonth.has(key)) byMonth.set(key, []);
+  byMonth.get(key).push(m);
+}
+
+// 3) 월 정렬 (오름차순: 2025-09, 10, 11, 12 …)
+const monthsSorted = [...byMonth.keys()].sort((a,b)=> a.localeCompare(b));
+
+// 4) 탭 버튼 렌더
+tabsWrap.innerHTML = monthsSorted.map((key,i)=>`
+  <button class="month-tab${i===monthsSorted.length-1?' active':''}"
+    data-month="${key}"
+    style="background:#1a1a22;border:1px solid #232532;color:#ddd;padding:8px 12px;border-radius:10px;cursor:pointer;">
+    ${getMonthLabel(key)}
+  </button>
+`).join(' ');
+
+// 5) 월별 렌더 함수 (날짜별 접기/펼치기 포함)
+function renderMonth(key){
+  const data = (byMonth.get(key)||[]).slice().sort((a,b)=> String(a.date).localeCompare(String(b.date)));
+  list.innerHTML = ''; // reset
+
+  let curDate=null, box=null, mCount=0;
+  const flushHeader = ()=>{ if(box && mCount>0){ box.querySelector('.match-header').textContent += ` (Match ${mCount}게임)`; } };
+
+  for(const m of data){
+    if(m.date !== curDate){
+      flushHeader();
+      curDate = m.date; mCount = 0;
+
+      box = document.createElement('div');
+      box.className = 'match';
+
+      const hdr = document.createElement('div');
+      hdr.className = 'match-header';
+      hdr.textContent = `${curDate}`;
+
+      const inner = document.createElement('div');
+      inner.className = 'match-inner hidden';
+      hdr.addEventListener('click',()=> inner.classList.toggle('hidden'));
+
+      box.appendChild(hdr);
+      box.appendChild(inner);
+      list.appendChild(box);
     }
-    flushHeader();
+
+    const wrap = box.querySelector('.match-inner');
+
+    if(m.map === 'Match'){
+      mCount++;
+      const line = document.createElement('div');
+      line.className = 'match-item';
+      line.style.color = '#a8e0a8';
+      const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
+      line.textContent = `[Match] 승자: ${win}${m.score?` | 스코어: ${m.score}`:''}`;
+      wrap.appendChild(line);
+      continue;
+    }
+
+    if(m.player1 && m.player2){
+      const l = document.createElement('div'); l.className='match-item';
+      l.textContent = `${m.map||'-'} — ${m.player1} vs ${m.player2} | 승자: ${m.winner||'-'}${m.score?` | ${m.score}`:''}`;
+      wrap.appendChild(l);
+    }
+
+    if(Array.isArray(m.team1) && Array.isArray(m.team2)){
+      const l = document.createElement('div'); l.className='match-item';
+      const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
+      l.textContent = `${m.map||'-'} — [${m.team1.join(', ')}] vs [${m.team2.join(', ')}] | 승자: ${win}${m.score?` | ${m.score}`:''}`;
+      wrap.appendChild(l);
+    }
+  }
+  flushHeader();
+}
+
+// 6) 초기 표시: 최신 월(마지막 탭) 자동 선택
+if (monthsSorted.length){
+  renderMonth(monthsSorted[monthsSorted.length-1]);
+}
+
+// 7) 탭 클릭 이벤트
+tabsWrap.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.month-tab');
+  if(!btn) return;
+  // active 토글
+  tabsWrap.querySelectorAll('.month-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // 렌더
+  const key = btn.dataset.month;
+  renderMonth(key);
+});
+
 
     // --- 그래프 ---
     renderChart(eloByDate);
