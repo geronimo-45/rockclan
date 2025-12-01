@@ -589,7 +589,7 @@ tabsWrap.addEventListener('click', (e)=>{
       const base = await safe(path('data.json'));
 
       // ✅ 현재 포함 달 (필요 시 여기만 추가: 'dec','jan' …)
-      const months = ['oct','nov'];
+      const months = ['oct','nov','dec'];
 
       for (const m of months) {
         const add = await safe(path(`data_${m}.json`));
