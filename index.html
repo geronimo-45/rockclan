@@ -278,7 +278,7 @@ async function start() {
   const base = await safe(path('data.json'));
 
   // 🔹 추가 달 데이터 목록 (필요시 여기에만 추가하면 됨)
-  const months = ['oct', 'nov']; // 예: ['oct', 'nov', 'dec', 'jan'] 형태로 확장 가능
+  const months = ['oct', 'nov', 'dec']; // 예: ['oct', 'nov', 'dec', 'jan'] 형태로 확장 가능
 
   // 🔹 각 달의 JSON 자동 병합
   for (const m of months) {
