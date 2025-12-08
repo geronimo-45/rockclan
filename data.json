@@ -38,7 +38,8 @@
   {"id":"Jangbi","race":"Zerg","tier":"Silver"},
   {"id":"Pang","race":"Terran","tier":"Gold"},
   {"id":"SunnySea","race":"Protoss","tier":"Diamond"},
-  {"id":"JeJu","race":"Protoss","tier":"Diamond"}
+  {"id":"JeJu","race":"Protoss","tier":"Diamond"},
+  {"id":"Nangman","race":"Terran","tier":"Gold"}
     ],
     "matches": [
   {"date":"2025-09-01","map":"Match","team1":["Zeze","Rupark","Miny","coolguy"],"team2":["Veeny","Gdragon","Rocky","Hyunho"],"winner":["Veeny","Gdragon","Rocky","Hyunho"],"score":"4:1"},
