@@ -88,8 +88,13 @@
             <option value="">티어 전체</option>
             <option>Stone</option><option>Bronze</option><option>Silver</option><option>Gold</option><option>Diamond</option><option>Legend</option>
           </select>
+          <!-- 📅 랭킹 기준 날짜 선택 (캘린더) -->
+          <input id="rankDate" type="date" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
         </div>
-        <div class="muted" style="font-size:13px;margin-bottom:6px">현재 ELO 순서 기준</div>
+        <div class="muted" style="font-size:13px;margin-bottom:2px">
+          현재까지의 모든 경기 기준 랭킹입니다. (달력에서 과거 날짜를 선택하면 해당 시점 기준 랭킹을 볼 수 있습니다.)
+        </div>
+        <div class="muted" id="rankDateLabel" style="font-size:12px;margin-bottom:6px"></div>
         <table id="players-table">
           <thead><tr><th>Rank</th><th>ID</th><th>종족</th><th>티어</th><th>ELO</th><th>승</th><th>패</th><th>승률</th></tr></thead>
           <tbody></tbody>
@@ -288,6 +293,8 @@
   const $search = document.getElementById('search');
   const $race   = document.getElementById('raceFilter');
   const $tier   = document.getElementById('tierFilter');
+  const $rankDate = document.getElementById('rankDate');
+  const $rankDateLabel = document.getElementById('rankDateLabel');
 
 start();
 
@@ -339,6 +346,16 @@ async function start() {
 
     const matches = (data.matches||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
 
+    // --- 랭킹용 날짜 범위 계산 (달력 min/max 세팅용) ---
+    let minRankDate = null;
+    let maxRankDate = null;
+    for (const m of matches) {
+      if (!m || !m.date || !m.map || m.map === 'Match') continue;
+      const d = String(m.date);
+      if (!minRankDate || d < minRankDate) minRankDate = d;
+      if (!maxRankDate || d > maxRankDate) maxRankDate = d;
+    }
+
     for(const m of matches){
       if(!m.map || m.map==='Match') continue;
       const d = toMMDD(m.date);
@@ -368,24 +385,24 @@ async function start() {
       }
     }
 
-// --- 랭킹 표시 (ELO 내림차순) + 필터 ---
-const tbody = document.querySelector('#players-table tbody');
+    // --- 랭킹 표시 (ELO 내림차순) + 필터 ---
+    const tbody = document.querySelector('#players-table tbody');
 
-// 🔧 const → let 로 변경하고, 숨김 필터 적용
-let allRows = [...stat.values()].sort((a,b)=>b.elo-a.elo);
+    // 숨길 ID 목록 (탈퇴 회원 목록)
+    const HIDE = new Set(['Wonder', 'ceta']);
 
-// 숨길 ID 목록 (탈퇴 회원 목록)
-const HIDE = new Set(['Wonder', 'ceta']);
+    // 기본 전체 랭킹 데이터
+    let baseRows = [...stat.values()].filter(p => !HIDE.has(p.id)).sort((a,b)=>b.elo-a.elo);
 
-// 탈퇴 회원 숨기기
-allRows = allRows.filter(p => !HIDE.has(p.id));
+    // 현재 화면에 적용되는 랭킹 데이터 (달력 선택에 따라 변경)
+    let activeRows = baseRows;
 
     function applyFilters(){
       const q = ($search.value||'').trim().toLowerCase();
       const r = $race.value||'';
       const t = $tier.value||'';
 
-      const filtered = allRows.filter(p=>{
+      const filtered = activeRows.filter(p=>{
         if(q && !p.id.toLowerCase().includes(q)) return false;
         if(r && p.race!==r) return false;
         if(t && p.tier!==t) return false;
@@ -401,11 +418,104 @@ allRows = allRows.filter(p => !HIDE.has(p.id));
         </tr>`;
       }).join('');
     }
+
+    function updateRankDateLabel(iso, noGames){
+      if(!$rankDateLabel) return;
+      if(!iso){
+        $rankDateLabel.textContent = '📅 기준 날짜: 전체 (모든 경기 반영)';
+        return;
+      }
+      const parts = String(iso).split('-');
+      if(parts.length===3){
+        const [y,m,d] = parts;
+        const mm = parseInt(m,10);
+        const dd = parseInt(d,10);
+        $rankDateLabel.textContent =
+          `📅 기준 날짜: ${y}년 ${mm}월 ${dd}일 (해당일까지의 경기만 반영)` +
+          (noGames ? ' - 선택한 날짜까지 기록된 경기가 없습니다.' : '');
+      } else {
+        $rankDateLabel.textContent = `📅 기준 날짜: ${iso}`;
+      }
+    }
+
+    function recomputeRankingByDate(isoDate){
+      if(!isoDate || !minRankDate){
+        activeRows = baseRows;
+        updateRankDateLabel(null,false);
+        applyFilters();
+        return;
+      }
+
+      if(isoDate < minRankDate){
+        activeRows = [];
+        updateRankDateLabel(isoDate,true);
+        applyFilters();
+        return;
+      }
+
+      const snapStat = new Map();
+      const ensureSnap = (id)=>{
+        if(snapStat.has(id)) return snapStat.get(id);
+        const m = playersMeta.get(id) || {};
+        const o = { id, elo:1000, tier:m.tier||'Silver', race:m.race||'Protoss', win:0, loss:0, played:0 };
+        snapStat.set(id,o);
+        return o;
+      };
+
+      for(const m of matches){
+        if(!m || !m.map || m.map==='Match') continue;
+        const dIso = String(m.date);
+        if(dIso > isoDate) break;
+
+        if(m.player1 && m.player2){
+          const p1=ensureSnap(m.player1), p2=ensureSnap(m.player2);
+          if(m.winner===m.player1){ calc(p1,p2,1,false); p1.win++; p2.loss++; }
+          else if(m.winner===m.player2){ calc(p1,p2,0,false); p2.win++; p1.loss++; }
+          p1.played++; p2.played++;
+        }
+
+        if(Array.isArray(m.team1) && Array.isArray(m.team2)){
+          const T1=m.team1.map(ensureSnap), T2=m.team2.map(ensureSnap);
+          const winners = Array.isArray(m.winner)? m.winner : [];
+          const win1 = winners.some(x=>m.team1.includes(x)) ? 1 : 0;
+
+          const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
+          const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
+          const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
+          calc(dA,dB,win1,true);
+          const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
+
+          T1.forEach(p=>{ p.elo+=diffA; p.played++; win1?p.win++:p.loss++; });
+          T2.forEach(p=>{ p.elo+=diffB; p.played++; !win1?p.win++:p.loss++; });
+        }
+      }
+
+      activeRows = [...snapStat.values()]
+        .filter(p=>!HIDE.has(p.id))
+        .sort((a,b)=>b.elo-a.elo);
+
+      updateRankDateLabel(isoDate,false);
+      applyFilters();
+    }
+
     ['input','change'].forEach(ev=>{
       $search.addEventListener(ev,applyFilters);
       $race.addEventListener(ev,applyFilters);
       $tier.addEventListener(ev,applyFilters);
     });
+
+    // 달력 min/max 및 change 이벤트 연결
+    if($rankDate){
+      if(minRankDate) $rankDate.min = minRankDate;
+      if(maxRankDate) $rankDate.max = maxRankDate;
+      $rankDate.addEventListener('change', ()=>{
+        const v = $rankDate.value;
+        recomputeRankingByDate(v || null);
+      });
+    }
+
+    // 초기 라벨/랭킹 렌더
+    updateRankDateLabel(null,false);
     applyFilters();
 
 // --- 기록실 (월별 탭) ---
