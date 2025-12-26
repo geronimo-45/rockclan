@@ -487,18 +487,19 @@
       "winner": ["Strive", "Hani", "eun", "MGZG"],
       "score": "4:3"
     },
-    {"date":"2025-12-24","map":"투혼","player1":"Strive","player2":"dalsun2","winner":"Strive","score":"1:0"},
-    {"date":"2025-12-24","map":"투혼","player1":"MGZG","player2":"Rocky","winner":"Rocky","score":"1:1"},
-    {"date":"2025-12-24","map":"투혼","player1":"eun","player2":"MiSTY","winner":"MiSTY","score":"1:2"},
-    {"date":"2025-12-24","map":"투혼","player1":"Hani","player2":"Pang","winner":"Hani","score":"2:2"},
-    {"date":"2025-12-24","map":"2:2투혼","team1":["Hani","MGZG"],"team2":["dalsun2","Pang"],"winner":["dalsun2","Pang"],"score":"2:3"},
-    {"date":"2025-12-24","map":"2:2생컨","team1":["Strive","eun"],"team2":["Rocky","MiSTY"],"winner":["Strive","eun"],"score":"3:3"},
-    {"date":"2025-12-24","map":"투혼(에결)","player1":"Strive","player2":"Rocky","winner":"Strive","score":"4:3"}
+    {"date":"2025-12-25","map":"투혼","player1":"Strive","player2":"dalsun2","winner":"Strive","score":"1:0"},
+    {"date":"2025-12-25","map":"투혼","player1":"MGZG","player2":"Rocky","winner":"Rocky","score":"1:1"},
+    {"date":"2025-12-25","map":"투혼","player1":"eun","player2":"MiSTY","winner":"MiSTY","score":"1:2"},
+    {"date":"2025-12-25","map":"투혼","player1":"Hani","player2":"Pang","winner":"Hani","score":"2:2"},
+    {"date":"2025-12-25","map":"2:2투혼","team1":["Hani","MGZG"],"team2":["dalsun2","Pang"],"winner":["dalsun2","Pang"],"score":"2:3"},
+    {"date":"2025-12-25","map":"2:2생컨","team1":["Strive","eun"],"team2":["Rocky","MiSTY"],"winner":["Strive","eun"],"score":"3:3"},
+    {"date":"2025-12-25","map":"투혼(에결)","player1":"Strive","player2":"Rocky","winner":"Strive","score":"4:3"}
 
 
   ],
   "generated_at": "2025-12-02T00:00:00Z"
 }
+
 
 
 
