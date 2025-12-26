@@ -480,7 +480,7 @@
     {"date":"2025-12-23","map":"2:2생컨","team1":["Gdragon","Pang"],"team2":["dalsun2","Miny"],"winner":["dalsun2","Miny"],"score":"2:4"},
 
         {
-      "date": "2025-12-24",
+      "date": "2025-12-25",
       "map": "Match",
       "team1": ["Strive", "Hani", "eun", "MGZG"],
       "team2": ["dalsun2", "Pang", "Rocky", "MiSTY"],
@@ -499,6 +499,7 @@
   ],
   "generated_at": "2025-12-02T00:00:00Z"
 }
+
 
 
 
