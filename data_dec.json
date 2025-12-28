@@ -590,7 +590,7 @@
     {"date":"2025-12-28","map":"투혼","player1":"Zeze","player2":"Hani","winner":"Zeze","score":"2:1"},
     {"date":"2025-12-28","map":"투혼","player1":"PE","player2":"IN","winner":"PE","score":"3:1"},
     {"date":"2025-12-28","map":"3:3생컨","team1":["PE","dong9","Attaboy"],"team2":["IN","Strive","Nangman"],"winner":["IN","Strive","Nangman"],"score":"3:2"},
-    {"date":"2025-12-28","map":"4:4투혼","team1":["Zeze","PE","dong9","Attaboy"],"team2":["Hani","Strive","IN","Nangman"],"winner":["Hani","Strive","IN","Nangman"],"score":"3:3"},
+    {"date":"2025-12-28","map":"4:4헌터","team1":["Zeze","PE","dong9","Attaboy"],"team2":["Hani","Strive","IN","Nangman"],"winner":["Hani","Strive","IN","Nangman"],"score":"3:3"},
     {"date":"2025-12-28","map":"투혼(에결)","player1":"Zeze","player2":"Nangman","winner":"Nangman","score":"3:4"},
 
     {
@@ -633,4 +633,5 @@
   ],
   "generated_at": "2025-12-02T00:00:00Z"
 }
+
 
