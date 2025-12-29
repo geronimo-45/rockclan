@@ -1181,6 +1181,8 @@ tabsWrap.addEventListener('click', (e)=>{
       let scWin=0, scLoss=0, htWin=0, htLoss=0;
       let proWin=0, proLoss=0; // ✅ 프로리그 전적
 
+      const proLog = []; // ✅ 프로리그 경기 로그 (최근 15경기 표시용)
+      
       for (const m of base.matches || []) {
         const isSolo = !!(m.player1 && m.player2);
         const isTeam = Array.isArray(m.team1) && Array.isArray(m.team2);
@@ -1197,6 +1199,15 @@ tabsWrap.addEventListener('click', (e)=>{
           const win1 = winners.some(x => m.team1.includes(x)) ? 1 : 0;
           const isWin = inT1 ? !!win1 : !win1;
           isWin ? proWin++ : proLoss++;
+
+                    // ✅ 최근 15경기용 로그 저장
+          proLog.push({
+            isWin,
+            date: m.date || '-',
+            map: m.map || '-',
+            score: m.score || ''
+          });
+          
           continue; // 프로리그는 일반전/팀전 집계에 포함되지 않음
         }
 
