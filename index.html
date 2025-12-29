@@ -1230,11 +1230,19 @@ tabsWrap.addEventListener('click', (e)=>{
         const infoEl = document.getElementById('modalPlayerInfo');
         infoEl.insertAdjacentElement('afterend', statsEl);
       }
+      
+      // ✅ 프로리그 최근 15경기 문자열 만들기
+      let recentStreakText = '';
+      if (proLog.length) {
+        const recent = proLog.slice(-15); // 뒤에서부터 최대 15경기
+        const seq = recent.map(g => g.isWin ? '승' : '패').join(' ');
+        recentStreakText = ` <span style="color:#ffb347;font-size:13px;">(최근 ${recent.length}경기: ${seq})</span>`;
+      }
 
       // --- 통계 내용 갱신 ---
       statsEl.innerHTML = `
         <div>
-          🏆 <b>프로리그:</b> ${proWin}승 ${proLoss}패<br>
+          🏆 <b>프로리그:</b> ${proWin}승 ${proLoss}패${recentStreakText}<br>
           <b>개인전:</b> ${soloWin}승 ${soloLoss}패,
           <b>팀전:</b> ${teamWin}승 ${teamLoss}패
           <span style="color:#888">(팀전은 생컨·헌터 모두 포함)</span><br>
