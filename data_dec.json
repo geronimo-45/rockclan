@@ -753,17 +753,17 @@
         {
       "date": "2025-12-30",
       "map": "Match",
-      "team1": ["Strive", "Pang", "MiSTY", "Meteor"],
+      "team1": ["Strive", "Pang", "MiSTY", "mete-o"],
       "team2": ["JeJu", "Gdragon", "IN", "Miny"],
-      "winner": ["Strive", "Pang", "MiSTY", "Meteor"],
+      "winner": ["Strive", "Pang", "MiSTY", "mete-o"],
       "score": "4:2"
     },
-    {"date":"2025-12-30","map":"투혼","player1":"Meteor","player2":"JeJu","winner":"JeJu","score":"0:1"},
+    {"date":"2025-12-30","map":"투혼","player1":"mete-o","player2":"JeJu","winner":"JeJu","score":"0:1"},
     {"date":"2025-12-30","map":"투혼","player1":"MiSTY","player2":"IN","winner":"IN","score":"0:2"},
     {"date":"2025-12-30","map":"투혼","player1":"Strive","player2":"Gdragon","winner":"Strive","score":"1:2"},
     {"date":"2025-12-30","map":"투혼","player1":"Pang","player2":"Miny","winner":"Pang","score":"2:2"},
-    {"date":"2025-12-30","map":"3:3생컨","team1":["Strive","Pang","Meteor"],"team2":["JeJu","Gdragon","IN"],"winner":["Strive","Pang","Meteor"],"score":"3:2"},
-    {"date":"2025-12-30","map":"4:4헌터","team1":["Strive","Pang","MiSTY","Meteor"],"team2":["JeJu","Gdragon","IN","Miny"],"winner":["Strive","Pang","MiSTY","Meteor"],"score":"4:2"},
+    {"date":"2025-12-30","map":"3:3생컨","team1":["Strive","Pang","mete-o"],"team2":["JeJu","Gdragon","IN"],"winner":["Strive","Pang","mete-o"],"score":"3:2"},
+    {"date":"2025-12-30","map":"4:4헌터","team1":["Strive","Pang","MiSTY","mete-o"],"team2":["JeJu","Gdragon","IN","Miny"],"winner":["Strive","Pang","MiSTY","mete-o"],"score":"4:2"},
 
 
     {
@@ -801,6 +801,7 @@
   ],
   "generated_at": "2025-12-02T00:00:00Z"
 }
+
 
 
 
