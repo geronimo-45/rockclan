@@ -662,16 +662,16 @@
     {
       "date": "2025-12-28",
       "map": "Match",
-      "team1": ["Friend", "MistY", "GgoMajin"],
+      "team1": ["Friend", "MiSTY", "GgoMajin"],
       "team2": ["Rocky", "JoJo", "Eun"],
-      "winner": ["Friend", "MistY", "GgoMajin"],
+      "winner": ["Friend", "MiSTY", "GgoMajin"],
       "score": "3:2"
     },
-    {"date":"2025-12-28","map":"투혼","player1":"MistY","player2":"JoJo","winner":"JoJo","score":"0:1"},
+    {"date":"2025-12-28","map":"투혼","player1":"MiSTY","player2":"JoJo","winner":"JoJo","score":"0:1"},
     {"date":"2025-12-28","map":"투혼","player1":"Friend","player2":"Rocky","winner":"Friend","score":"1:1"},
     {"date":"2025-12-28","map":"투혼","player1":"GgoMajin","player2":"Eun","winner":"Eun","score":"1:2"},
-    {"date":"2025-12-28","map":"3:3헌터","team1":["MistY","Friend","GgoMajin"],"team2":["JoJo","Rocky","Eun"],"winner":["MistY","Friend","GgoMajin"],"score":"2:2"},
-    {"date":"2025-12-28","map":"3:3생컨","team1":["MistY","Friend","GgoMajin"],"team2":["JoJo","Rocky","Eun"],"winner":["MistY","Friend","GgoMajin"],"score":"3:2"},
+    {"date":"2025-12-28","map":"3:3헌터","team1":["MiSTY","Friend","GgoMajin"],"team2":["JoJo","Rocky","Eun"],"winner":["MiSTY","Friend","GgoMajin"],"score":"2:2"},
+    {"date":"2025-12-28","map":"3:3생컨","team1":["MiSTY","Friend","GgoMajin"],"team2":["JoJo","Rocky","Eun"],"winner":["MiSTY","Friend","GgoMajin"],"score":"3:2"},
 
         {
       "date": "2025-12-29",
@@ -737,3 +737,4 @@
   ],
   "generated_at": "2025-12-02T00:00:00Z"
 }
+
