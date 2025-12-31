@@ -732,9 +732,58 @@
     {"date":"2025-12-29","map":"투혼","player1":"Veeny","player2":"Gdragon","winner":"Veeny","score":"2:1"},
     {"date":"2025-12-29","map":"투혼","player1":"Skidashi","player2":"dalsun2","winner":"dalsun2","score":"2:2"},
     {"date":"2025-12-29","map":"2:2생컨","team1":["Veeny","Skidashi"],"team2":["Hani","Gdragon"],"winner":["Hani","Gdragon"],"score":"2:3"},
-    {"date":"2025-12-29","map":"2:2투혼","team1":["Pang","Strive"],"team2":["dalsun2","Nangman"],"winner":["dalsun2","Nangman"],"score":"2:4"}
+    {"date":"2025-12-29","map":"2:2투혼","team1":["Pang","Strive"],"team2":["dalsun2","Nangman"],"winner":["dalsun2","Nangman"],"score":"2:4"},
+
+        {
+      "date": "2025-12-30",
+      "map": "Match",
+      "team1": ["Miny", "Strive", "Gdragon", "IN"],
+      "team2": ["Friend", "JeJu", "Attaboy", "Pang"],
+      "winner": ["Miny", "Strive", "Gdragon", "IN"],
+      "score": "4:3"
+    },
+    {"date":"2025-12-30","map":"투혼","player1":"Miny","player2":"Attaboy","winner":"Miny","score":"1:0"},
+    {"date":"2025-12-30","map":"투혼","player1":"Strive","player2":"JeJu","winner":"Strive","score":"2:0"},
+    {"date":"2025-12-30","map":"투혼","player1":"IN","player2":"Friend","winner":"Friend","score":"2:1"},
+    {"date":"2025-12-30","map":"투혼","player1":"Gdragon","player2":"Pang","winner":"Pang","score":"2:2"},
+    {"date":"2025-12-30","map":"4:4헌터","team1":["Miny","Strive","IN","Gdragon"],"team2":["Attaboy","JeJu","Friend","Pang"],"winner":["Attaboy","JeJu","Friend","Pang"],"score":"2:3"},
+    {"date":"2025-12-30","map":"3:3생컨","team1":["Gdragon","Strive","IN"],"team2":["Friend","JeJu","Pang"],"winner":["Gdragon","Strive","IN"],"score":"3:3"},
+    {"date":"2025-12-30","map":"투혼(에결)","player1":"Strive","player2":"Attaboy","winner":"Strive","score":"4:3"},
+
+    {
+      "date": "2025-12-30",
+      "map": "Match",
+      "team1": ["Strive", "JeJu", "eun", "Pang", "mete-o"],
+      "team2": ["dalsun2", "dong9", "Hani", "MiSTY", "Nangman"],
+      "winner": ["dalsun2", "dong9", "Hani", "MiSTY", "Nangman"],
+      "score": "2:4"
+    },
+    {"date":"2025-12-30","map":"투혼","player1":"JeJu","player2":"dong9","winner":"dong9","score":"0:1"},
+    {"date":"2025-12-30","map":"투혼","player1":"Strive","player2":"dalsun2","winner":"dalsun2","score":"0:2"},
+    {"date":"2025-12-30","map":"투혼","player1":"Pang","player2":"Hani","winner":"Pang","score":"1:2"},
+    {"date":"2025-12-30","map":"투혼","player1":"mete-o","player2":"Nangman","winner":"Nangman","score":"1:3"},
+    {"date":"2025-12-30","map":"투혼","player1":"eun","player2":"MiSTY","winner":"eun","score":"2:3"},
+    {"date":"2025-12-30","map":"3:3생컨","team1":["JeJu","Strive","mete-o"],"team2":["dalsun2","dong9","MiSTY"],"winner":["dalsun2","dong9","MiSTY"],"score":"2:4"},
+
+    {
+      "date": "2025-12-30",
+      "map": "Match",
+      "team1": ["JeJu", "Strive", "eun", "Pang", "mete-o"],
+      "team2": ["dong9", "dalsun2", "Hani", "Nangman", "MiSTY"],
+      "winner": ["JeJu", "Strive", "eun", "Pang", "mete-o"],
+      "score": "4:3"
+    },
+    {"date":"2025-12-30","map":"투혼","player1":"Pang","player2":"dong9","winner":"dong9","score":"0:1"},
+    {"date":"2025-12-30","map":"투혼","player1":"JeJu","player2":"Nangman","winner":"JeJu","score":"1:1"},
+    {"date":"2025-12-30","map":"투혼","player1":"eun","player2":"dalsun2","winner":"dalsun2","score":"1:2"},
+    {"date":"2025-12-30","map":"투혼","player1":"Strive","player2":"MiSTY","winner":"Strive","score":"2:2"},
+    {"date":"2025-12-30","map":"투혼","player1":"mete-o","player2":"Hani","winner":"Hani","score":"2:3"},
+    {"date":"2025-12-30","map":"3:3생컨","team1":["JeJu","Strive","mete-o"],"team2":["dalsun2","dong9","MiSTY"],"winner":["JeJu","Strive","mete-o"],"score":"3:3"},
+    {"date":"2025-12-30","map":"4:4헌터","team1":["JeJu","Strive","eun","Pang"],"team2":["dalsun2","dong9","Nangman","Hani"],"winner":["JeJu","Strive","eun","Pang"],"score":"4:3"}
+
 
   ],
   "generated_at": "2025-12-02T00:00:00Z"
 }
+
 
