@@ -837,11 +837,12 @@
     {"date":"2025-12-31","map":"폴리포이드","player1":"Rocky","player2":"MiSTY","winner":"Rocky","score":"2:1"},
     {"date":"2025-12-31","map":"도미네이터","player1":"JeJu","player2":"MUNGOM","winner":"MUNGOM","score":"2:2"},
     {"date":"2025-12-31","map":"3:3생컨","team1":["Pang","Rocky","Nangman"],"team2":["dopamine","dong9","MUNGOM"],"winner":["Pang","Rocky","Nangman"],"score":"3:2"},
-    {"date":"2025-12-31","map":"4:4헌터","team1":["JeJu","Pang","NangMan","Rocky"],"team2":["dopamine","dong9","MUNGOM","MiSTY"],"winner":["JeJu","Pang","Nangman","Rocky"],"score":"4:2"}
+    {"date":"2025-12-31","map":"4:4헌터","team1":["JeJu","Pang","Nangman","Rocky"],"team2":["dopamine","dong9","MUNGOM","MiSTY"],"winner":["JeJu","Pang","Nangman","Rocky"],"score":"4:2"}
 
 
 
   ],
   "generated_at": "2025-12-02T00:00:00Z"
 }
+
 
