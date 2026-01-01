@@ -42,7 +42,8 @@
   {"id":"Nangman","race":"Terran","tier":"Gold"},
   {"id":"PE","race":"Terran","tier":"Diamond"},
   {"id":"JoJo","race":"Protoss","tier":"Bronze"},
-  {"id":"mete-o","race":"Zerg","tier":"Bronze"}
+  {"id":"mete-o","race":"Zerg","tier":"Bronze"},
+  {"id":"MUNGOM","race":"Zerg","tier":"Gold"}
     ],
     "matches": [
   {"date":"2025-09-01","map":"Match","team1":["Zeze","Rupark","Miny","coolguy"],"team2":["Veeny","Gdragon","Rocky","Hyunho"],"winner":["Veeny","Gdragon","Rocky","Hyunho"],"score":"4:1"},
