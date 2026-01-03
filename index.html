@@ -1056,10 +1056,10 @@
               </div>`;
             }
             return `<div style="margin:4px 0;color:#ddd">
-              ${escapeHtml(it.date)} | ${escapeHtml(it.map)} | <b style="color:${color}">${it.result}</b>${score}
-              "font-size:12px;margin-left:10px">
-                우리팀: [${(it.myTeam||[]).map(escapeHtml).join(', ')}] / 상대팀: [${(it.oppTeam||[]).map(escapeHtml).join(', ')}]
-              </div>
+             ${escapeHtml(it.date)} | ${escapeHtml(it.map)} | <b style="color:${color}">${it.result}</b>${score}
+             <span class="muted" style="font-size:12px;margin-left:10px">
+               우리팀: [${(it.myTeam||[]).map(escapeHtml).join(', ')}] / 상대팀: [${(it.oppTeam||[]).map(escapeHtml).join(', ')}]
+             </span>
             </div>`;
           }).join('');
         return `<div style="font-weight:700;color:#ffb347;margin-bottom:6px">${title}</div>${rows}`;
@@ -1075,8 +1075,8 @@
         const html = `
           <div class="card" style="margin-top:12px">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-              <div style="font-weight:800;color:#ffb347">${escapeHtml(p1)} vs ${escapeHtml(p2)}</div>
-              "font-size:12px">개인전/팀전 분리 집계</div>
+             <div style="font-weight:800;color:#ffb347">${escapeHtml(p1)} vs ${escapeHtml(p2)}</div>
+             <div class="muted" style="font-size:12px">개인전/팀전 분리 집계</div>
             </div>
 
             <table style="margin-top:10px">
@@ -1132,7 +1132,7 @@
           <div class="card" style="margin-top:12px">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
               <div style="font-weight:800;color:#ffb347">${escapeHtml(p1)} 상대 목록</div>
-              "font-size:12px">클릭하면 아래에 전적이 표시됩니다.</div>
+              <div class="muted" style="font-size:12px">클릭하면 아래에 전적이 표시됩니다.</div>
             </div>
 
             <table style="margin-top:10px">
