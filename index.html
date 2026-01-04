@@ -1526,10 +1526,10 @@ async function showPlayerModal(playerId, seasonKey=CURRENT_SEASON_KEY){
         const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
 
         T1.forEach(p=>{ const before=p.elo; p.elo+=diffA; p.history.push(Math.round(p.elo));
-          if(p.id===playerId) playerLog.push({date:m.date,map:m.map||'-',opponentText:`팀전 vs ${m.team2.join(',')}`,isWin:!!win1,eloAfter:Math.round(p.elo),delta:Math.round(p.elo-before)});
+          if(p.id===playerId) playerLog.push({date:m.date,map:m.map||'-',opponentText:`${m.team2.join(',')}`,isWin:!!win1,eloAfter:Math.round(p.elo),delta:Math.round(p.elo-before)});
         });
         T2.forEach(p=>{ const before=p.elo; p.elo+=diffB; p.history.push(Math.round(p.elo));
-          if(p.id===playerId) playerLog.push({date:m.date,map:m.map||'-',opponentText:`팀전 vs ${m.team1.join(',')}`,isWin:!win1,eloAfter:Math.round(p.elo),delta:Math.round(p.elo-before)});
+          if(p.id===playerId) playerLog.push({date:m.date,map:m.map||'-',opponentText:`${m.team1.join(',')}`,isWin:!win1,eloAfter:Math.round(p.elo),delta:Math.round(p.elo-before)});
         });
       }
     }
