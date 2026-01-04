@@ -229,9 +229,9 @@
     {
       "date": "2026-01-03",
       "map": "Match",
-      "team1": ["Strive","Rupark","IN","Hani"],
+      "team1": ["Strive","Rupark","IN","Hani","MiSTY"],
       "team2": ["dalsun2","dong9","Pang","Friend","Rocky"],
-      "winner": ["Strive","Rupark","IN","Hani"],
+      "winner": ["Strive","Rupark","IN","Hani","MiSTY"],
       "score": "4:3"
     },
     {"date":"2026-01-03","map":"투혼","player1":"Strive","player2":"Rocky","winner":"Strive","score":"1:0"},
