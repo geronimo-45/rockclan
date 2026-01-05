@@ -242,7 +242,6 @@
     {"date":"2026-01-03","map":"4:4헌터","team1":["Strive","Rupark","IN","Hani"],"team2":["dalsun2","dong9","Pang","Friend"],"winner":["dalsun2","dong9","Pang","Friend"],"score":"3:3"},
     {"date":"2026-01-03","map":"3:3생컨","team1":["Strive","IN","MiSTY"],"team2":["Rocky","dong9","Pang"],"winner":["Strive","IN","MiSTY"],"score":"4:3"},
 
-    [
   {
     "date": "2026-01-04",
     "type": "match",
@@ -351,8 +350,6 @@
   {"date":"2026-01-04","map":"투혼","player1":"Rupark","player2":"Hani","winner":"Hani","score":"0:3"},
   {"date":"2026-01-04","map":"투혼","player1":"Skidashi","player2":"IN","winner":"IN","score":"0:4"},
   {"date":"2026-01-04","map":"투혼","player1":"MiSTY","player2":"Pang","winner":"Pang","score":"0:5"}
-]
-
     
   ],
   "generated_at": "2026-01-01T00:00:00Z"
