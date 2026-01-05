@@ -244,7 +244,7 @@
 
   {
     "date": "2026-01-04",
-    "type": "Match",
+    "map": "Match",
     "team1": ["Rupark","Skidashi","IN"],
     "team2": ["Veeny","Miny","dong9"],
     "winner": ["Rupark","Skidashi","IN"],
@@ -258,7 +258,7 @@
 
   {
     "date": "2026-01-04",
-    "type": "Match",
+    "map": "Match",
     "team1": ["Veeny","MiSTY","Skidashi","Miny"],
     "team2": ["Rupark","nRoll","Rocky","Friend"],
     "winner": ["Veeny","MiSTY","Skidashi","Miny"],
@@ -272,7 +272,7 @@
 
   {
     "date": "2026-01-04",
-    "type": "Match",
+    "map": "Match",
     "team1": ["IN","Strive","nRoll","Friend","dong9","JeJu"],
     "team2": ["Veeny","dalsun2","MiSTY","Gdragon","Rupark","Seung9"],
     "winner": ["IN","Strive","nRoll","Friend","dong9","JeJu"],
@@ -289,7 +289,7 @@
 
   {
     "date": "2026-01-04",
-    "type": "Match",
+    "map": "Match",
     "team1": ["Friend","Gdragon","Rocky","dalsun2","Veeny","IN"],
     "team2": ["MiSTY","Pang","JeJu","Rupark","Skidashi","Hani"],
     "winner": ["MiSTY","Pang","JeJu","Rupark","Skidashi","Hani"],
@@ -306,7 +306,7 @@
 
   {
     "date": "2026-01-04",
-    "type": "Match",
+    "map": "Match",
     "team1": ["Friend","Gdragon","Rocky","dalsun2","Veeny","IN"],
     "team2": ["MiSTY","Pang","JeJu","Rupark","Skidashi","Hani"],
     "winner": ["Friend","Gdragon","Rocky","dalsun2","Veeny","IN"],
@@ -323,7 +323,7 @@
 
   {
     "date": "2026-01-04",
-    "type": "Match",
+    "map": "Match",
     "team1": ["JeJu","Gdragon","Rupark","Skidashi","MiSTY"],
     "team2": ["dalsun2","yolo","Pang","IN","Hani"],
     "winner": ["JeJu","Gdragon","Rupark","Skidashi","MiSTY"],
@@ -339,7 +339,7 @@
 
   {
     "date": "2026-01-04",
-    "type": "Match",
+    "map": "Match",
     "team1": ["JeJu","Gdragon","Rupark","Skidashi","MiSTY"],
     "team2": ["dalsun2","yolo","Pang","IN","Hani"],
     "winner": ["dalsun2","yolo","Pang","IN","Hani"],
