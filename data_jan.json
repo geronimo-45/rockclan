@@ -412,7 +412,37 @@
     },
     {"date":"2026-01-05","map":"투혼","player1":"dalsun2","player2":"Rupark","winner":"dalsun2","score":"1:0"},
     {"date":"2026-01-05","map":"투혼","player1":"Pang","player2":"Eun","winner":"Pang","score":"2:0"},
-    {"date":"2026-01-05","map":"투혼","player1":"Pang","player2":"MiSTY","winner":"Pang","score":"3:0"}
+    {"date":"2026-01-05","map":"투혼","player1":"Pang","player2":"MiSTY","winner":"Pang","score":"3:0"},
+    
+    {
+      "date": "2026-01-06",
+      "map": "Match",
+      "team1": ["Attaboy","Rupark","Gdragon"],
+      "team2": ["dopamine","Veeny","JeJu"],
+      "winner": ["Attaboy","Rupark","Gdragon"],
+      "score": "3:1"
+    },
+    {"date":"2026-01-06","map":"투혼","player1":"Gdragon","player2":"JeJu","winner":"JeJu","score":"0:1"},
+    {"date":"2026-01-06","map":"투혼","player1":"Attaboy","player2":"dopamine","winner":"Attaboy","score":"1:1"},
+    {"date":"2026-01-06","map":"투혼","player1":"Rupark","player2":"Veeny","winner":"Rupark","score":"2:1"},
+    {"date":"2026-01-06","map":"3:3헌터","team1":["Attaboy","Rupark","Gdragon"],"team2":["dopamine","Veeny","JeJu"],"winner":["Attaboy","Rupark","Gdragon"],"score":"3:1"},
+
+    {
+      "date": "2026-01-06",
+      "map": "Match",
+      "team1": ["JeJu","Gdragon","Zeze","eun","MiSTY"],
+      "team2": ["dalsun2","Attaboy","dopamine","Veeny","Miny"],
+      "winner": ["dalsun2","Attaboy","dopamine","Veeny","Miny"],
+      "score": "3:4"
+    },
+    {"date":"2026-01-06","map":"투혼","player1":"Gdragon","player2":"Miny","winner":"Miny","score":"0:1"},
+    {"date":"2026-01-06","map":"투혼","player1":"MiSTY","player2":"Veeny","winner":"Veeny","score":"0:2"},
+    {"date":"2026-01-06","map":"투혼","player1":"eun","player2":"dopamine","winner":"dopamine","score":"0:3"},
+    {"date":"2026-01-06","map":"투혼","player1":"JeJu","player2":"Attaboy","winner":"JeJu","score":"1:3"},
+    {"date":"2026-01-06","map":"투혼","player1":"Zeze","player2":"dalsun2","winner":"Zeze","score":"2:3"},
+    {"date":"2026-01-06","map":"3:3헌터","team1":["eun","Zeze","Gdragon"],"team2":["Veeny","dalsun2","Miny"],"winner":["eun","Zeze","Gdragon"],"score":"3:3"},
+    {"date":"2026-01-06","map":"2:2생컨","team1":["MiSTY","JeJu"],"team2":["Attaboy","dopamine"],"winner":["Attaboy","dopamine"],"score":"3:4"}
+
     
   ],
   "generated_at": "2026-01-01T00:00:00Z"
