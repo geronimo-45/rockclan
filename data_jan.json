@@ -638,7 +638,57 @@
 {"date":"2026-01-10","map":"투혼","player1":"Seung9","player2":"Gdragon","winner":"Seung9","score":"2:1"},
 {"date":"2026-01-10","map":"투혼","player1":"dalsun2","player2":"Strive","winner":"dalsun2","score":"3:1"},
 {"date":"2026-01-10","map":"투혼","player1":"Friend","player2":"Rupark","winner":"Rupark","score":"3:2"},
-{"date":"2026-01-10","map":"4:4헌터","team1":["Seung9","Skidashi","Friend","dong9"],"team2":["Strive","Gdragon","JeJu","Rupark"],"winner":["Strive","Gdragon","JeJu","Rupark"],"score":"3:4"}
+{"date":"2026-01-10","map":"4:4헌터","team1":["Seung9","Skidashi","Friend","dong9"],"team2":["Strive","Gdragon","JeJu","Rupark"],"winner":["Strive","Gdragon","JeJu","Rupark"],"score":"3:4"},
+
+        {
+      "date": "2026-01-11",
+      "map": "Match",
+      "team1": ["Joy","Mystic","Dalsun","Kkomajin","Miny"],
+      "team2": ["Strive","Jeje","Friend","MUNGOM","nRoll"],
+      "winner": ["Joy","Mystic","Dalsun","Kkomajin","Miny"],
+      "score": "4:2"
+    },
+    {"date":"2026-01-11","map":"투혼","player1":"Dalsun","player2":"Jeje","winner":"Dalsun","score":"1:0"},
+    {"date":"2026-01-11","map":"투혼","player1":"Mystic","player2":"nRoll","winner":"Mystic","score":"2:0"},
+    {"date":"2026-01-11","map":"투혼","player1":"Miny","player2":"Friend","winner":"Friend","score":"2:1"},
+    {"date":"2026-01-11","map":"투혼","player1":"Kkomajin","player2":"MUNGOM","winner":"MUNGOM","score":"2:2"},
+    {"date":"2026-01-11","map":"투혼","player1":"Joy","player2":"Strive","winner":"Joy","score":"3:2"},
+    {"date":"2026-01-11","map":"3:3생컨","team1":["Joy","Mystic","Dalsun"],"team2":["Strive","Jeje","Friend"],"winner":["Joy","Mystic","Dalsun"],"score":"4:2"},
+
+    {
+      "date": "2026-01-11",
+      "map": "Match",
+      "team1": ["Dalsun","Jeju","Friend","Jeje","Miny","Joy","Seung9"],
+      "team2": ["Strive","Veeny","dong9","Pang","Misty","MUNGOM","Skidashi"],
+      "winner": ["Strive","Veeny","dong9","Pang","Misty","MUNGOM","Skidashi"],
+      "score": "3:6"
+    },
+    {"date":"2026-01-11","map":"투혼","player1":"Friend","player2":"dong9","winner":"dong9","score":"0:1"},
+    {"date":"2026-01-11","map":"투혼","player1":"Jeju","player2":"MUNGOM","winner":"MUNGOM","score":"0:2"},
+    {"date":"2026-01-11","map":"투혼","player1":"Jeje","player2":"Pang","winner":"Pang","score":"0:3"},
+    {"date":"2026-01-11","map":"투혼","player1":"Miny","player2":"Veeny","winner":"Veeny","score":"0:4"},
+    {"date":"2026-01-11","map":"투혼","player1":"Dalsun","player2":"Misty","winner":"Dalsun","score":"1:4"},
+    {"date":"2026-01-11","map":"투혼","player1":"Joy","player2":"Skidashi","winner":"Joy","score":"2:4"},
+    {"date":"2026-01-11","map":"투혼","player1":"Seung9","player2":"Strive","winner":"Strive","score":"2:5"},
+    {"date":"2026-01-11","map":"4:4헌터","team1":["Joy","Jeju","Dalsun","Seung9"],"team2":["Veeny","Strive","dong9","Pang"],"winner":["Joy","Jeju","Dalsun","Seung9"],"score":"3:5"},
+    {"date":"2026-01-11","map":"3:3생컨","team1":["Jeje","Miny","Friend"],"team2":["Misty","Skidashi","MUNGOM"],"winner":["Misty","Skidashi","MUNGOM"],"score":"3:6"},
+
+    {
+      "date": "2026-01-12",
+      "map": "Match",
+      "team1": ["Jeju","Joy","Veeny","Miny"],
+      "team2": ["Dalsun","Jeje","Skidashi","Nangman"],
+      "winner": ["Dalsun","Jeje","Skidashi","Nangman"],
+      "score": "3:4"
+    },
+    {"date":"2026-01-12","map":"투혼","player1":"Miny","player2":"Nangman","winner":"Nangman","score":"1:0"},
+    {"date":"2026-01-12","map":"투혼","player1":"Jeju","player2":"Jeje","winner":"Jeju","score":"1:1"},
+    {"date":"2026-01-12","map":"투혼","player1":"Skidashi","player2":"Joy","winner":"Joy","score":"2:1"},
+    {"date":"2026-01-12","map":"투혼","player1":"Dalsun","player2":"Veeny","winner":"Dalsun","score":"2:2"},
+    {"date":"2026-01-12","map":"2:2생컨","team1":["Joy","Jeju"],"team2":["Dalsun","Jeje"],"winner":["Joy","Jeju"],"score":"3:2"},
+    {"date":"2026-01-12","map":"2:2투혼","team1":["Veeny","Miny"],"team2":["Skidashi","Nangman"],"winner":["Skidashi","Nangman"],"score":"3:3"},
+    {"date":"2026-01-12","map":"투혼(에결)","player1":"Joy","player2":"Jeje","winner":"Jeje","score":"3:4"}
+
     
   ],
   "generated_at": "2026-01-01T00:00:00Z"
