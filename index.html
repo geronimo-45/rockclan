@@ -94,6 +94,57 @@
 .tier-matrix td { line-height:1.25; }
 .tier-matrix .cell-muted { color: var(--muted); font-size:12px; }
 
+    /* 티어별 개인전 통계 드롭다운 */
+#tier-solo .dropdown {
+  position: relative;
+}
+#tier-solo .dropdown > button {
+  background:#1f1f28;
+  border-radius:999px;
+  padding:6px 12px;
+  border:1px solid rgba(255,255,255,0.08);
+  cursor:pointer;
+  font-size:12px;
+  color:#eee;
+}
+#tier-solo .dropdown-panel {
+  position:absolute;
+  top:110%;
+  left:0;
+  min-width:200px;
+  max-height:260px;
+  overflow-y:auto;
+  background:#17171f;
+  border-radius:10px;
+  padding:8px;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 8px 20px rgba(0,0,0,0.6);
+  display:none;
+  z-index:20;
+}
+#tier-solo .dropdown-panel.open {
+  display:block;
+}
+#tier-solo .dropdown-item {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+  padding:2px 0;
+}
+#tier-solo .dropdown-scroll {
+  max-height:200px;
+  overflow-y:auto;
+  margin-top:4px;
+  padding-top:4px;
+  border-top:1px solid rgba(255,255,255,0.08);
+}
+
+/* 기존 매트릭스 살짝 정리 */
+.tier-matrix th, .tier-matrix td { font-size:13px; }
+.tier-matrix td { line-height:1.25; }
+.tier-matrix .cell-muted { color: var(--muted); font-size:12px; }
+
 
   </style>
 </head>
@@ -101,7 +152,7 @@
 <body>
   <header>
     <h1>RockClan Records</h1>
-    <div class="sub">클랜원 랭킹 • 기록실 • Old Records • ELO 시스템 설명 • 상대 전적 조회 • 티어별 개인전 통계</div>
+    <div class="sub">클랜원 랭킹 • 기록실 • Old Records • ELO 시스템 설명 • 상대 전적 조회 • 티어별 개인전 통</div>
   </header>
 
   <nav>
@@ -318,9 +369,12 @@
   <div class="card">
     <h2 style="margin:6px 0;color:var(--accent)">티어별 개인전 통계</h2>
     <div class="muted" style="font-size:12px;margin-bottom:8px">
-      선택한 시즌의 <b>개인전(1:1)</b>만 집계합니다. (행=본인 티어, 열=상대 티어 → 해당 구간 승률)
+      선택한 시즌의 <b>개인전(1:1)</b>만 집계합니다. (행=내 티어, 열=상대 티어 → 해당 구간 승률)
     </div>
 
+    <!-- 🔹 클랜원 필터 드롭다운 -->
+    <div id="tierSoloFilter" class="filters" style="margin-bottom:10px;"></div>
+    
     <div id="tierSoloSeasonTabs" class="filters" style="margin-bottom:10px;"></div>
     <div id="tierSoloMatrix"></div>
   </div>
@@ -1261,32 +1315,42 @@
         .replaceAll("'","&#39;");
     }
 function renderTierSoloStats(matchesAll, playersMeta){
-  const tabs = document.getElementById('tierSoloSeasonTabs');
-  const out  = document.getElementById('tierSoloMatrix');
-  if(!tabs || !out) return;
+  const filterEl = document.getElementById('tierSoloFilter');
+  const tabs     = document.getElementById('tierSoloSeasonTabs');
+  const out      = document.getElementById('tierSoloMatrix');
+  if(!filterEl || !tabs || !out) return;
+
+  const seasonsForTabs = SEASONS.slice(); // 2025, 2026S1, 2026S2...
+  let activeKey = CURRENT_SEASON_KEY || (seasonsForTabs[0] && seasonsForTabs[0].key);
+
+  const allPlayers = Array.from(playersMeta.keys()).sort();
+  let selectedSet = new Set(); // size==0 이면 "전체"
 
   const getSeasonTier = (id, seasonKey)=>{
-    const snap = (SEASON_TIER_SNAPSHOT && SEASON_TIER_SNAPSHOT[seasonKey]) ? SEASON_TIER_SNAPSHOT[seasonKey] : null;
+    const snap = SEASON_TIER_SNAPSHOT && SEASON_TIER_SNAPSHOT[seasonKey];
     if(snap && snap[id]) return snap[id];
     const m = playersMeta.get(id) || {};
     return m.tier || 'Silver';
   };
 
-  const seasonsForTabs = SEASONS.slice(); // 2025, 2026S1, 2026S2...
-  let activeKey = CURRENT_SEASON_KEY || (seasonsForTabs[0] && seasonsForTabs[0].key);
+  const tiers = TierOrder.slice();
 
   const draw = ()=>{
     const season = seasonsForTabs.find(s=>s.key===activeKey) || seasonsForTabs[0];
-    if(!season){ out.innerHTML = `<div class="muted">시즌 정보가 없습니다.</div>`; return; }
+    if(!season){
+      out.innerHTML = `<div class="muted">시즌 정보가 없습니다.</div>`;
+      return;
+    }
 
-    const tiers = TierOrder.slice();
-    const mat = new Map(); // key `${row}|${col}` -> {w,l}
-    const bump = (row, col, isWin)=>{
-      const k = row + '|' + col;
+    const mat = new Map(); // key "row|col" -> {w,l}
+    const bump = (row,col,isWin)=>{
+      const k = row+'|'+col;
       if(!mat.has(k)) mat.set(k,{w:0,l:0});
       const o = mat.get(k);
-      if(isWin) o.w++; else o.l++;
+      isWin ? o.w++ : o.l++;
     };
+
+    const hasFilter = selectedSet.size>0;
 
     for(const m of matchesAll){
       if(!m || !m.map || m.map==='Match') continue;
@@ -1295,7 +1359,8 @@ function renderTierSoloStats(matchesAll, playersMeta){
       // 개인전만
       if(!(m.player1 && m.player2)) continue;
 
-      const p1=m.player1, p2=m.player2;
+      const p1 = m.player1;
+      const p2 = m.player2;
       if(HIDE_IDS && (HIDE_IDS.has(p1) || HIDE_IDS.has(p2))) continue;
 
       const w = m.winner || '';
@@ -1304,11 +1369,26 @@ function renderTierSoloStats(matchesAll, playersMeta){
       const t1 = getSeasonTier(p1, season.key);
       const t2 = getSeasonTier(p2, season.key);
 
-      if(w===p1){ bump(t1,t2,true);  bump(t2,t1,false); }
-      else      { bump(t2,t1,true);  bump(t1,t2,false); }
+      const s1 = selectedSet.has(p1);
+      const s2 = selectedSet.has(p2);
+
+      if(!hasFilter){
+        // 전체 클랜원 기준: 양방향 반영
+        if(w===p1){ bump(t1,t2,true);  bump(t2,t1,false); }
+        else      { bump(t2,t1,true);  bump(t1,t2,false); }
+      }else{
+        // 필터가 있을 때: 선택된 사람 기준으로만 집계
+        if(w===p1){
+          if(s1) bump(t1,t2,true);
+          if(s2) bump(t2,t1,false);
+        }else{ // w===p2
+          if(s2) bump(t2,t1,true);
+          if(s1) bump(t1,t2,false);
+        }
+      }
     }
 
-    const cellHtml = (row, col)=>{
+    const cellHtml = (row,col)=>{
       const o = mat.get(row+'|'+col) || {w:0,l:0};
       const n = o.w + o.l;
       if(!n) return `<div class="cell-muted">-</div>`;
@@ -1319,6 +1399,9 @@ function renderTierSoloStats(matchesAll, playersMeta){
     out.innerHTML = `
       <div class="muted" style="font-size:12px;margin:6px 0 10px">
         시즌: <b>${escapeHtml(season.label)}</b> (개인전만)
+        ${selectedSet.size===0
+          ? ' • 기준: 전체 클랜원'
+          : ` • 기준: 선택 ${selectedSet.size}명`}
       </div>
       <table class="tier-matrix">
         <thead>
@@ -1339,7 +1422,7 @@ function renderTierSoloStats(matchesAll, playersMeta){
     `;
   };
 
-  // 시즌 탭 렌더
+  // 🔹 시즌 탭 렌더링
   tabs.innerHTML = seasonsForTabs.map(s=>`
     <button class="old-season-tab ${s.key===activeKey?'active':''}" data-season="${escapeHtml(s.key)}"
       style="border:1px solid #232532;background:#1a1a22;color:#ddd;border-radius:10px;padding:10px 12px;cursor:pointer">
@@ -1356,8 +1439,95 @@ function renderTierSoloStats(matchesAll, playersMeta){
     draw();
   });
 
+  // 🔹 클랜원 필터 드롭다운 렌더링
+  const playerItems = allPlayers.map(id=>`
+    <label class="dropdown-item">
+      <input type="checkbox" value="${escapeHtml(id)}">
+      <span>${escapeHtml(id)}</span>
+    </label>
+  `).join('');
+
+  filterEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="muted" style="font-size:12px;">클랜원 필터</div>
+      <div class="dropdown" id="tierSoloPlayerDropdown">
+        <button type="button" id="tierSoloPlayerBtn">전체 클랜원</button>
+        <div class="dropdown-panel" id="tierSoloPlayerPanel">
+          <label class="dropdown-item">
+            <input type="checkbox" value="__ALL__">
+            <span>전체 선택</span>
+          </label>
+          <div class="dropdown-scroll">
+            ${playerItems}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const btn   = document.getElementById('tierSoloPlayerBtn');
+  const panel = document.getElementById('tierSoloPlayerPanel');
+  const allChk = panel.querySelector('input[value="__ALL__"]');
+  const checkboxes = panel.querySelectorAll('.dropdown-scroll input[type="checkbox"]');
+
+  const updateButtonLabel = ()=>{
+    if(selectedSet.size===0){
+      btn.textContent = '전체 클랜원';
+    }else if(selectedSet.size===1){
+      btn.textContent = Array.from(selectedSet)[0];
+    }else{
+      btn.textContent = `선택 ${selectedSet.size}명`;
+    }
+  };
+
+  btn.addEventListener('click', ()=>{
+    panel.classList.toggle('open');
+  });
+
+allChk.addEventListener('change', ()=>{
+  if(allChk.checked){
+    // ✅ 전체 인원 선택
+    selectedSet = new Set(allPlayers);
+    checkboxes.forEach(c=>{ c.checked = true; });
+  } else {
+    // ✅ 전체 해제 → 필터 없음(전체 클랜원 기준)
+    selectedSet.clear();
+    checkboxes.forEach(c=>{ c.checked = false; });
+  }
+  updateButtonLabel();
+  draw();
+});
+
+
+  checkboxes.forEach(chk=>{
+    chk.addEventListener('change', ()=>{
+      const id = chk.value;
+      if(chk.checked) selectedSet.add(id);
+      else selectedSet.delete(id);
+
+if (selectedSet.size === allPlayers.length) {
+  // 전원 선택된 상태
+  allChk.checked = true;
+} else {
+  // 일부만 선택 or 아무도 선택 안 함
+  allChk.checked = false;
+}
+
+
+      updateButtonLabel();
+      draw();
+    });
+  });
+
+  // 드롭다운 외부 클릭 시 닫기
+  document.addEventListener('click', (e)=>{
+    if(!filterEl.contains(e.target)) panel.classList.remove('open');
+  });
+
+  updateButtonLabel();
   draw();
 }
+
 
     // --- (현재는 미사용) Recharts 그래프용 함수: 필요하면 추후 활성화 ---
     function renderChart(eloByDate){
@@ -1526,10 +1696,10 @@ async function showPlayerModal(playerId, seasonKey=CURRENT_SEASON_KEY){
         const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
 
         T1.forEach(p=>{ const before=p.elo; p.elo+=diffA; p.history.push(Math.round(p.elo));
-          if(p.id===playerId) playerLog.push({date:m.date,map:m.map||'-',opponentText:`${m.team2.join(',')}`,isWin:!!win1,eloAfter:Math.round(p.elo),delta:Math.round(p.elo-before)});
+          if(p.id===playerId) playerLog.push({date:m.date,map:m.map||'-',opponentText:`팀전 vs ${m.team2.join(',')}`,isWin:!!win1,eloAfter:Math.round(p.elo),delta:Math.round(p.elo-before)});
         });
         T2.forEach(p=>{ const before=p.elo; p.elo+=diffB; p.history.push(Math.round(p.elo));
-          if(p.id===playerId) playerLog.push({date:m.date,map:m.map||'-',opponentText:`${m.team1.join(',')}`,isWin:!win1,eloAfter:Math.round(p.elo),delta:Math.round(p.elo-before)});
+          if(p.id===playerId) playerLog.push({date:m.date,map:m.map||'-',opponentText:`팀전 vs ${m.team1.join(',')}`,isWin:!win1,eloAfter:Math.round(p.elo),delta:Math.round(p.elo-before)});
         });
       }
     }
