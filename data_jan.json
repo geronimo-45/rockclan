@@ -1301,7 +1301,37 @@
     {"date":"2026-01-25","map":"투혼","player1":"Friend","player2":"Rupark","winner":"Rupark","score":"2:2"},
     {"date":"2026-01-25","map":"4:4헌터","team1":["Strive","Seung9","Miny","Friend"],"team2":["dalsun2","JeJu","Rupark","MiSTY"],"winner":["Strive","Seung9","Miny","Friend"],"score":"3:2"},
     {"date":"2026-01-25","map":"3:3생컨","team1":["Strive","Seung9","Friend"],"team2":["dalsun2","JeJu","MiSTY"],"winner":["dalsun2","JeJu","MiSTY"],"score":"3:3"},
-    {"date":"2026-01-25","map":"투혼(에결)","player1":"Strive","player2":"dalsun2","winner":"Strive","score":"4:3"}
+    {"date":"2026-01-25","map":"투혼(에결)","player1":"Strive","player2":"dalsun2","winner":"Strive","score":"4:3"},
+
+        {
+      "date": "2026-01-26",
+      "map": "Match",
+      "team1": ["Seung9", "Attaboy", "Zeze", "Miny"],
+      "team2": ["dong9", "dopamine", "Veeny", "Skidashi"],
+      "winner": ["dong9", "dopamine", "Veeny", "Skidashi"],
+      "score": "1:4"
+    },
+    {"date":"2026-01-26","map":"투혼","player1":"Zeze","player2":"dopamine","winner":"dopamine","score":"0:1"},
+    {"date":"2026-01-26","map":"투혼","player1":"Attaboy","player2":"dong9","winner":"dong9","score":"0:2"},
+    {"date":"2026-01-26","map":"투혼","player1":"Miny","player2":"Skidashi","winner":"Skidashi","score":"0:3"},
+    {"date":"2026-01-26","map":"투혼","player1":"Seung9","player2":"Veeny","winner":"Seung9","score":"1:3"},
+    {"date":"2026-01-26","map":"4:4헌터","team1":["Zeze","Attaboy","Miny","Seung9"],"team2":["dopamine","dong9","Skidashi","Veeny"],"winner":["dopamine","dong9","Skidashi","Veeny"],"score":"1:4"},
+
+    {
+      "date": "2026-01-26",
+      "map": "Match",
+      "team1": ["Strive", "dong9", "Attaboy", "Veeny"],
+      "team2": ["Seung9", "Skidashi", "dopamine", "Zeze"],
+      "winner": ["Strive", "dong9", "Attaboy", "Veeny"],
+      "score": "4:2"
+    },
+    {"date":"2026-01-26","map":"투혼","player1":"Attaboy","player2":"dopamine","winner":"dopamine","score":"0:1"},
+    {"date":"2026-01-26","map":"투혼","player1":"Veeny","player2":"Zeze","winner":"Veeny","score":"1:1"},
+    {"date":"2026-01-26","map":"투혼","player1":"dong9","player2":"Skidashi","winner":"dong9","score":"2:1"},
+    {"date":"2026-01-26","map":"투혼","player1":"Strive","player2":"Seung9","winner":"Seung9","score":"2:2"},
+    {"date":"2026-01-26","map":"4:4헌터","team1":["Strive","dong9","Attaboy","Veeny"],"team2":["Seung9","Skidashi","dopamine","Zeze"],"winner":["Strive","dong9","Attaboy","Veeny"],"score":"3:2"},
+    {"date":"2026-01-26","map":"3:3생컨","team1":["dong9","Strive","Attaboy"],"team2":["dopamine","Skidashi","Seung9"],"winner":["dong9","Strive","Attaboy"],"score":"4:2"}
+
 
   ],
   "generated_at": "2026-01-01T00:00:00Z"
