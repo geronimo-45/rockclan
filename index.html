@@ -528,7 +528,7 @@ renderAll(base);
   const cs = SEASONS.find(s=>s.key===CURRENT_SEASON_KEY);
   if (cs) {
     document.getElementById('currentSeasonDesc').innerHTML =
-      `${cs.label} (${cs.start} ~ ${cs.end}) 경기 기준 랭킹입니다. (달력에서 날짜를 선택하면 해당 시즌 내 시점 기준 랭킹을 볼 수 있습니다.)`;
+      `${cs.label} 경기 기준 랭킹입니다. (달력에서 날짜를 선택하면 해당 시즌 내 시점 기준 랭킹을 볼 수 있습니다.)`;
   }
 }
 
