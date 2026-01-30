@@ -1385,8 +1385,21 @@
     },
     {"date":"2026-01-29","map":"투혼","player1":"Attaboy","player2":"dopamine","winner":"Attaboy","score":"1:0"},
     {"date":"2026-01-29","map":"투혼","player1":"IN","player2":"Skidashi","winner":"IN","score":"2:0"},
-    {"date":"2026-01-29","map":"투혼","player1":"MiSTY","player2":"Zeze","winner":"MiSTY","score":"3:0"}
+    {"date":"2026-01-29","map":"투혼","player1":"MiSTY","player2":"Zeze","winner":"MiSTY","score":"3:0"},
 
+        {
+      "date": "2026-01-30",
+      "map": "Match",
+      "team1": ["Zeze", "Attaboy", "Skidashi"],
+      "team2": ["Veeny", "Pang", "MiSTY"],
+      "winner": ["Zeze", "Attaboy", "Skidashi"],
+      "score": "3:2"
+    },
+    {"date":"2026-01-30","map":"투혼","player1":"Attaboy","player2":"Pang","winner":"Pang","score":"0:1"},
+    {"date":"2026-01-30","map":"투혼","player1":"Skidashi","player2":"MiSTY","winner":"MiSTY","score":"0:2"},
+    {"date":"2026-01-30","map":"투혼","player1":"Zeze","player2":"Veeny","winner":"Zeze","score":"1:2"},
+    {"date":"2026-01-30","map":"3:3헌터","team1":["Zeze","Attaboy","Skidashi"],"team2":["Veeny","Pang","MiSTY"],"winner":["Zeze","Attaboy","Skidashi"],"score":"2:2"},
+    {"date":"2026-01-30","map":"3:3생컨","team1":["Zeze","Attaboy","Skidashi"],"team2":["Veeny","Pang","MiSTY"],"winner":["Zeze","Attaboy","Skidashi"],"score":"3:2"}
 
 
   ],
