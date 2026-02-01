@@ -673,30 +673,17 @@ renderAll(base);
           return o;
         };
 
-for (const m of matchesForRanking) {
-  if (!m || !m.map) continue;
+        for(const m of matchesForRanking){
+          if(!m || !m.map || m.map==='Match') continue;
+          const dIso = String(m.date);
+          if(dIso > isoDate) break;
 
-  const dIso = String(m.date);
-  if (dIso > isoDate) break;
-
-  // ✅ 1) 프로리그(Match)는 여기서 먼저 누적하고, ELO 계산은 건드리지 말고 continue
-  if (m.map === 'Match' && Array.isArray(m.team1) && Array.isArray(m.team2)) {
-    const winners = Array.isArray(m.winner) ? m.winner : [];
-    const win1 = winners.some(x => m.team1.includes(x));
-
-    m.team1.forEach(id => {
-      const p = ensureSnap(id);
-      win1 ? p.proW++ : p.proL++;
-    });
-    m.team2.forEach(id => {
-      const p = ensureSnap(id);
-      win1 ? p.proL++ : p.proW++;
-    });
-    continue; // ✅ ELO/solo/team 계산로직으로 절대 내려가지 않음
-  }
-
-  // ✅ 2) 나머지(개인전/팀전/ELO)는 Match가 아닌 것만 처리
-  if (m.map === 'Match') continue;
+          if(m.player1 && m.player2){
+            const p1=ensureSnap(m.player1), p2=ensureSnap(m.player2);
+            if(m.winner===m.player1){ calc(p1,p2,1,false); p1.win++; p2.loss++; }
+            else if(m.winner===m.player2){ calc(p1,p2,0,false); p2.win++; p1.loss++; }
+            p1.played++; p2.played++;
+          }
 
           if(Array.isArray(m.team1) && Array.isArray(m.team2)){
             const T1=m.team1.map(ensureSnap), T2=m.team2.map(ensureSnap);
@@ -783,7 +770,7 @@ for (const m of matchesForRanking) {
 
           for(const m of matchesAll){
             if(!isInSeason(m, season)) continue;
-            if(!m || !m.map) continue;
+            if(!m || !m.map || m.map==='Match') continue;
 
             if(m.player1 && m.player2){
               const p1=ensureS(m.player1), p2=ensureS(m.player2);
