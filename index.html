@@ -152,7 +152,7 @@
 <body>
   <header>
     <h1>RockClan Records</h1>
-    <div class="sub">클랜원 랭킹 • 기록실 • Old Records • ELO 시스템 설명 • 상대 전적 조회 • 티어별 개인전 통</div>
+    <div class="sub">클랜원 랭킹 • 기록실 • Old Records • ELO 시스템 설명 • 상대 전적 조회 • 티어별 개인전 통계</div>
   </header>
 
   <nav>
@@ -190,7 +190,13 @@
             <option value="">티어 전체</option>
             <option>Stone</option><option>Bronze</option><option>Silver</option><option>Gold</option><option>Diamond</option><option>Legend</option>
           </select>
-          <!-- 📅 랭킹 기준 날짜 선택 (캘린더) -->
+                    <select id="rankMode" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
+            <option value="all" selected>전체</option>
+            <option value="pro">프로리그</option>
+            <option value="solo">개인전</option>
+            <option value="team">팀전</option>
+          </select>
+          <!-- 📅 랭킹 기준 날짜 선택 --> 
           <input id="rankDate" type="date" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
         </div>
         <div id="currentSeasonDesc"
@@ -425,7 +431,8 @@
     const $rankDate = document.getElementById('rankDate');
     const $rankDateLabel = document.getElementById('rankDateLabel');
 
-    // 🔹 시즌 정의
+        const $rankMode = document.getElementById('rankMode');
+// 🔹 시즌 정의
 const SEASONS = [
   { key:'2025',   label:'2025 시즌',    start:'2025-09-01',  end:'2025-12-31' },
   { key:'2026Q1', label:'2026 시즌 1Q', start:'2026-01-01', end:'2026-03-31' },
@@ -534,17 +541,10 @@ renderAll(base);
 
 
     function renderAll(data){
+      
       const playersMeta = new Map((data.players||[]).map(p=>[p.id,p]));
-      const stat = new Map();
-      const eloByDate = {};
 
-      const ensure = (id)=>{
-        if(stat.has(id)) return stat.get(id);
-        const m=playersMeta.get(id)||{};
-        const o={ id, elo:1000, tier:m.tier||'Silver', race:m.race||'Protoss', win:0, loss:0, played:0 };
-        stat.set(id,o); return o;
-      };
-
+      // --- 랭킹 계산 유틸 ---
       const calc = (A,B,res,isTeam)=>{
         const K = isTeam? 8 : 12;
         const effA = A.elo + getTierIndex(A.tier)*40;
@@ -556,59 +556,134 @@ renderAll(base);
 
       const matchesAll = (data.matches||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
 
-      // ✅ 현재 시즌(2026 시즌1Q) 랭킹 계산에 사용할 경기만 추출
+      // ✅ 현재 시즌(예: 2026 시즌1Q) 랭킹 계산에 사용할 경기만 추출
       const matchesForRanking = matchesAll.filter(m => isInSeason(m, CURRENT_SEASON));
 
       // --- 랭킹용 날짜 범위 계산 (달력 min/max 세팅용) ---
       let minRankDate = null;
       let maxRankDate = null;
       for (const m of matchesForRanking) {
-        if (!m || !m.date || !m.map || m.map === 'Match') continue;
+        if (!m || !m.date) continue;
         const d = String(m.date);
         if (!minRankDate || d < minRankDate) minRankDate = d;
         if (!maxRankDate || d > maxRankDate) maxRankDate = d;
       }
 
-      // 🔹 현재 시즌 기준 ELO 누적
-      for(const m of matchesForRanking){
-        if(!m.map || m.map==='Match') continue;
-        const d = toMMDD(m.date);
+      // --- 모드/날짜에 따라 랭킹을 "매번" 재계산 (실수/누락 방지) ---
+      const buildRankingRows = (mode, isoDate)=>{
+        const stat = new Map();
+        const ensure = (id)=>{
+          if(stat.has(id)) return stat.get(id);
+          const meta = playersMeta.get(id) || {};
+          const o = { id, elo:1000, tier:meta.tier||'Silver', race:meta.race||'Protoss', win:0, loss:0, played:0 };
+          stat.set(id,o);
+          return o;
+        };
 
-        if(m.player1 && m.player2){
-          const p1=ensure(m.player1), p2=ensure(m.player2);
-          if(m.winner===m.player1){ calc(p1,p2,1,false); p1.win++; p2.loss++; }
-          else if(m.winner===m.player2){ calc(p1,p2,0,false); p2.win++; p1.loss++; }
-          p1.played++; p2.played++;
-          (eloByDate[p1.id]??={})[d]=Math.round(p1.elo);
-          (eloByDate[p2.id]??={})[d]=Math.round(p2.elo);
+        let usedGames = 0;
+
+        for(const m of matchesForRanking){
+          if(!m || !m.date) continue;
+          if(isoDate && String(m.date) > isoDate) continue;
+
+          const isPro  = (m.map === 'Match' && Array.isArray(m.team1) && Array.isArray(m.team2));
+          const isSolo = !!(m.player1 && m.player2) && (m.map !== 'Match');
+          const isTeam = Array.isArray(m.team1) && Array.isArray(m.team2) && (m.map !== 'Match');
+
+          if(mode==='pro'){
+            if(!isPro) continue;
+            const t1 = m.team1||[], t2 = m.team2||[];
+            const winners = Array.isArray(m.winner) ? m.winner : [];
+            const win1 = winners.some(x=>t1.includes(x)) ? 1 : 0;
+
+            const involved = new Set([...(t1||[]), ...(t2||[])]);
+            involved.forEach(id=>{
+              const p = ensure(id);
+              p.played++;
+              const inT1 = t1.includes(id);
+              const isWin = inT1 ? !!win1 : !win1;
+              isWin ? p.win++ : p.loss++;
+            });
+            usedGames++;
+            continue;
+          }
+
+          if(mode==='solo' && !isSolo) continue;
+          if(mode==='team' && !isTeam) continue;
+
+          if(isSolo){
+            const p1=ensure(m.player1), p2=ensure(m.player2);
+            const res = (m.winner===m.player1)?1:(m.winner===m.player2)?0:null;
+            if(res!==null){
+              calc(p1,p2,res,false);
+              if(res===1){ p1.win++; p2.loss++; } else { p2.win++; p1.loss++; }
+              p1.played++; p2.played++;
+              usedGames++;
+            }
+          }
+
+          if(isTeam){
+            const T1=(m.team1||[]).map(ensure), T2=(m.team2||[]).map(ensure);
+            if(!T1.length || !T2.length) continue;
+
+            const winners=Array.isArray(m.winner)?m.winner:[];
+            const win1=winners.some(x=>(m.team1||[]).includes(x))?1:0;
+
+            const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
+            const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
+            const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
+            calc(dA,dB,win1,true);
+            const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
+
+            T1.forEach(p=>{ p.elo+=diffA; p.played++; win1?p.win++:p.loss++; });
+            T2.forEach(p=>{ p.elo+=diffB; p.played++; !win1?p.win++:p.loss++; });
+            usedGames++;
+          }
         }
 
-        if(Array.isArray(m.team1) && Array.isArray(m.team2)){
-          const T1=m.team1.map(ensure), T2=m.team2.map(ensure);
-          const winners = Array.isArray(m.winner)? m.winner : [];
-          const win1 = winners.some(x=>m.team1.includes(x)) ? 1 : 0;
+        let rows = [...stat.values()].filter(p => !HIDE_IDS.has(p.id));
 
-          const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
-          const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
-          const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
-          calc(dA,dB,win1,true);
-          const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
-
-          T1.forEach(p=>{ p.elo+=diffA; p.played++; win1?p.win++:p.loss++; (eloByDate[p.id]??={})[d]=Math.round(p.elo); });
-          T2.forEach(p=>{ p.elo+=diffB; p.played++; !win1?p.win++:p.loss++; (eloByDate[p.id]??={})[d]=Math.round(p.elo); });
+        if(mode==='pro'){
+          // 프로리그: 득실(승-패) 우선 정렬 → 승수 → 패수(적을수록) → ID
+          rows.sort((a,b)=>{
+            const ad = (a.win||0) - (a.loss||0);
+            const bd = (b.win||0) - (b.loss||0);
+            if(bd!==ad) return bd-ad;
+            if((b.win||0)!==(a.win||0)) return (b.win||0)-(a.win||0);
+            if((a.loss||0)!==(b.loss||0)) return (a.loss||0)-(b.loss||0);
+            return String(a.id).localeCompare(String(b.id));
+          });
+        } else {
+          rows.sort((a,b)=>b.elo-a.elo);
         }
+
+        // 프로리그는 ELO 대신 득실(승-패)을 표시용으로 보관
+        if(mode==='pro'){
+          rows.forEach(p=>{
+            p.diff = (p.win||0) - (p.loss||0);
+            p.elo = null;
+          });
+        }
+
+        return { rows, noGames: usedGames===0 };
+      };
+
+      // --- 랭킹 표시 + 필터 ---
+      const tbody = document.querySelector('#players-table tbody');
+      const theadRow = document.querySelector('#players-table thead tr');
+
+      let currentMode = ($rankMode && $rankMode.value) ? $rankMode.value : 'all';
+      let currentDate = ($rankDate && $rankDate.value) ? $rankDate.value : null;
+      let activeRows = [];
+
+      function renderTableHeader(mode){
+        if(!theadRow) return;
+        // (요청대로 컬럼은 유지) 단, 프로리그는 ELO가 '-'로 표시됨
+        theadRow.innerHTML = '<th>Rank</th><th>ID</th><th>종족</th><th>티어</th><th>ELO</th><th>승</th><th>패</th><th>승률</th>';
       }
 
-      // --- 랭킹 표시 (ELO 내림차순) + 필터 ---
-      const tbody = document.querySelector('#players-table tbody');
-
-      let baseRows = [...stat.values()]
-        .filter(p => !HIDE_IDS.has(p.id))
-        .sort((a,b)=>b.elo-a.elo);
-
-      let activeRows = baseRows;
-
       function applyFilters(){
+        const modeNow = ($rankMode && $rankMode.value) ? $rankMode.value : currentMode;
         const q = ($search.value||'').trim().toLowerCase();
         const r = $race.value||'';
         const t = $tier.value||'';
@@ -621,11 +696,19 @@ renderAll(base);
         });
 
         tbody.innerHTML = filtered.map((p,i)=>{
-          const wr = p.played? ((p.win/p.played)*100).toFixed(1) : '0.0';
+          const played = p.played||0;
+          const wr = played? ((p.win/played)*100).toFixed(1) : '0.0';
+          let eloText;
+          if(modeNow==='pro'){
+            const d = (typeof p.diff==='number') ? p.diff : ((p.win||0)-(p.loss||0));
+            eloText = (d>0? `+${d}` : String(d));
+          } else {
+            eloText = (p.elo===null || typeof p.elo==='undefined') ? '-' : Math.round(p.elo);
+          }
           return `<tr>
             <td>${i+1}</td><td>${p.id}</td><td>${p.race}</td>
             <td class="tier-${p.tier}">${p.tier}</td>
-            <td>${Math.round(p.elo)}</td><td>${p.win}</td><td>${p.loss}</td><td>${wr}%</td>
+            <td>${eloText}</td><td>${p.win}</td><td>${p.loss}</td><td>${wr}%</td>
           </tr>`;
         }).join('');
       }
@@ -633,7 +716,7 @@ renderAll(base);
       function updateRankDateLabel(iso, noGames){
         if(!$rankDateLabel) return;
         if(!iso){
-          $rankDateLabel.textContent = '📅 기준 날짜: 시즌 전체 (2026-01-01 ~ 2026-03-31 기준)';
+          $rankDateLabel.textContent = `📅 기준 날짜: 시즌 전체 (${CURRENT_SEASON.start} ~ ${CURRENT_SEASON.end} 기준)`;
           return;
         }
         const parts = String(iso).split('-');
@@ -649,85 +732,41 @@ renderAll(base);
         }
       }
 
-      function recomputeRankingByDate(isoDate){
-        if(!isoDate || !minRankDate){
-          activeRows = baseRows;
-          updateRankDateLabel(null,false);
-          applyFilters();
-          return;
-        }
-
-        if(isoDate < minRankDate){
-          activeRows = [];
-          updateRankDateLabel(isoDate,true);
-          applyFilters();
-          return;
-        }
-
-        const snapStat = new Map();
-        const ensureSnap = (id)=>{
-          if(snapStat.has(id)) return snapStat.get(id);
-          const m = playersMeta.get(id) || {};
-          const o = { id, elo:1000, tier:m.tier||'Silver', race:m.race||'Protoss', win:0, loss:0, played:0 };
-          snapStat.set(id,o);
-          return o;
-        };
-
-        for(const m of matchesForRanking){
-          if(!m || !m.map || m.map==='Match') continue;
-          const dIso = String(m.date);
-          if(dIso > isoDate) break;
-
-          if(m.player1 && m.player2){
-            const p1=ensureSnap(m.player1), p2=ensureSnap(m.player2);
-            if(m.winner===m.player1){ calc(p1,p2,1,false); p1.win++; p2.loss++; }
-            else if(m.winner===m.player2){ calc(p1,p2,0,false); p2.win++; p1.loss++; }
-            p1.played++; p2.played++;
-          }
-
-          if(Array.isArray(m.team1) && Array.isArray(m.team2)){
-            const T1=m.team1.map(ensureSnap), T2=m.team2.map(ensureSnap);
-            const winners = Array.isArray(m.winner)? m.winner : [];
-            const win1 = winners.some(x=>m.team1.includes(x)) ? 1 : 0;
-
-            const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
-            const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
-            const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
-            calc(dA,dB,win1,true);
-            const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
-
-            T1.forEach(p=>{ p.elo+=diffA; p.played++; win1?p.win++:p.loss++; });
-            T2.forEach(p=>{ p.elo+=diffB; p.played++; !win1?p.win++:p.loss++; });
-          }
-        }
-
-        activeRows = [...snapStat.values()]
-          .filter(p=>!HIDE_IDS.has(p.id))
-          .sort((a,b)=>b.elo-a.elo);
-
-        updateRankDateLabel(isoDate,false);
+      function rebuildRanking(){
+        const out = buildRankingRows(currentMode, currentDate);
+        activeRows = out.rows;
+        renderTableHeader(currentMode);
+        updateRankDateLabel(currentDate, out.noGames);
         applyFilters();
       }
 
+      // 검색/필터
       ['input','change'].forEach(ev=>{
         $search.addEventListener(ev,applyFilters);
         $race.addEventListener(ev,applyFilters);
         $tier.addEventListener(ev,applyFilters);
       });
 
+      // 모드 변경
+      if($rankMode){
+        $rankMode.addEventListener('change', ()=>{
+          currentMode = $rankMode.value || 'all';
+          rebuildRanking();
+        });
+      }
+
+      // 날짜 변경 (모드 상관없이 공통 적용)
       if($rankDate){
         if(minRankDate) $rankDate.min = minRankDate;
         if(maxRankDate) $rankDate.max = maxRankDate;
         $rankDate.addEventListener('change', ()=>{
-          const v = $rankDate.value;
-          recomputeRankingByDate(v || null);
+          currentDate = ($rankDate.value||'') ? $rankDate.value : null;
+          rebuildRanking();
         });
       }
 
-      updateRankDateLabel(null,false);
-      applyFilters();
-
-      // --- Old Records (완료된 시즌) ---
+      rebuildRanking();
+// --- Old Records (완료된 시즌) ---
       (function buildOldRecords(){
         const tabsEl = document.getElementById('oldSeasonTabs');
         const contentEl = document.getElementById('oldSeasonContent');
