@@ -45,7 +45,8 @@
   {"id":"mete-o","race":"Zerg","tier":"Bronze"},
   {"id":"MUNGOM","race":"Zerg","tier":"Gold"},
   {"id":"nRoll","race":"Protoss","tier":"Silver"},
-  {"id":"Glory","race":"Zerg","tier":"Silver"}
+  {"id":"Glory","race":"Zerg","tier":"Silver"},
+  {"id":"Maksim","race":"Protoss","tier":"Silver"}
     ],
     "matches": [
   {"date":"2025-09-01","map":"Match","team1":["Zeze","Rupark","Miny","coolguy"],"team2":["Veeny","Gdragon","Rocky","Hyunho"],"winner":["Veeny","Gdragon","Rocky","Hyunho"],"score":"4:1"},
