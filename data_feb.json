@@ -295,35 +295,20 @@
       "map": "Match",
       "team1": ["dalsun2","Pang","MiSTY"],
       "team2": ["JeJu","Veeny","Friend"],
-      "winner": ["JeJu","Veeny","Friend"],
-      "score": "0:2"
-    },
-    {"date":"2026-02-05","map":"투혼","player1":"Pang","player2":"Veeny","winner":"Veeny","score":"0:1"},
-    {"date":"2026-02-05","map":"투혼","player1":"MiSTY","player2":"JeJu","winner":"JeJu","score":"0:2"},
-
-    {
-      "date": "2026-02-05",
-      "map": "Match",
-      "team1": ["dalsun2","Pang","MiSTY"],
-      "team2": ["JeJu","Veeny","Friend"],
       "winner": ["dalsun2","Pang","MiSTY"],
-      "score": "3:2"
-    },
-    {"date":"2026-02-05","map":"투혼","player1":"MiSTY","player2":"Friend","winner":"Friend","score":"0:1"},
-    {"date":"2026-02-05","map":"투혼","player1":"dalsun2","player2":"Friend","winner":"dalsun2","score":"1:1"},
-    {"date":"2026-02-05","map":"투혼","player1":"dalsun2","player2":"Veeny","winner":"dalsun2","score":"2:1"},
-    {"date":"2026-02-05","map":"투혼","player1":"dalsun2","player2":"JeJu","winner":"JeJu","score":"2:2"},
-    {"date":"2026-02-05","map":"투혼","player1":"Pang","player2":"JeJu","winner":"Pang","score":"3:2"},
-
-    {
-      "date": "2026-02-05",
-      "map": "Match",
-      "team1": ["dalsun2","Pang","MiSTY"],
-      "team2": ["JeJu","Veeny","Friend"],
-      "winner": ["dalsun2","Pang","MiSTY"],
-      "score": "1:0"
-    },
-    {"date":"2026-02-05","map":"투혼(에결)","player1":"Pang","player2":"Friend","winner":"Pang","score":"1:0"},
+      "score": "2:1",
+      "match":"RoundSummary"
+        },
+{"date":"2026-02-05","map":"투혼","player1":"Pang","player2":"Veeny","winner":"Veeny","score":"0:1","match":"Round1"},
+{"date":"2026-02-05","map":"투혼","player1":"MiSTY","player2":"JeJu","winner":"JeJu","score":"0:2","match":"Round1"},
+    
+{"date":"2026-02-05","map":"투혼","player1":"MiSTY","player2":"Friend","winner":"Friend","score":"0:1","match":"Round2"},
+{"date":"2026-02-05","map":"투혼","player1":"dalsun2","player2":"Friend","winner":"dalsun2","score":"1:1","match":"Round2"},
+{"date":"2026-02-05","map":"투혼","player1":"dalsun2","player2":"Veeny","winner":"dalsun2","score":"2:1","match":"Round2"},
+{"date":"2026-02-05","map":"투혼","player1":"dalsun2","player2":"JeJu","winner":"JeJu","score":"2:2","match":"Round2"},
+{"date":"2026-02-05","map":"투혼","player1":"Pang","player2":"JeJu","winner":"Pang","score":"3:2","match":"Round2"},
+    
+{"date":"2026-02-05","map":"투혼(에결)","player1":"Pang","player2":"Friend","winner":"Pang","score":"1:0","match":"Round3"},
 
         {
       "date": "2026-02-06",
