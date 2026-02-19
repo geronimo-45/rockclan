@@ -951,13 +951,13 @@ renderAll(base);
         const dataM = (byMonth.get(key)||[]).slice().sort((a,b)=> String(a.date).localeCompare(String(b.date)));
         list.innerHTML = '';
 
-        let curDate=null, box=null, mCount=0;
+        let curDate=null, box=null, mCount=0, curRound=null;
         const flushHeader = ()=>{ if(box && mCount>0){ box.querySelector('.match-header').textContent += ` (Match ${mCount}게임)`; } };
 
         for(const m of dataM){
           if(m.date !== curDate){
             flushHeader();
-            curDate = m.date; mCount = 0;
+            curDate = m.date; mCount = 0; curRound = null;
 
             box = document.createElement('div');
             box.className = 'match';
@@ -987,6 +987,19 @@ renderAll(base);
             wrap.appendChild(line);
             continue;
           }
+// ✅ 라운드 구분 표시 (match: "Round1/2/3" 등)
+const round = (typeof m.match === 'string' && m.match.trim()) ? m.match.trim() : null;
+if(round && round !== curRound){
+  curRound = round;
+
+  const sep = document.createElement('div');
+  sep.className = 'match-item';
+  sep.style.marginTop = '10px';
+  sep.style.fontWeight = '700';
+  sep.style.color = '#ffb347';
+  sep.textContent = `▶ ${curRound}`;
+  wrap.appendChild(sep);
+}
 
           if(m.player1 && m.player2){
             const l = document.createElement('div'); l.className='match-item';
