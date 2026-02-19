@@ -951,13 +951,13 @@ renderAll(base);
         const dataM = (byMonth.get(key)||[]).slice().sort((a,b)=> String(a.date).localeCompare(String(b.date)));
         list.innerHTML = '';
 
-        let curDate=null, box=null, mCount=0;
+        let curDate=null, box=null, mCount=0, curRound=null;
         const flushHeader = ()=>{ if(box && mCount>0){ box.querySelector('.match-header').textContent += ` (Match ${mCount}게임)`; } };
 
         for(const m of dataM){
           if(m.date !== curDate){
             flushHeader();
-            curDate = m.date; mCount = 0;
+            curDate = m.date; mCount = 0; curRound = null;
 
             box = document.createElement('div');
             box.className = 'match';
@@ -977,6 +977,7 @@ renderAll(base);
 
           const wrap = box.querySelector('.match-inner');
 
+          // ✅ 프로리그 최종 결과 (Match 1줄)
           if(m.map === 'Match'){
             mCount++;
             const line = document.createElement('div');
@@ -986,6 +987,20 @@ renderAll(base);
             line.textContent = `[Match] 승자: ${win}${m.score?` | 스코어: ${m.score}`:''}`;
             wrap.appendChild(line);
             continue;
+          }
+
+          // ✅ 라운드 구분 표시 (match: "Round1/2/3" 등)
+          const round = (typeof m.match === 'string' && m.match.trim()) ? m.match.trim() : null;
+          if(round && round !== curRound){
+            curRound = round;
+
+            const sep = document.createElement('div');
+            sep.className = 'match-item';
+            sep.style.marginTop = '10px';
+            sep.style.fontWeight = '700';
+            sep.style.color = '#ffb347';
+            sep.textContent = `▶ ${curRound}`;
+            wrap.appendChild(sep);
           }
 
           if(m.player1 && m.player2){
@@ -1003,15 +1018,7 @@ renderAll(base);
         }
         flushHeader();
       }
-
-      if (monthsSorted.length){
-        renderMonth(monthsSorted[monthsSorted.length-1]);
-      }
-
-      tabsWrap.addEventListener('click', (e)=>{
-        const btn = e.target.closest('.month-tab');
-        if(!btn) return;
-        tabsWrap.querySelectorAll('.month-tab').forEach(b=>b.classList.remove('active'));
+tabsWrap.querySelectorAll('.month-tab').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
         renderMonth(btn.dataset.month);
       });
