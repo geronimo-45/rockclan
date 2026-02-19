@@ -46,7 +46,12 @@
   {"id":"MUNGOM","race":"Zerg","tier":"Gold"},
   {"id":"nRoll","race":"Protoss","tier":"Silver"},
   {"id":"Glory","race":"Zerg","tier":"Silver"},
-  {"id":"Maksim","race":"Protoss","tier":"Silver"}
+  {"id":"Maksim","race":"Protoss","tier":"Silver"},
+  {"id":"StarKing","race":"Terran","tier":"Silver"},
+  {"id":"juhyoung","race":"Zerg","tier":"Silver"},
+  {"id":"Probe","race":"Protoss","tier":"Diamond"},
+  {"id":"Hyun","race":"Zerg","tier":"Diamond"},
+  {"id":"crcrcrby","race":"Protoss","tier":"Legend"}
     ],
     "matches": [
   {"date":"2025-09-01","map":"Match","team1":["Zeze","Rupark","Miny","coolguy"],"team2":["Veeny","Gdragon","Rocky","Hyunho"],"winner":["Veeny","Gdragon","Rocky","Hyunho"],"score":"4:1"},
