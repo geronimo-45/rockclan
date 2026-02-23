@@ -1005,7 +1005,55 @@
     {"date":"2026-02-21","map":"투혼","player1":"Glory","player2":"dong9","winner":"dong9","score":"3:1"},
     {"date":"2026-02-21","map":"2:2생컨","team1":["JeJu","dalsun2"],"team2":["Strive","Gdragon"],"winner":["Strive","Gdragon"],"score":"3:2"},
     {"date":"2026-02-21","map":"2:2투혼","team1":["Glory","Hyun"],"team2":["dong9","MiSTY"],"winner":["dong9","MiSTY"],"score":"3:3"},
-    {"date":"2026-02-21","map":"투혼(에결)","player1":"Hyun","player2":"MiSTY","winner":"Hyun","score":"4:3"}
+    {"date":"2026-02-21","map":"투혼(에결)","player1":"Hyun","player2":"MiSTY","winner":"Hyun","score":"4:3"},
+
+        {
+      "date": "2026-02-22",
+      "map": "Match",
+      "team1": ["Strive","Veeny","Skidashi","MiSTY","Miny"],
+      "team2": ["dong9","Rocky","Glory","GgoMajin","Gdragon"],
+      "winner": ["dong9","Rocky","Glory","GgoMajin","Gdragon"],
+      "score": "3:4"
+    },
+    {"date":"2026-02-22","map":"투혼","player1":"Strive","player2":"dong9","winner":"Strive","score":"1:0"},
+    {"date":"2026-02-22","map":"투혼","player1":"Veeny","player2":"Rocky","winner":"Veeny","score":"2:0"},
+    {"date":"2026-02-22","map":"투혼","player1":"Skidashi","player2":"Glory","winner":"Skidashi","score":"3:0"},
+    {"date":"2026-02-22","map":"투혼","player1":"MiSTY","player2":"GgoMajin","winner":"GgoMajin","score":"3:1"},
+    {"date":"2026-02-22","map":"투혼","player1":"Miny","player2":"Gdragon","winner":"Gdragon","score":"3:2"},
+    {"date":"2026-02-22","map":"2:2생컨","team1":["Miny","MiSTY"],"team2":["dong9","Rocky"],"winner":["dong9","Rocky"],"score":"3:3"},
+    {"date":"2026-02-22","map":"3:3헌터","team1":["Strive","Skidashi","Veeny"],"team2":["Glory","GgoMajin","Gdragon"],"winner":["Glory","GgoMajin","Gdragon"],"score":"3:4"},
+
+    {
+      "date": "2026-02-22",
+      "map": "Match",
+      "team1": ["JeJu","Glory","MiSTY","Strive"],
+      "team2": ["dong9","Friend","Gdragon","dalsun2"],
+      "winner": ["dong9","Friend","Gdragon","dalsun2"],
+      "score": "3:4"
+    },
+    {"date":"2026-02-22","map":"투혼","player1":"JeJu","player2":"dong9","winner":"dong9","score":"0:1"},
+    {"date":"2026-02-22","map":"투혼","player1":"Glory","player2":"Friend","winner":"Friend","score":"0:2"},
+    {"date":"2026-02-22","map":"투혼","player1":"MiSTY","player2":"Gdragon","winner":"Gdragon","score":"0:3"},
+    {"date":"2026-02-22","map":"투혼","player1":"Strive","player2":"dalsun2","winner":"Strive","score":"1:3"},
+    {"date":"2026-02-22","map":"2:2투혼","team1":["Strive","Glory"],"team2":["dong9","Friend"],"winner":["Strive","Glory"],"score":"2:3"},
+    {"date":"2026-02-22","map":"2:2생컨","team1":["JeJu","MiSTY"],"team2":["Gdragon","dalsun2"],"winner":["JeJu","MiSTY"],"score":"3:3"},
+    {"date":"2026-02-22","map":"투혼(에결)","player1":"Strive","player2":"dalsun2","winner":"dalsun2","score":"3:4"},
+
+    {
+      "date": "2026-02-22",
+      "map": "Match",
+      "team1": ["Pang","JeJu","Rupark","MiSTY"],
+      "team2": ["Gdragon","dalsun2","Veeny","Miny"],
+      "winner": ["Pang","JeJu","Rupark","MiSTY"],
+      "score": "4:3"
+    },
+    {"date":"2026-02-22","map":"투혼","player1":"Pang","player2":"dalsun2","winner":"dalsun2","score":"0:1"},
+    {"date":"2026-02-22","map":"투혼","player1":"Rupark","player2":"Miny","winner":"Rupark","score":"1:1"},
+    {"date":"2026-02-22","map":"투혼","player1":"JeJu","player2":"Veeny","winner":"JeJu","score":"2:1"},
+    {"date":"2026-02-22","map":"투혼","player1":"MiSTY","player2":"Gdragon","winner":"Gdragon","score":"2:2"},
+    {"date":"2026-02-22","map":"2:2투혼","team1":["Pang","Rupark"],"team2":["Gdragon","Veeny"],"winner":["Pang","Rupark"],"score":"3:2"},
+    {"date":"2026-02-22","map":"2:2생컨","team1":["JeJu","MiSTY"],"team2":["dalsun2","Miny"],"winner":["dalsun2","Miny"],"score":"3:3"},
+    {"date":"2026-02-22","map":"투혼(에결)","player1":"JeJu","player2":"Miny","winner":"JeJu","score":"4:3"}
 
 
   ],
