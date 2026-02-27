@@ -17,7 +17,7 @@
     {
       "date": "2026-02-01",
       "map": "Match",
-      "team1": ["MiSTY", "Rocky", "Glory", "MUNGOM", "dopamine", "Rupark", "Attaboyboy"],
+      "team1": ["MiSTY", "Rocky", "Glory", "MUNGOM", "dopamine", "Rupark", "Attaboy"],
       "team2": ["Zeze", "Friend", "GgoMajin", "dong9", "Veeny", "Skidashi", "Hyunho"],
       "winner": ["Zeze", "Friend", "GgoMajin", "dong9", "Veeny", "Skidashi", "Hyunho"],
       "score": "2:5"
@@ -28,7 +28,7 @@
     {"date":"2026-02-01","map":"투혼","player1":"MUNGOM","player2":"dong9","winner":"dong9","score":"0:4"},
     {"date":"2026-02-01","map":"투혼","player1":"dopamine","player2":"Veeny","winner":"dopamine","score":"1:4"},
     {"date":"2026-02-01","map":"투혼","player1":"Rupark","player2":"Skidashi","winner":"Rupark","score":"2:4"},
-    {"date":"2026-02-01","map":"투혼","player1":"Attaboyboy","player2":"Hyunho","winner":"Hyunho","score":"2:5"},
+    {"date":"2026-02-01","map":"투혼","player1":"Attaboy","player2":"Hyunho","winner":"Hyunho","score":"2:5"},
 
     {
       "date": "2026-02-01",
