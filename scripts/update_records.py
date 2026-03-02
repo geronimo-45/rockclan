@@ -321,6 +321,75 @@ def normalize_map(raw: str) -> str:
     return raw
 
 
+# ===== index.html 자동 업데이트 =====
+def update_index_html(new_month_filename: str):
+    """
+    index.html에 새 월 데이터 파일 참조를 자동으로 추가.
+
+    index.html 안에는 아래 패턴이 두 군데 있음:
+      const months = ['oct','nov','dec','jan','feb'];
+    → 새 월(예: 'mar')을 배열 끝에 자동으로 추가.
+    """
+    index_path = REPO_ROOT / "index.html"
+    if not index_path.exists():
+        print(f"  [경고] index.html 없음, 건너뜀")
+        return
+
+    # new_month_filename: "data_mar.json" → month_key: "mar"
+    month_key = new_month_filename.replace("data_", "").replace(".json", "")
+
+    with open(index_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # 이미 포함되어 있으면 패스
+    if f"'{month_key}'" in content or f'"{month_key}"' in content:
+        print(f"  [정보] index.html에 이미 '{month_key}' 존재, 건너뜀")
+        return
+
+    # 패턴: const months = ['oct','nov','dec','jan','feb'];
+    # 따옴표 종류(', ")에 상관없이 배열 끝 항목 뒤에 새 month_key 삽입
+    pattern = re.compile(
+        r"(const\s+months\s*=\s*\[)([\s\S]*?)(\];)"
+    )
+
+    updated_count = 0
+
+    def replacer(m):
+        nonlocal updated_count
+        prefix = m.group(1)   # "const months = ["
+        body   = m.group(2)   # "'oct','nov','dec','jan','feb'"
+        suffix = m.group(3)   # "];"
+
+        # 기존 따옴표 스타일 감지 (작은따옴표 우선)
+        quote = "'" if "'" in body else '"'
+
+        # 이미 있으면 스킵
+        if f"{quote}{month_key}{quote}" in body:
+            return m.group(0)
+
+        # 마지막 항목 뒤에 추가
+        new_body = body.rstrip()
+        if new_body.endswith(","):
+            new_body += f" {quote}{month_key}{quote}"
+        else:
+            new_body += f", {quote}{month_key}{quote}"
+
+        updated_count += 1
+        return prefix + new_body + suffix
+
+    new_content = pattern.sub(replacer, content)
+
+    if updated_count == 0:
+        print(f"  [경고] index.html에서 'const months = [...]' 패턴을 찾지 못했어요.")
+        print(f"         index.html을 직접 확인하고 '{month_key}'를 수동으로 추가해주세요.")
+        return
+
+    with open(index_path, "w", encoding="utf-8") as f:
+        f.write(new_content)
+
+    print(f"  [업데이트] index.html의 months 배열 {updated_count}곳에 '{month_key}' 추가 완료")
+
+
 # ===== JSON 파일 관리 =====
 def get_data_file(match_date: str) -> Path:
     """날짜에 맞는 JSON 파일 경로 반환"""
@@ -426,9 +495,13 @@ def main():
 
         print(f"  파싱된 항목 수: {len(entries)}")
 
-        # JSON 파일에 추가
+        # JSON 파일에 추가 (새 월이면 index.html도 자동 업데이트)
         data_file = get_data_file(match_date)
+        is_new_file = not data_file.exists()
         append_entries(data_file, entries)
+        if is_new_file:
+            print(f"  [신규] {data_file.name} 새로 생성 → index.html 업데이트")
+            update_index_html(data_file.name)
 
         processed_ids.add(article_id)
         new_entries_count += len(entries)
