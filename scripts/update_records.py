@@ -593,6 +593,115 @@ def append_entries(path: Path, entries: list):
     save_json_file(path, data)
 
 
+def fetch_article_by_id(article_id: int):
+    """
+    게시글 ID로 직접 접근해서 제목 + 본문 + 날짜 반환.
+    실패 시 (None, None, None) 반환.
+    """
+    # 두 가지 URL 시도
+    urls = [
+        f"https://cafe.naver.com/ArticleRead.nhn?clubid={CAFE_ID}&articleid={article_id}",
+        f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/{article_id}",
+    ]
+
+    for url in urls:
+        try:
+            resp = requests.get(url, headers=get_headers(accept_html=True), timeout=15)
+            print(f"  [HTTP] {resp.status_code} ← {url.split('?')[0].split('/')[-1]}")
+
+            if resp.status_code == 404:
+                return None, None, None
+            if resp.status_code in (401, 403):
+                print("  [오류] 인증 실패 — 쿠키를 확인하세요.")
+                return None, None, None
+            if not resp.ok:
+                continue
+
+            html = resp.text
+
+            # 제목 추출
+            title = ""
+            title_patterns = [
+                r'<meta property="og:title" content="([^"]+)"',
+                r'<title>([^<]+)</title>',
+                r'"subject"\s*:\s*"([^"]+)"',
+                r'<h3[^>]+class="[^"]*title[^"]*"[^>]*>([^<]+)</h3>',
+            ]
+            for pat in title_patterns:
+                m = re.search(pat, html)
+                if m:
+                    title = m.group(1).strip()
+                    # og:title에 카페 이름이 붙는 경우 제거 ("제목 : 카페명" 형태)
+                    title = re.sub(r'\s*[:\|]\s*.*카페.*$', '', title).strip()
+                    title = re.sub(r'\s*[:\|]\s*RockClan.*$', '', title, flags=re.IGNORECASE).strip()
+                    if title and len(title) > 2:
+                        break
+
+            # 날짜 추출
+            post_date_str = datetime.now().strftime("%Y-%m-%d")
+            date_patterns = [
+                r'"writeDateTimestamp"\s*:\s*(\d+)',
+                r'"writeDate"\s*:\s*"(\d{4}-\d{2}-\d{2})',
+                r'<meta[^>]+property="article:published_time"[^>]+content="(\d{4}-\d{2}-\d{2})',
+            ]
+            for pat in date_patterns:
+                m = re.search(pat, html)
+                if m:
+                    val = m.group(1)
+                    if val.isdigit():
+                        post_date_str = datetime.fromtimestamp(int(val)/1000).strftime("%Y-%m-%d")
+                    else:
+                        post_date_str = val[:10]
+                    break
+
+            # 본문 추출
+            content = fetch_article_content_from_html(html, article_id)
+
+            if title or content:
+                print(f"  [파싱] 제목: '{title}' / 날짜: {post_date_str} / 본문: {len(content)}자")
+                return title, content, post_date_str
+
+        except Exception as e:
+            print(f"  [오류] ID {article_id} 접근 실패: {e}")
+            continue
+
+    return None, None, None
+
+
+def fetch_article_content_from_html(html: str, article_id: int) -> str:
+    """HTML에서 본문 텍스트 추출"""
+    content = ""
+
+    # 본문 영역 추출 시도
+    body_patterns = [
+        r'<div[^>]+class="[^"]*se-main-container[^"]*"[^>]*>([\s\S]{100,}?)</div>\s*(?:</div>\s*){2}',
+        r'<div[^>]+id="tbody"[^>]*>([\s\S]{50,}?)</div>',
+        r'"contentHtml"\s*:\s*"([\s\S]+?)"(?:,|\})',
+        r'<div[^>]+class="[^"]*article_body[^"]*"[^>]*>([\s\S]{50,}?)</div>',
+    ]
+    for pat in body_patterns:
+        m = re.search(pat, html, re.IGNORECASE)
+        if m:
+            content = m.group(1)
+            break
+
+    if not content:
+        content = html
+
+    # HTML → 텍스트
+    content = re.sub(r'<br\s*/?>', '\n', content, flags=re.IGNORECASE)
+    content = re.sub(r'</p>', '\n', content, flags=re.IGNORECASE)
+    content = re.sub(r'<[^>]+>', ' ', content)
+    content = re.sub(r'&nbsp;', ' ', content)
+    content = re.sub(r'&lt;', '<', content)
+    content = re.sub(r'&gt;', '>', content)
+    content = re.sub(r'&amp;', '&', content)
+    content = re.sub(r'&#39;', "'", content)
+    content = re.sub(r'[ \t]+', ' ', content)
+    content = re.sub(r'\n{3,}', '\n\n', content)
+    return content.strip()
+
+
 # ===== 메인 =====
 def main():
     print(f"[시작] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -607,55 +716,56 @@ def main():
     processed_ids = load_processed_ids()
     new_entries_count = 0
 
-    print(f"[정보] 기처리 게시글 수: {len(processed_ids)}")
+    # 시작 ID: 처리된 ID 중 최대값 + 1
+    start_id = max(processed_ids) + 1 if processed_ids else 741
+    print(f"[정보] 기처리 게시글 수: {len(processed_ids)}, 시작 ID: {start_id}")
 
-    # 최근 글 목록 가져오기 (2페이지까지)
-    articles = []
-    for page in range(1, 3):
-        articles.extend(fetch_article_list(page))
+    # 연속 실패 횟수 (N번 연속 실패하면 종료 — 게시글 번호 공백 허용)
+    MAX_CONSECUTIVE_FAILS = 10
+    consecutive_fails = 0
+    current_id = start_id
 
-    print(f"[정보] 가져온 글 수: {len(articles)}")
-
-    # 프로리그 게시글 필터링 & 처리
-    for article in articles:
-        article_id = article.get("articleId")
-        title = article.get("subject", "")
-        post_date = article.get("writeDateTimestamp", "")
-
-        if not article_id or article_id in processed_ids:
+    while consecutive_fails < MAX_CONSECUTIVE_FAILS:
+        if current_id in processed_ids:
+            current_id += 1
             continue
+
+        print(f"\n[시도] 게시글 ID: {current_id}")
+        title, content, post_date_str = fetch_article_by_id(current_id)
+
+        if title is None:
+            # 존재하지 않는 글 or 접근 불가
+            consecutive_fails += 1
+            print(f"  [스킵] 연속 실패 {consecutive_fails}/{MAX_CONSECUTIVE_FAILS}")
+            current_id += 1
+            continue
+
+        consecutive_fails = 0  # 성공하면 카운터 리셋
+        processed_ids.add(current_id)
 
         if not is_proleague_post(title):
-            print(f"  [건너뜀] '{title}'")
+            print(f"  [건너뜀] '{title}' — 프로리그 글 아님")
+            current_id += 1
             continue
 
-        print(f"\n[처리] {title} (ID: {article_id})")
+        print(f"  [처리] '{title}'")
 
-        # 게시글 작성일 파싱
-        try:
-            post_date_str = datetime.fromtimestamp(post_date / 1000).strftime("%Y-%m-%d")
-        except Exception:
-            post_date_str = datetime.now().strftime("%Y-%m-%d")
-
-        # 경기 날짜 추출
         match_date = extract_match_date(title, post_date_str)
         print(f"  경기 날짜: {match_date}")
 
-        # 본문 가져오기
-        content = fetch_article_content(article_id)
         if not content:
             print(f"  [경고] 본문 없음, 건너뜀")
+            current_id += 1
             continue
 
-        # 파싱
         entries = parse_post_content(content, match_date)
         if not entries:
             print(f"  [경고] 파싱 실패, 건너뜀")
+            current_id += 1
             continue
 
         print(f"  파싱된 항목 수: {len(entries)}")
 
-        # JSON 파일에 추가 (새 월이면 index.html도 자동 업데이트)
         data_file = get_data_file(match_date)
         is_new_file = not data_file.exists()
         append_entries(data_file, entries)
@@ -663,13 +773,11 @@ def main():
             print(f"  [신규] {data_file.name} 새로 생성 → index.html 업데이트")
             update_index_html(data_file.name)
 
-        processed_ids.add(article_id)
         new_entries_count += len(entries)
+        current_id += 1
 
-    # 처리된 ID 저장
     save_processed_ids(processed_ids)
-
-    print(f"\n[완료] 새로 추가된 항목: {new_entries_count}개")
+    print(f"\n[완료] 새로 추가된 항목: {new_entries_count}개 (마지막 확인 ID: {current_id - 1})")
 
 
 if __name__ == "__main__":
