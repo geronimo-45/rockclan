@@ -136,9 +136,73 @@ def fetch_article_list(page: int = 1) -> list:
         articles = []
         html = resp.text
 
-        # 디버그: 실제 HTML 구조 확인 (처음 1000자 출력)
-        print(f"  [디버그] HTML 앞부분:\n{html[:1000]}")
-        print(f"  [디버그] HTML 전체 길이: {len(html)}자")
+        # Next.js 앱: __NEXT_DATA__ JSON에서 게시글 목록 추출
+        next_data_match = re.search(r'<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)</script>', html)
+        if next_data_match:
+            try:
+                next_data = json.loads(next_data_match.group(1))
+                print(f"  [디버그] __NEXT_DATA__ 발견, 키: {list(next_data.get('props', {}).get('pageProps', {}).keys())[:10]}")
+
+                # 다양한 경로에서 articleList 찾기
+                page_props = next_data.get("props", {}).get("pageProps", {})
+
+                candidates = [
+                    page_props.get("articleList"),
+                    page_props.get("articles"),
+                    page_props.get("data", {}).get("articleList") if isinstance(page_props.get("data"), dict) else None,
+                    page_props.get("initialData", {}).get("articleList") if isinstance(page_props.get("initialData"), dict) else None,
+                ]
+
+                for candidate in candidates:
+                    if isinstance(candidate, list) and len(candidate) > 0:
+                        for item in candidate:
+                            aid = item.get("articleId") or item.get("id")
+                            title = item.get("subject") or item.get("title") or item.get("name", "")
+                            if aid and title:
+                                articles.append({
+                                    "articleId": int(aid),
+                                    "subject": title.strip(),
+                                    "writeDateTimestamp": item.get("writeDateTimestamp") or int(datetime.now().timestamp() * 1000),
+                                })
+                        if articles:
+                            break
+
+                if not articles:
+                    print(f"  [디버그] pageProps 전체 키: {json.dumps(list(page_props.keys()))}")
+            except Exception as e:
+                print(f"  [오류] __NEXT_DATA__ 파싱 실패: {e}")
+        else:
+            print(f"  [디버그] __NEXT_DATA__ 없음 — 다른 방식 시도")
+
+        # fallback: 직접 API 호출 (카페 내부 API)
+        if not articles:
+            api_url = (
+                f"https://cafe.naver.com/api/cafes/{CAFE_ID}/menus/{MENU_ID}/articles"
+                f"?page={page}&perPage=20&orderBy=desc"
+            )
+            try:
+                api_resp = requests.get(api_url, headers=get_headers(), timeout=15)
+                print(f"  [API fallback] 상태코드: {api_resp.status_code}")
+                if api_resp.status_code == 200:
+                    api_data = api_resp.json()
+                    print(f"  [API fallback] 응답 키: {list(api_data.keys())[:10]}")
+                    raw_list = (
+                        api_data.get("articleList")
+                        or api_data.get("articles")
+                        or api_data.get("result", {}).get("articleList")
+                        or []
+                    )
+                    for item in raw_list:
+                        aid = item.get("articleId") or item.get("id")
+                        title = item.get("subject") or item.get("title", "")
+                        if aid and title:
+                            articles.append({
+                                "articleId": int(aid),
+                                "subject": title.strip(),
+                                "writeDateTimestamp": item.get("writeDateTimestamp") or int(datetime.now().timestamp() * 1000),
+                            })
+            except Exception as e:
+                print(f"  [API fallback] 실패: {e}")
 
         # 게시글 링크 패턴: articleid=숫자
         # 예: href="...articleid=733&..."
