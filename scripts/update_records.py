@@ -133,11 +133,12 @@ def fetch_article_list(page: int = 1) -> list:
 
         resp.raise_for_status()
 
-        # HTML에서 게시글 목록 파싱
-        from html.parser import HTMLParser
-
         articles = []
         html = resp.text
+
+        # 디버그: 실제 HTML 구조 확인 (처음 1000자 출력)
+        print(f"  [디버그] HTML 앞부분:\n{html[:1000]}")
+        print(f"  [디버그] HTML 전체 길이: {len(html)}자")
 
         # 게시글 링크 패턴: articleid=숫자
         # 예: href="...articleid=733&..."
