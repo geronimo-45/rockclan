@@ -1,27 +1,14 @@
 {
   "month": "March 2026",
   "matches": [
-    {
-      "date": "2026-03-01",
-      "map": "Match",
-      "team1": ["Friend", "GgoMajin", "Hyunho"],
-      "team2": ["MiSTY", "Glory", "Rocky"],
-      "winner": ["Friend", "GgoMajin", "Hyunho"],
-      "score": "3:1"
-    },
-    {"date":"2026-02-01","map":"투혼","player1":"GgoMajin","player2":"Glory","winner":"GgoMajin","score":"1:0"},
-    {"date":"2026-02-01","map":"투혼","player1":"Hyunho","player2":"MiSTY","winner":"Hyunho","score":"2:0"},
-    {"date":"2026-02-01","map":"투혼","player1":"Friend","player2":"Rocky","winner":"Rocky","score":"2:1"},
-    {"date":"2026-02-01","map":"3:3생컨","team1":["Friend","GgoMajin","Hyunho"],"team2":["MiSTY","Glory","Rocky"],"winner":["Friend","GgoMajin","Hyunho"],"score":"3:1"},
-
 {"date":"2026-03-01","map":"Match","team1":["Rocky","Friend","JeJu","dong9"],"team2":["MiSTY","Skidashi","Strive","IN"],"winner":["MiSTY","Skidashi","Strive","IN"],"score":"3:4"},
 {"date":"2026-03-01","map":"투혼","player1":"Friend","player2":"Skidashi","winner":"Skidashi","score":"0:1"},
 {"date":"2026-03-01","map":"투혼","player1":"Rocky","player2":"MiSTY","winner":"MiSTY","score":"0:2"},
 {"date":"2026-03-01","map":"투혼","player1":"dong9","player2":"IN","winner":"dong9","score":"1:2"},
 {"date":"2026-03-01","map":"투혼","player1":"JeJu","player2":"Strive","winner":"JeJu","score":"2:2"},
-{"date":"2026-03-01","map":"2:2팀플","team1":["dong9","Rocky"],"team2":["IN","Skidashi"],"winner":["dong9","Rocky"],"score":"3:2"},
+{"date":"2026-03-01","map":"2:2투혼","team1":["dong9","Rocky"],"team2":["IN","Skidashi"],"winner":["dong9","Rocky"],"score":"3:2"},
 {"date":"2026-03-01","map":"2:2생컨","team1":["JeJu","Friend"],"team2":["Strive","MiSTY"],"winner":["Strive","MiSTY"],"score":"3:3"},
-{"date":"2026-03-01","map":"투혼","player1":"Friend","player2":"IN","winner":"IN","score":"3:4"},
+{"date":"2026-03-01","map":"투혼(에결)","player1":"Friend","player2":"IN","winner":"IN","score":"3:4"},
 
 {"date":"2026-03-01","map":"Match","team1":["JeJu","Rocky","Friend","Rupark"],"team2":["Strive","MiSTY","IN","Skidashi"],"winner":["Strive","MiSTY","IN","Skidashi"],"score":"0:4"},
 {"date":"2026-03-01","map":"투혼","player1":"JeJu","player2":"Strive","winner":"Strive","score":"0:1"},
