@@ -106,25 +106,44 @@ def get_headers() -> dict:
 
 def fetch_article_list(page: int = 1) -> list:
     """게시판 글 목록 가져오기"""
+    # 네이버 카페 article list API (v2.1)
     url = (
-        f"https://apis.naver.com/cafe-web/cafe2/ArticleListV2.json"
-        f"?cafeId={CAFE_ID}&menuId={MENU_ID}&pageSize=20&page={page}"
-        f"&boardType=L&userIdType=nickName&orderBy=date"
+        f"https://apis.naver.com/cafe-web/cafe-articleapi/v2.1"
+        f"/cafes/{CAFE_ID}/menus/{MENU_ID}/articles"
+        f"?page={page}&pageSize=20&boardType=L&orderBy=date"
     )
     try:
         resp = requests.get(url, headers=get_headers(), timeout=15)
+        print(f"  [API] 글 목록 상태코드: {resp.status_code}")
+        if resp.status_code == 401:
+            print("  [오류] 인증 실패 — 쿠키가 만료됐거나 잘못됐을 수 있어요.")
+            return []
+        if resp.status_code == 403:
+            print("  [오류] 접근 거부 — 비공개 카페이거나 로그인이 필요합니다.")
+            return []
         resp.raise_for_status()
         data = resp.json()
-        return data.get("message", {}).get("result", {}).get("articleList", [])
+
+        # v2.1 응답 구조: result.articleList 또는 result.list
+        result = data.get("result", {})
+        articles = (
+            result.get("articleList")
+            or result.get("list")
+            or result.get("articles")
+            or []
+        )
+        print(f"  [API] 페이지 {page}: {len(articles)}개 글 발견")
+        return articles
+
     except Exception as e:
-        print(f"[오류] 글 목록 가져오기 실패: {e}")
+        print(f"  [오류] 글 목록 가져오기 실패: {e}")
         return []
 
 
 def fetch_article_content(article_id: int) -> str:
     """게시글 본문 가져오기"""
     url = (
-        f"https://apis.naver.com/cafe-web/cafe-articleapi/v2"
+        f"https://apis.naver.com/cafe-web/cafe-articleapi/v2.1"
         f"/cafes/{CAFE_ID}/articles/{article_id}"
     )
     try:
@@ -443,6 +462,9 @@ def main():
     if not NID_AUT or not NID_SES:
         print("[오류] 네이버 쿠키가 설정되지 않았습니다. GitHub Secrets를 확인하세요.")
         return
+
+    print(f"[정보] 쿠키 확인 — NID_AUT: {'✅ 설정됨' if NID_AUT else '❌ 없음'} / NID_SES: {'✅ 설정됨' if NID_SES else '❌ 없음'}")
+    print(f"[정보] 카페ID: {CAFE_ID}, 메뉴ID: {MENU_ID}")
 
     processed_ids = load_processed_ids()
     new_entries_count = 0
