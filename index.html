@@ -515,7 +515,7 @@ const SEASONS = [
       const base = await safe(path('data.json'));
 
       // 🔹 추가 월 데이터 로드 (필요시 여기만 수정)
-      const months = ['oct','nov','dec','jan','feb']; // data_oct.json, data_nov.json, data_dec.json, data_jan.json ...
+      const months = ['oct','nov','dec','jan','feb','mar']; // data_oct.json, data_nov.json, data_dec.json, data_jan.json ...
 
       for (const m of months) {
         try {
@@ -1692,7 +1692,7 @@ if(oldContent){
 async function showPlayerModal(playerId, seasonKey=CURRENT_SEASON_KEY){
   try{
     const base = await safe(path('data.json'));
-    const months = ['oct','nov','dec','jan','feb'];
+    const months = ['oct','nov','dec','jan','feb','mar'];
     for(const m of months){
       const add = await safe(path(`data_${m}.json`));
       base.matches = (base.matches||[]).concat(add.matches||[]);
