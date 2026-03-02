@@ -95,44 +95,84 @@ def save_processed_ids(ids: set):
 
 
 # ===== 네이버 카페 API =====
-def get_headers() -> dict:
+def get_headers(accept_html: bool = False) -> dict:
     return {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36"
+        ),
         "Referer": f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/menus/{MENU_ID}",
         "Cookie": f"NID_AUT={NID_AUT}; NID_SES={NID_SES}",
-        "Accept": "application/json",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" if accept_html else "application/json",
+        "Accept-Language": "ko-KR,ko;q=0.9",
     }
 
 
 def fetch_article_list(page: int = 1) -> list:
-    """게시판 글 목록 가져오기"""
-    # 네이버 카페 article list API (v2.1)
+    """
+    게시판 글 목록 가져오기 — iframe HTML 파싱 방식
+    네이버 카페는 실제 컨텐츠를 iframe 안에 표시하므로
+    ArticleList.nhn 엔드포인트로 HTML을 직접 파싱합니다.
+    """
     url = (
-        f"https://apis.naver.com/cafe-web/cafe-articleapi/v2.1"
-        f"/cafes/{CAFE_ID}/menus/{MENU_ID}/articles"
-        f"?page={page}&pageSize=20&boardType=L&orderBy=date"
+        f"https://cafe.naver.com/ArticleList.nhn"
+        f"?search.clubid={CAFE_ID}"
+        f"&search.menuid={MENU_ID}"
+        f"&search.boardtype=L"
+        f"&search.page={page}"
+        f"&userDisplay=20"
     )
     try:
-        resp = requests.get(url, headers=get_headers(), timeout=15)
-        print(f"  [API] 글 목록 상태코드: {resp.status_code}")
-        if resp.status_code == 401:
-            print("  [오류] 인증 실패 — 쿠키가 만료됐거나 잘못됐을 수 있어요.")
-            return []
-        if resp.status_code == 403:
-            print("  [오류] 접근 거부 — 비공개 카페이거나 로그인이 필요합니다.")
-            return []
-        resp.raise_for_status()
-        data = resp.json()
+        resp = requests.get(url, headers=get_headers(accept_html=True), timeout=15)
+        print(f"  [HTML] 글 목록 상태코드: {resp.status_code}")
 
-        # v2.1 응답 구조: result.articleList 또는 result.list
-        result = data.get("result", {})
-        articles = (
-            result.get("articleList")
-            or result.get("list")
-            or result.get("articles")
-            or []
+        if resp.status_code in (401, 403):
+            print("  [오류] 인증 실패 — 쿠키를 다시 복사해주세요.")
+            return []
+
+        resp.raise_for_status()
+
+        # HTML에서 게시글 목록 파싱
+        from html.parser import HTMLParser
+
+        articles = []
+        html = resp.text
+
+        # 게시글 링크 패턴: articleid=숫자
+        # 예: href="...articleid=733&..."
+        article_ids = re.findall(r'articleid=(\d+)', html)
+        seen = set()
+
+        # 제목 파싱: <a ...>제목</a> 구조에서 추출
+        # 링크에서 articleid와 제목 동시 추출
+        link_pattern = re.compile(
+            r'<a[^>]+articleid=(\d+)[^>]*>(.*?)</a>',
+            re.DOTALL | re.IGNORECASE
         )
-        print(f"  [API] 페이지 {page}: {len(articles)}개 글 발견")
+
+        for m in link_pattern.finditer(html):
+            aid = int(m.group(1))
+            if aid in seen:
+                continue
+            seen.add(aid)
+
+            raw_title = m.group(2)
+            # HTML 태그 제거 & 공백 정리
+            title = re.sub(r'<[^>]+>', '', raw_title).strip()
+            title = re.sub(r'\s+', ' ', title)
+
+            # 빈 제목이나 숫자만 있는 경우 스킵
+            if not title or title.isdigit():
+                continue
+
+            articles.append({
+                "articleId": aid,
+                "subject": title,
+                "writeDateTimestamp": int(datetime.now().timestamp() * 1000),
+            })
+
+        print(f"  [HTML] 페이지 {page}: {len(articles)}개 글 파싱됨")
         return articles
 
     except Exception as e:
@@ -141,26 +181,59 @@ def fetch_article_list(page: int = 1) -> list:
 
 
 def fetch_article_content(article_id: int) -> str:
-    """게시글 본문 가져오기"""
+    """
+    게시글 본문 가져오기 — iframe HTML 직접 파싱
+    네이버 카페 글은 iframe 내부에 렌더링되므로
+    ArticleRead.nhn으로 접근합니다.
+    """
     url = (
-        f"https://apis.naver.com/cafe-web/cafe-articleapi/v2.1"
-        f"/cafes/{CAFE_ID}/articles/{article_id}"
+        f"https://cafe.naver.com/ArticleRead.nhn"
+        f"?clubid={CAFE_ID}&articleid={article_id}"
     )
     try:
-        resp = requests.get(url, headers=get_headers(), timeout=15)
+        resp = requests.get(url, headers=get_headers(accept_html=True), timeout=15)
+        print(f"  [HTML] 본문 상태코드: {resp.status_code} (ID:{article_id})")
         resp.raise_for_status()
-        data = resp.json()
-        result = data.get("result", {})
-        content = result.get("article", {}).get("contentHtml", "")
-        # HTML 태그 제거
-        content = re.sub(r"<[^>]+>", "\n", content)
-        content = re.sub(r"&nbsp;", " ", content)
-        content = re.sub(r"&lt;", "<", content)
-        content = re.sub(r"&gt;", ">", content)
-        content = re.sub(r"\n{3,}", "\n\n", content)
-        return content.strip()
+
+        html = resp.text
+
+        # 본문 영역 추출: se-main-container 또는 ArticleContentBox
+        content = ""
+
+        # 방법1: 본문 div 추출
+        body_patterns = [
+            r'<div[^>]+class="[^"]*se-main-container[^"]*"[^>]*>([\s\S]*?)</div>\s*</div>\s*</div>',
+            r'<div[^>]+id="tbody"[^>]*>([\s\S]*?)</div>',
+            r'<div[^>]+class="[^"]*article_body[^"]*"[^>]*>([\s\S]*?)</div>',
+        ]
+
+        for pat in body_patterns:
+            m = re.search(pat, html, re.IGNORECASE)
+            if m:
+                content = m.group(1)
+                break
+
+        # 방법2: 전체 HTML에서 텍스트 추출 (fallback)
+        if not content:
+            content = html
+
+        # HTML → 텍스트 변환
+        content = re.sub(r'<br\s*/?>', '\n', content, flags=re.IGNORECASE)
+        content = re.sub(r'<[^>]+>', ' ', content)
+        content = re.sub(r'&nbsp;', ' ', content)
+        content = re.sub(r'&lt;', '<', content)
+        content = re.sub(r'&gt;', '>', content)
+        content = re.sub(r'&amp;', '&', content)
+        content = re.sub(r'&#39;', "'", content)
+        content = re.sub(r'[ \t]+', ' ', content)
+        content = re.sub(r'\n{3,}', '\n\n', content)
+
+        result = content.strip()
+        print(f"  [HTML] 본문 길이: {len(result)}자")
+        return result
+
     except Exception as e:
-        print(f"[오류] 글 본문 가져오기 실패 (ID:{article_id}): {e}")
+        print(f"  [오류] 글 본문 가져오기 실패 (ID:{article_id}): {e}")
         return ""
 
 
