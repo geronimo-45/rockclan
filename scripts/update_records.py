@@ -133,7 +133,26 @@ def fetch_article_by_id(context, article_id):
             except Exception as e:
                 captured["body_err"] = str(e)
 
-    # article.cafe.naver.com XHR만 라우팅
+    # article.cafe.naver.com XHR 가로채서 쿠키 강제 주입
+    full_cookie = "; ".join(filter(None, [
+        f"NID_AUT={NID_AUT}" if NID_AUT else "",
+        f"NID_SES={NID_SES}" if NID_SES else "",
+        f"JSESSIONID={CAFE_JSESSIONID}" if CAFE_JSESSIONID else "",
+        f"nci4={CAFE_NCI4}" if CAFE_NCI4 else "",
+        f"ncmc4={CAFE_NCMC4}" if CAFE_NCMC4 else "",
+        f"ncu={CAFE_NCU}" if CAFE_NCU else "",
+        f"ncvc2={CAFE_NCVC2}" if CAFE_NCVC2 else "",
+        f"ncvid={CAFE_NCVID}" if CAFE_NCVID else "",
+    ]))
+
+    def handle_api_route(route):
+        req = route.request
+        captured["xhr_headers"] = dict(req.headers)
+        # 쿠키 강제 주입
+        headers = dict(req.headers)
+        headers["cookie"] = full_cookie
+        route.continue_(headers=headers)
+
     api_pattern = "https://article.cafe.naver.com/**"
     page.route(api_pattern, handle_api_route)
     page.on("response", on_response)
