@@ -136,7 +136,22 @@ def fetch_article_by_id(page, article_id):
                 title_el = m.group(1).strip()
                 print(f"  [직접검색] '{title_el}'")
 
+        # 디버그: 페이지의 모든 h2, h3 요소 출력
         if not title_el:
+            print("  [디버그] 페이지 h2/h3 목록:")
+            for tag in ["h1","h2","h3","h4"]:
+                els = page.query_selector_all(tag)
+                for el in els[:5]:
+                    try: print(f"    <{tag}> '{el.inner_text().strip()[:80]}'")
+                    except: pass
+            print("  [디버그] class에 title 포함 요소:")
+            els = page.query_selector_all("[class*='title']")
+            for el in els[:10]:
+                try:
+                    cls = el.get_attribute("class") or ""
+                    txt = el.inner_text().strip()[:60]
+                    if txt: print(f"    class='{cls[:40]}' → '{txt}'")
+                except: pass
             print(f"  [실패] 제목 없음 (URL:{current_url[:60]})")
             return None, None, None
 
