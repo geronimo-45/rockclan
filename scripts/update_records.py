@@ -85,8 +85,8 @@ def fetch_article_by_id(article_id):
 
         html = resp.text
         print(f"  [디버그] HTML길이:{len(html)}")
-        print(f"  [디버그] HTML전체:
-{html}")\n        print(f"  [디버그] HTML전체:\n{html}")
+        print("  [디버그] HTML전체:")
+        print(html)
 
         # 디버그: 다양한 패턴으로 제목 찾기 시도
         for i,pat in enumerate([
