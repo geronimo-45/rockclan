@@ -71,39 +71,50 @@ def build_cookies():
 
 def fetch_article_by_id(page, article_id):
     """Playwright로 게시글 접근 → (제목, 본문, 날짜) 반환"""
-    url = f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/{article_id}"
+    target_url = f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/{article_id}"
     try:
-        resp = page.goto(url, wait_until="networkidle", timeout=30000)
+        resp = page.goto(target_url, wait_until="networkidle", timeout=30000)
         print(f"  [HTTP] {resp.status if resp else '?'}")
 
         if resp and resp.status == 404:
             return None, None, None
 
-        # 페이지 렌더링 대기 — 제목 요소가 나타날 때까지
+        # 리다이렉트 감지: 내소식 또는 다른 페이지로 이동했으면 글 없음
+        current_url = page.url
+        if "articleid" not in current_url and f"articles/{article_id}" not in current_url:
+            print(f"  [리다이렉트] {current_url[:80]} → 글 없음")
+            return None, None, None
+
+        # 페이지 렌더링 대기
         try:
-            page.wait_for_selector("h3.ArticleTitle, .article_header h3, .tit_h1, h3.title", timeout=10000)
+            page.wait_for_selector(
+                "h3.ArticleTitle, .article_header h3, .se-module-text, .ArticleWriteFormView",
+                timeout=10000
+            )
         except:
-            pass  # 타임아웃 무시, 그냥 진행
+            pass
 
         html = page.content()
         title_el = None
 
-        # 제목 추출 시도
+        # 제목 추출 시도 (더 많은 셀렉터)
         for selector in [
             "h3.ArticleTitle",
             ".article_header h3",
+            ".ArticleTitle",
             ".tit_h1",
             "h3.title",
-            ".ArticleTitle",
-            "h2.title",
-            "[class*='title'] h2",
-            "[class*='title'] h3",
+            ".article-head h3",
+            ".ArticleTitle__title",
+            "[class*='ArticleTitle']",
+            "[class*='article-title']",
+            "[class*='article_title']",
         ]:
             try:
                 el = page.query_selector(selector)
                 if el:
                     t = el.inner_text().strip()
-                    if t and t not in ("네이버 카페","") and len(t) > 2:
+                    if t and t not in ("네이버 카페","내소식","") and len(t) > 2:
                         title_el = t
                         print(f"  [셀렉터] '{selector}' → '{t}'")
                         break
@@ -114,11 +125,19 @@ def fetch_article_by_id(page, article_id):
             m = re.search(r'<meta property="og:title" content="([^"]+)"', html)
             if m:
                 t = m.group(1).strip()
-                if t and t not in ("네이버 카페","NAVER") and len(t) > 2:
+                if t and t not in ("네이버 카페","NAVER","내소식") and len(t) > 2:
                     title_el = t
+                    print(f"  [og:title] '{t}'")
+
+        # 마지막: 모든 텍스트에서 프로리그 패턴 직접 검색
+        if not title_el:
+            m = re.search(r"(\d+월\s*\d+일\s*프로리그\s*\d+차[^<\"\n]*)", html)
+            if m:
+                title_el = m.group(1).strip()
+                print(f"  [직접검색] '{title_el}'")
 
         if not title_el:
-            print(f"  [실패] 제목 없음 (HTML길이:{len(html)})")
+            print(f"  [실패] 제목 없음 (URL:{current_url[:60]})")
             return None, None, None
 
         # 날짜 추출
