@@ -110,24 +110,10 @@ def parse_article_json(data, article_id):
     return None, None, None
 
 def fetch_article_by_id(context, article_id):
-    """새 페이지에서 API 응답 캡처 후 즉시 닫기"""
+    """페이지 로드 후 브라우저 컨텍스트 안에서 fetch() 호출 — 인증 자동 처리"""
     page = context.new_page()
-    captured_json = {}
-
-    def on_response(response):
-        url = response.url
-        if f"articles/{article_id}" in url and "article.cafe.naver.com" in url:
-            try:
-                body = response.body()
-                data = json.loads(body)
-                captured_json["data"] = data
-                captured_json["url"] = url
-            except Exception as e:
-                captured_json["err"] = str(e)
-
-    page.on("response", on_response)
-
     try:
+        # 먼저 cafe.naver.com 페이지 방문 (쿠키/세션 초기화)
         nav_url = f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/{article_id}"
         resp = page.goto(nav_url, wait_until="networkidle", timeout=30000)
         status = resp.status if resp else "?"
@@ -142,23 +128,39 @@ def fetch_article_by_id(context, article_id):
             print(f"  [리다이렉트] → 글 없음")
             return None, None, None
 
-        # API 응답 대기 (최대 5초 추가)
-        page.wait_for_timeout(5000)
+        # 페이지 내부 JS에서 API 직접 호출 (브라우저 인증 상태 활용)
+        api_url = f"https://article.cafe.naver.com/gw/v4/cafes/{CAFE_ID}/articles/{article_id}?query=&useCafeId=true&requestFrom=A"
+        result = page.evaluate(f"""async () => {{
+            try {{
+                const res = await fetch("{api_url}", {{
+                    credentials: "include",
+                    headers: {{
+                        "Accept": "application/json",
+                        "Referer": "https://cafe.naver.com/"
+                    }}
+                }});
+                const data = await res.json();
+                return {{ ok: true, status: res.status, data: JSON.stringify(data) }};
+            }} catch(e) {{
+                return {{ ok: false, error: e.toString() }};
+            }}
+        }}""")
 
-        if "data" in captured_json:
-            data = captured_json["data"]
-            print(f"  [API OK] {captured_json['url'][:70]}")
-            print(f"  [디버그] 최상위 키: {list(data.keys())[:8]}")
-            title, content, post_date = parse_article_json(data, article_id)
-            if title:
-                print(f"  [파싱] 제목:'{title}' / 날짜:{post_date} / 본문:{len(content)}자")
-                return title, content, post_date
-            else:
-                print(f"  [디버그] 제목 파싱 실패. 데이터: {str(data)[:400]}")
+        if not result.get("ok"):
+            print(f"  [오류] JS fetch 실패: {result.get('error')}")
+            return None, None, None
+
+        print(f"  [JS fetch] HTTP {result.get('status')}")
+        data = json.loads(result["data"])
+        print(f"  [디버그] 최상위 키: {list(data.keys())[:8]}")
+
+        title, content, post_date = parse_article_json(data, article_id)
+        if title:
+            print(f"  [파싱] 제목:'{title}' / 날짜:{post_date} / 본문:{len(content)}자")
+            return title, content, post_date
         else:
-            print(f"  [디버그] API 응답 없음. err={captured_json.get('err','')}")
-
-        return None, None, None
+            print(f"  [디버그] 제목 파싱 실패. 데이터: {str(data)[:400]}")
+            return None, None, None
 
     except Exception as e:
         print(f"  [오류] {e}")
