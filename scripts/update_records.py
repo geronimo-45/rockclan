@@ -53,17 +53,18 @@ def save_processed_ids(ids):
         json.dump(sorted(list(ids)),f)
 
 def build_cookies():
+    # 모든 쿠키를 .naver.com으로 — article.cafe.naver.com 등 모든 서브도메인에 전달됨
     defs = [
-        ("NID_AUT",    NID_AUT,         ".naver.com"),
-        ("NID_SES",    NID_SES,         ".naver.com"),
-        ("JSESSIONID", CAFE_JSESSIONID, ".cafe.naver.com"),
-        ("nci4",       CAFE_NCI4,       ".cafe.naver.com"),
-        ("ncmc4",      CAFE_NCMC4,      ".cafe.naver.com"),
-        ("ncu",        CAFE_NCU,        ".cafe.naver.com"),
-        ("ncvc2",      CAFE_NCVC2,      ".cafe.naver.com"),
-        ("ncvid",      CAFE_NCVID,      ".cafe.naver.com"),
+        ("NID_AUT",    NID_AUT),
+        ("NID_SES",    NID_SES),
+        ("JSESSIONID", CAFE_JSESSIONID),
+        ("nci4",       CAFE_NCI4),
+        ("ncmc4",      CAFE_NCMC4),
+        ("ncu",        CAFE_NCU),
+        ("ncvc2",      CAFE_NCVC2),
+        ("ncvid",      CAFE_NCVID),
     ]
-    return [{"name":n,"value":v,"domain":d,"path":"/"} for n,v,d in defs if v]
+    return [{"name":n,"value":v,"domain":".naver.com","path":"/"} for n,v in defs if v]
 
 def parse_article_json(data, article_id):
     """API JSON에서 제목/날짜/본문 추출"""
