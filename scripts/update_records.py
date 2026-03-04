@@ -1,6 +1,6 @@
 """
 RockClan 프로리그 기록실 자동화 스크립트
-GitHub Actions에서 실행됨 (30분마다)
+모바일 URL 사용 (서버사이드 렌더링)
 """
 import os, json, re, requests
 from datetime import datetime
@@ -51,7 +51,7 @@ def save_processed_ids(ids):
     with open(PROCESSED_FILE,"w",encoding="utf-8") as f:
         json.dump(sorted(list(ids)),f)
 
-def get_headers(accept_html=False):
+def get_headers(mobile=False):
     parts = [f"NID_AUT={NID_AUT}", f"NID_SES={NID_SES}"]
     if CAFE_JSESSIONID: parts.append(f"JSESSIONID={CAFE_JSESSIONID}")
     if CAFE_NCI4:       parts.append(f"nci4={CAFE_NCI4}")
@@ -59,68 +59,92 @@ def get_headers(accept_html=False):
     if CAFE_NCU:        parts.append(f"ncu={CAFE_NCU}")
     if CAFE_NCVC2:      parts.append(f"ncvc2={CAFE_NCVC2}")
     if CAFE_NCVID:      parts.append(f"ncvid={CAFE_NCVID}")
+
+    ua = (
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) "
+        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"
+        if mobile else
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+    )
     return {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Referer": f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/menus/{MENU_ID}",
+        "User-Agent": ua,
+        "Referer": f"https://m.cafe.naver.com/ca-fe/cafes/{CAFE_ID}/menus/{MENU_ID}" if mobile
+                   else f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/menus/{MENU_ID}",
         "Cookie": "; ".join(parts),
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" if accept_html else "application/json",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "ko-KR,ko;q=0.9",
     }
 
 def fetch_article_by_id(article_id):
-    urls = [
-        f"https://cafe.naver.com/ArticleRead.nhn?clubid={CAFE_ID}&articleid={article_id}",
-        f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/{article_id}",
+    """모바일 URL 우선 → PC URL 순으로 시도"""
+    attempts = [
+        # 모바일 버전 (서버사이드 렌더링)
+        (f"https://m.cafe.naver.com/ca-fe/cafes/{CAFE_ID}/articles/{article_id}", True),
+        # 구버전 모바일
+        (f"https://m.cafe.naver.com/NaverCafeArticleList.nhn?clubid={CAFE_ID}&articleid={article_id}", True),
     ]
-    for url in urls:
+
+    for url, mobile in attempts:
         try:
-            resp = requests.get(url, headers=get_headers(accept_html=True), timeout=15)
-            label = url.split("?")[0].split("/")[-1]
-            print(f"  [HTTP] {resp.status_code} <- {label}")
+            resp = requests.get(url, headers=get_headers(mobile=mobile), timeout=15)
+            label = url.split("/")[-1].split("?")[0]
+            print(f"  [HTTP] {resp.status_code} <- {label} (mobile={mobile})")
+
             if resp.status_code == 404: return None,None,None
-            if resp.status_code in (401,403): print("  [오류] 인증 실패"); return None,None,None
+            if resp.status_code in (401,403):
+                print("  [오류] 인증 실패"); continue
             if not resp.ok: continue
+
             html = resp.text
+            print(f"  [디버그] HTML길이:{len(html)}")
 
-            # 디버그: og:title 원본값 출력
-            og_m = re.search(r'<meta property="og:title" content="([^"]+)"', html)
-            print(f"  [디버그] og:title = '{og_m.group(1) if og_m else '없음'}'")
-            print(f"  [디버그] HTML전체:\n{html}")
-
+            # 제목 추출
             title = ""
-            for pat in [r'<meta property="og:title" content="([^"]+)"',
-                        r'"subject"\s*:\s*"([^"]+)"',
-                        r'<title>([^<]+)</title>']:
+            for pat in [
+                r'<meta property="og:title" content="([^"]+)"',
+                r'"subject"\s*:\s*"([^"]+)"',
+                r'<h3[^>]+class="[^"]*tit[^"]*"[^>]*>([^<]+)</h3>',
+                r'<title>([^<|]+)',
+            ]:
                 m = re.search(pat, html)
                 if m:
                     t = m.group(1).strip()
-                    if t and t not in ("네이버 카페","NAVER") and len(t)>2:
+                    if t and t not in ("네이버 카페","NAVER","") and len(t)>2:
                         title = t; break
 
-            if not title or title in ("네이버 카페","NAVER"):
-                print("  [실패] 로그인 필요 — 쿠키 문제")
-                return None,None,None
+            if not title:
+                # SPA 껍데기인지 확인
+                if '<div id="app">' in html or len(html) < 2000:
+                    print(f"  [디버그] SPA/빈페이지 감지 (길이:{len(html)}), 다음 URL 시도")
+                    continue
+                print(f"  [디버그] 제목 파싱 실패 / og:title={re.search(chr(60)+r'title>([^<]+)', html, re.I) and re.search(chr(60)+r'title>([^<]+)', html, re.I).group(1)}")
+                continue
 
+            # 날짜
             post_date_str = datetime.now().strftime("%Y-%m-%d")
             for pat in [r'"writeDateTimestamp"\s*:\s*(\d{10,})',
-                        r'"writeDate"\s*:\s*"(\d{4}-\d{2}-\d{2})']:
+                        r'"writeDate"\s*:\s*"(\d{4}-\d{2}-\d{2})',
+                        r'<span[^>]+class="[^"]*date[^"]*"[^>]*>(\d{4}\.\d{2}\.\d{2})']:
                 m = re.search(pat, html)
                 if m:
-                    val = m.group(1)
-                    post_date_str = datetime.fromtimestamp(int(val)/1000).strftime("%Y-%m-%d") if val.isdigit() else val[:10]
+                    val = m.group(1).replace(".","-")
+                    post_date_str = datetime.fromtimestamp(int(val)/1000).strftime("%Y-%m-%d") if val.replace("-","").isdigit() and len(val)>8 else val[:10]
                     break
 
             content = extract_text(html)
             print(f"  [파싱] 제목:'{title}' / 날짜:{post_date_str} / 본문:{len(content)}자")
             return title, content, post_date_str
+
         except Exception as e:
             print(f"  [오류] {e}")
+
     return None,None,None
 
 def extract_text(html):
     content = ""
     for pat in [
         r'<div[^>]+class="[^"]*se-main-container[^"]*"[^>]*>([\s\S]{100,}?)</div>\s*(?:</div>\s*){2}',
+        r'<div[^>]+class="[^"]*article_body[^"]*"[^>]*>([\s\S]{50,}?)</div>',
         r'<div[^>]+id="tbody"[^>]*>([\s\S]{50,}?)</div>',
         r'"contentHtml"\s*:\s*"([\s\S]+?)"(?:,|\})',
     ]:
