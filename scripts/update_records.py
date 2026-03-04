@@ -1,6 +1,6 @@
 """
 RockClan 프로리그 기록실 자동화 스크립트
-Playwright + iframe 지원
+Playwright - iframe URL로 직접 접근
 """
 import os, json, re
 from datetime import datetime
@@ -66,17 +66,18 @@ def build_cookies():
     ]
     return [{"name":n,"value":v,"domain":d,"path":"/"} for n,v,d in defs if v]
 
-def get_title_from_frame(frame):
-    """frame(또는 page)에서 제목 추출"""
-    selectors = [
-        "h3.ArticleTitle", ".ArticleTitle", ".tit_subject",
-        ".article_header h3", ".tit_h1", "h3.title",
-        "[class*='ArticleTitle']", "[class*='article_title']",
-        "[class*='tit_subject']", "h3",
-    ]
-    for sel in selectors:
+TITLE_SELECTORS = [
+    "h3.ArticleTitle", ".ArticleTitle", ".tit_subject",
+    ".article_header h3", ".tit_h1", "h3.title",
+    ".ArticleTitle__title", "[class*='ArticleTitle']",
+    "[class*='article_title']", "[class*='tit_subject']",
+    ".article-title", ".se-title-text", "h3",
+]
+
+def try_get_title(target):
+    for sel in TITLE_SELECTORS:
         try:
-            el = frame.query_selector(sel)
+            el = target.query_selector(sel)
             if el:
                 t = el.inner_text().strip()
                 if t and t not in SKIP_TITLES and len(t) > 2:
@@ -85,73 +86,60 @@ def get_title_from_frame(frame):
     return None, None
 
 def fetch_article_by_id(page, article_id):
-    target_url = f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/{article_id}"
+    # iframe URL로 직접 접근 (fromNext=true 포함)
+    direct_url = f"https://cafe.naver.com/ca-fe/cafes/{CAFE_ID}/articles/{article_id}?fromNext=true"
     try:
-        resp = page.goto(target_url, wait_until="networkidle", timeout=30000)
-        print(f"  [HTTP] {resp.status if resp else '?'}")
+        resp = page.goto(direct_url, wait_until="networkidle", timeout=30000)
+        status = resp.status if resp else "?"
+        print(f"  [HTTP] {status} (direct ca-fe)")
+
         if resp and resp.status == 404:
             return None, None, None
 
         # 리다이렉트 감지
         cur = page.url
-        if f"articles/{article_id}" not in cur and f"articleid={article_id}" not in cur:
-            print(f"  [리다이렉트] {cur[:70]} → 글 없음")
+        if f"articles/{article_id}" not in cur:
+            print(f"  [리다이렉트] → 글 없음")
             return None, None, None
 
-        # 렌더링 대기
+        # JavaScript 렌더링 대기 (최대 15초)
         try:
-            page.wait_for_selector("iframe, h3.ArticleTitle, .tit_subject", timeout=8000)
-        except: pass
+            page.wait_for_selector(
+                "h3.ArticleTitle, .ArticleTitle, .tit_subject, h3, .se-title-text",
+                timeout=15000
+            )
+        except:
+            pass
 
-        # ① iframe 안에서 찾기 (네이버 카페 PC 구조)
-        title, sel = None, None
-        article_frame = None
-        for frame in page.frames:
-            furl = frame.url
-            if frame == page.main_frame: continue
-            if "ArticleRead" in furl or ("cafe.naver.com" in furl and "article" in furl.lower()):
-                article_frame = frame
-                print(f"  [iframe] {furl[:80]}")
-                try:
-                    frame.wait_for_selector("h3, .tit_subject, .ArticleTitle", timeout=5000)
-                except: pass
-                title, sel = get_title_from_frame(frame)
-                if title:
-                    print(f"  [셀렉터/iframe] '{sel}' → '{title}'")
-                break
+        # 추가 대기 (렌더링 완료 보장)
+        page.wait_for_timeout(2000)
 
-        # ② 메인 페이지에서 찾기
+        title, sel = try_get_title(page)
+        if title:
+            print(f"  [셀렉터] '{sel}' → '{title}'")
+
+        # HTML에서 직접 패턴 검색
         if not title:
-            title, sel = get_title_from_frame(page)
-            if title:
-                print(f"  [셀렉터/main] '{sel}' → '{title}'")
-
-        # ③ HTML에서 직접 프로리그 패턴 검색
-        if not title:
-            src = (article_frame or page).content() if article_frame else page.content()
-            pat = re.compile(r"\d+월\s*\d+일\s*프로리그\s*\d+차[^\n<\"]{0,20}")
-            m = pat.search(src)
+            html = page.content()
+            m = re.search(r"(\d+월\s*\d+일\s*프로리그\s*\d+차[^\n<\"]{0,20})", html)
             if m:
-                title = m.group(0).strip()
+                title = m.group(1).strip()
                 print(f"  [직접검색] '{title}'")
 
-        # 디버그: 제목 못 찾으면 구조 출력
+        # 디버그
         if not title:
-            target = article_frame if article_frame else page
-            print("  [디버그] h1~h4 목록:")
+            print("  [디버그] h1~h4:")
             for tag in ["h1","h2","h3","h4"]:
-                for el in (target.query_selector_all(tag) or [])[:3]:
-                    try: print(f"    <{tag}> '{el.inner_text().strip()[:80]}'")
+                for el in (page.query_selector_all(tag) or [])[:3]:
+                    try:
+                        t = el.inner_text().strip()[:80]
+                        if t: print(f"    <{tag}> '{t}'")
                     except: pass
-            # iframe URL 목록
-            print("  [디버그] frames:")
-            for f in page.frames:
-                print(f"    {f.url[:80]}")
             print(f"  [실패] 제목 없음")
             return None, None, None
 
-        # 날짜 추출
-        html = (article_frame or page).content()
+        # 날짜
+        html = page.content()
         post_date = datetime.now().strftime("%Y-%m-%d")
         for pat in [r'"writeDateTimestamp"\s*:\s*(\d{10,})',
                     r'"writeDate"\s*:\s*"(\d{4}-\d{2}-\d{2})',
@@ -165,18 +153,16 @@ def fetch_article_by_id(page, article_id):
                     post_date = v[:10].replace(".","-")
                 break
 
-        # 본문 추출
+        # 본문
         content = ""
-        target = article_frame if article_frame else page
         for sel in [".se-main-container",".article_body","#tbody",".ArticleContentBox"]:
             try:
-                el = target.query_selector(sel)
+                el = page.query_selector(sel)
                 if el:
-                    content = el.inner_text()
-                    break
+                    content = el.inner_text(); break
             except: pass
         if not content:
-            try: content = target.inner_text("body")
+            try: content = page.inner_text("body")
             except: pass
         content = re.sub(r'[ \t]+',' ', content)
         content = re.sub(r'\n{3,}','\n\n', content).strip()
