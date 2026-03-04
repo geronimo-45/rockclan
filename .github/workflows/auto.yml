@@ -1,0 +1,48 @@
+name: RockClan 기록실 자동 업데이트
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update-records:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 📥 레포 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 패키지 설치
+        run: pip install requests
+
+      - name: 🔄 기록실 업데이트 실행
+        env:
+          NAVER_NID_AUT: ${{ secrets.NAVER_NID_AUT }}
+          NAVER_NID_SES: ${{ secrets.NAVER_NID_SES }}
+          CAFE_JSESSIONID: ${{ secrets.CAFE_JSESSIONID }}
+          CAFE_NCI4: ${{ secrets.CAFE_NCI4 }}
+          CAFE_NCMC4: ${{ secrets.CAFE_NCMC4 }}
+          CAFE_NCU: ${{ secrets.CAFE_NCU }}
+          CAFE_NCVC2: ${{ secrets.CAFE_NCVC2 }}
+          CAFE_NCVID: ${{ secrets.CAFE_NCVID }}
+        run: python scripts/update_records.py
+
+      - name: 💾 변경사항 커밋 & 푸시
+        run: |
+          git config user.name "RockClan Bot"
+          git config user.email "bot@rockclan.auto"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "변경사항 없음 — 커밋 건너뜀"
+          else
+            git commit -m "🤖 자동 업데이트: $(date +'%Y-%m-%d %H:%M') KST"
+            git push
+          fi
