@@ -59,7 +59,6 @@ def get_headers(mobile=False):
     if CAFE_NCU:        parts.append(f"ncu={CAFE_NCU}")
     if CAFE_NCVC2:      parts.append(f"ncvc2={CAFE_NCVC2}")
     if CAFE_NCVID:      parts.append(f"ncvid={CAFE_NCVID}")
-
     ua = (
         "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) "
         "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"
@@ -76,68 +75,65 @@ def get_headers(mobile=False):
     }
 
 def fetch_article_by_id(article_id):
-    """모바일 URL 우선 → PC URL 순으로 시도"""
-    attempts = [
-        # 모바일 버전 (서버사이드 렌더링)
-        (f"https://m.cafe.naver.com/ca-fe/cafes/{CAFE_ID}/articles/{article_id}", True),
-        # 구버전 모바일
-        (f"https://m.cafe.naver.com/NaverCafeArticleList.nhn?clubid={CAFE_ID}&articleid={article_id}", True),
-    ]
+    url = f"https://m.cafe.naver.com/ca-fe/cafes/{CAFE_ID}/articles/{article_id}"
+    try:
+        resp = requests.get(url, headers=get_headers(mobile=True), timeout=15)
+        print(f"  [HTTP] {resp.status_code}")
+        if resp.status_code == 404: return None,None,None
+        if resp.status_code in (401,403): print("  [오류] 인증 실패"); return None,None,None
+        if not resp.ok: return None,None,None
 
-    for url, mobile in attempts:
-        try:
-            resp = requests.get(url, headers=get_headers(mobile=mobile), timeout=15)
-            label = url.split("/")[-1].split("?")[0]
-            print(f"  [HTTP] {resp.status_code} <- {label} (mobile={mobile})")
+        html = resp.text
+        print(f"  [디버그] HTML길이:{len(html)}")
 
-            if resp.status_code == 404: return None,None,None
-            if resp.status_code in (401,403):
-                print("  [오류] 인증 실패"); continue
-            if not resp.ok: continue
+        # 디버그: 다양한 패턴으로 제목 찾기 시도
+        for i,pat in enumerate([
+            r'<meta property="og:title" content="([^"]+)"',
+            r'"subject"\s*:\s*"([^"]+)"',
+            r'"title"\s*:\s*"([^"]+)"',
+            r'<h2[^>]*>([^<]+)</h2>',
+            r'<h3[^>]*>([^<]+)</h3>',
+            r'class="[^"]*title[^"]*"[^>]*>([^<]+)<',
+            r'<title>([^<|]+)',
+        ]):
+            m = re.search(pat, html)
+            if m: print(f"  [디버그] 패턴{i}: '{m.group(1).strip()[:80]}'")
 
-            html = resp.text
-            print(f"  [디버그] HTML길이:{len(html)}")
+        # 실제 제목 추출
+        title = ""
+        for pat in [
+            r'<meta property="og:title" content="([^"]+)"',
+            r'"subject"\s*:\s*"([^"]+)"',
+            r'"title"\s*:\s*"([^"]+)"',
+            r'<h2[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<',
+            r'<title>([^<|]+)',
+        ]:
+            m = re.search(pat, html)
+            if m:
+                t = m.group(1).strip()
+                if t and t not in ("네이버 카페","NAVER","") and len(t)>2:
+                    title = t; break
 
-            # 제목 추출
-            title = ""
-            for pat in [
-                r'<meta property="og:title" content="([^"]+)"',
-                r'"subject"\s*:\s*"([^"]+)"',
-                r'<h3[^>]+class="[^"]*tit[^"]*"[^>]*>([^<]+)</h3>',
-                r'<title>([^<|]+)',
-            ]:
-                m = re.search(pat, html)
-                if m:
-                    t = m.group(1).strip()
-                    if t and t not in ("네이버 카페","NAVER","") and len(t)>2:
-                        title = t; break
+        if not title:
+            print(f"  [실패] 제목 없음")
+            return None,None,None
 
-            if not title:
-                # SPA 껍데기인지 확인
-                if '<div id="app">' in html or len(html) < 2000:
-                    print(f"  [디버그] SPA/빈페이지 감지 (길이:{len(html)}), 다음 URL 시도")
-                    continue
-                print(f"  [디버그] 제목 파싱 실패 / og:title={re.search(chr(60)+r'title>([^<]+)', html, re.I) and re.search(chr(60)+r'title>([^<]+)', html, re.I).group(1)}")
-                continue
+        # 날짜
+        post_date_str = datetime.now().strftime("%Y-%m-%d")
+        for pat in [r'"writeDateTimestamp"\s*:\s*(\d{10,})',
+                    r'"writeDate"\s*:\s*"(\d{4}-\d{2}-\d{2})']:
+            m = re.search(pat, html)
+            if m:
+                val = m.group(1)
+                post_date_str = datetime.fromtimestamp(int(val)/1000).strftime("%Y-%m-%d") if val.isdigit() else val[:10]
+                break
 
-            # 날짜
-            post_date_str = datetime.now().strftime("%Y-%m-%d")
-            for pat in [r'"writeDateTimestamp"\s*:\s*(\d{10,})',
-                        r'"writeDate"\s*:\s*"(\d{4}-\d{2}-\d{2})',
-                        r'<span[^>]+class="[^"]*date[^"]*"[^>]*>(\d{4}\.\d{2}\.\d{2})']:
-                m = re.search(pat, html)
-                if m:
-                    val = m.group(1).replace(".","-")
-                    post_date_str = datetime.fromtimestamp(int(val)/1000).strftime("%Y-%m-%d") if val.replace("-","").isdigit() and len(val)>8 else val[:10]
-                    break
+        content = extract_text(html)
+        print(f"  [파싱] 제목:'{title}' / 날짜:{post_date_str} / 본문:{len(content)}자")
+        return title, content, post_date_str
 
-            content = extract_text(html)
-            print(f"  [파싱] 제목:'{title}' / 날짜:{post_date_str} / 본문:{len(content)}자")
-            return title, content, post_date_str
-
-        except Exception as e:
-            print(f"  [오류] {e}")
-
+    except Exception as e:
+        print(f"  [오류] {e}")
     return None,None,None
 
 def extract_text(html):
