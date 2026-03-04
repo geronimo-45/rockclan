@@ -1,6 +1,6 @@
 """
 RockClan 프로리그 기록실 자동화 스크립트
-Playwright - iframe URL로 직접 접근
+Playwright 네트워크 인터셉트로 API 응답 캡처
 """
 import os, json, re
 from datetime import datetime
@@ -33,7 +33,6 @@ NICK_MAP = {
 }
 MONTH_NAMES = {1:"jan",2:"feb",3:"mar",4:"apr",5:"may",6:"jun",
                7:"jul",8:"aug",9:"sep",10:"oct",11:"nov",12:"dec"}
-SKIP_TITLES = {"네이버 카페","내소식","스타크래프트 [Rock] 클랜","NAVER",""}
 
 def resolve_id(nick):
     nick = nick.strip()
@@ -66,112 +65,96 @@ def build_cookies():
     ]
     return [{"name":n,"value":v,"domain":d,"path":"/"} for n,v,d in defs if v]
 
-TITLE_SELECTORS = [
-    "h3.ArticleTitle", ".ArticleTitle", ".tit_subject",
-    ".article_header h3", ".tit_h1", "h3.title",
-    ".ArticleTitle__title", "[class*='ArticleTitle']",
-    "[class*='article_title']", "[class*='tit_subject']",
-    ".article-title", ".se-title-text", "h3",
-]
-
-def try_get_title(target):
-    for sel in TITLE_SELECTORS:
-        try:
-            el = target.query_selector(sel)
-            if el:
-                t = el.inner_text().strip()
-                if t and t not in SKIP_TITLES and len(t) > 2:
-                    return t, sel
-        except: pass
-    return None, None
-
 def fetch_article_by_id(page, article_id):
-    # iframe URL로 직접 접근 (fromNext=true 포함)
-    direct_url = f"https://cafe.naver.com/ca-fe/cafes/{CAFE_ID}/articles/{article_id}?fromNext=true"
+    """
+    페이지 로드 중 네트워크 응답을 가로채서 API JSON 데이터 직접 추출
+    """
+    captured = {}
+
+    def on_response(response):
+        url = response.url
+        # 네이버 카페 API 응답 캡처
+        if ("cafe-articleapi" in url or "article" in url.lower()) and str(article_id) in url:
+            try:
+                data = response.json()
+                if isinstance(data, dict) and ("article" in data or "result" in data or "subject" in data):
+                    captured["api"] = data
+                    print(f"  [API 캡처] {url[:80]}")
+            except:
+                pass
+        # 추가: 응답 URL 디버깅 (처음 한 번만)
+        if "cafe" in url and "naver" in url and not captured.get("logged"):
+            captured["logged"] = True
+
+    page.on("response", on_response)
+
+    nav_url = f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/{article_id}"
     try:
-        resp = page.goto(direct_url, wait_until="networkidle", timeout=30000)
+        resp = page.goto(nav_url, wait_until="networkidle", timeout=30000)
         status = resp.status if resp else "?"
-        print(f"  [HTTP] {status} (direct ca-fe)")
+        print(f"  [HTTP] {status}")
 
         if resp and resp.status == 404:
+            page.remove_listener("response", on_response)
             return None, None, None
 
         # 리다이렉트 감지
         cur = page.url
-        if f"articles/{article_id}" not in cur:
+        if f"articles/{article_id}" not in cur and f"articleid={article_id}" not in cur:
             print(f"  [리다이렉트] → 글 없음")
+            page.remove_listener("response", on_response)
             return None, None, None
 
-        # JavaScript 렌더링 대기 (최대 15초)
-        try:
-            page.wait_for_selector(
-                "h3.ArticleTitle, .ArticleTitle, .tit_subject, h3, .se-title-text",
-                timeout=15000
-            )
-        except:
-            pass
+        # 추가 대기 (API 응답 완료)
+        page.wait_for_timeout(3000)
+        page.remove_listener("response", on_response)
 
-        # 추가 대기 (렌더링 완료 보장)
+        # API 응답이 잡혔으면 파싱
+        if captured.get("api"):
+            data = captured["api"]
+            # 여러 구조 시도
+            article = data.get("article") or data.get("result") or data
+            title = (article.get("subject") or article.get("title") or
+                     article.get("articleSubject") or "")
+            content_html = (article.get("contentHtml") or article.get("content") or
+                           article.get("articleContent") or "")
+            write_date = (article.get("writeDate") or article.get("writeDateTimestamp") or "")
+
+            if title and title not in ("네이버 카페",""):
+                print(f"  [API] 제목:'{title}'")
+                post_date = datetime.now().strftime("%Y-%m-%d")
+                if write_date:
+                    if str(write_date).isdigit():
+                        post_date = datetime.fromtimestamp(int(write_date)/1000).strftime("%Y-%m-%d")
+                    else:
+                        post_date = str(write_date)[:10]
+                content = re.sub(r'<[^>]+>', ' ', content_html)
+                content = re.sub(r'[ \t]+',' ', content).strip()
+                print(f"  [파싱] 제목:'{title}' / 날짜:{post_date} / 본문:{len(content)}자")
+                return title, content, post_date
+
+        # API 못 잡혔으면 캡처된 모든 API URL 출력 (디버그)
+        print(f"  [디버그] API 캡처 실패")
+        print(f"  [디버그] 캡처 상태: {list(captured.keys())}")
+
+        # 네트워크 요청 목록 직접 확인
+        all_urls = []
+        def log_req(req):
+            if "naver" in req.url and ("api" in req.url.lower() or "article" in req.url.lower()):
+                all_urls.append(req.url)
+        page.on("request", log_req)
+        page.reload(wait_until="networkidle", timeout=20000)
         page.wait_for_timeout(2000)
+        page.remove_listener("request", log_req)
+        for u in all_urls[:10]:
+            print(f"  [요청URL] {u[:100]}")
 
-        title, sel = try_get_title(page)
-        if title:
-            print(f"  [셀렉터] '{sel}' → '{title}'")
-
-        # HTML에서 직접 패턴 검색
-        if not title:
-            html = page.content()
-            m = re.search(r"(\d+월\s*\d+일\s*프로리그\s*\d+차[^\n<\"]{0,20})", html)
-            if m:
-                title = m.group(1).strip()
-                print(f"  [직접검색] '{title}'")
-
-        # 디버그
-        if not title:
-            print("  [디버그] h1~h4:")
-            for tag in ["h1","h2","h3","h4"]:
-                for el in (page.query_selector_all(tag) or [])[:3]:
-                    try:
-                        t = el.inner_text().strip()[:80]
-                        if t: print(f"    <{tag}> '{t}'")
-                    except: pass
-            print(f"  [실패] 제목 없음")
-            return None, None, None
-
-        # 날짜
-        html = page.content()
-        post_date = datetime.now().strftime("%Y-%m-%d")
-        for pat in [r'"writeDateTimestamp"\s*:\s*(\d{10,})',
-                    r'"writeDate"\s*:\s*"(\d{4}-\d{2}-\d{2})',
-                    r'(\d{4}\.\d{2}\.\d{2})']:
-            m = re.search(pat, html)
-            if m:
-                v = m.group(1)
-                if v.isdigit():
-                    post_date = datetime.fromtimestamp(int(v)/1000).strftime("%Y-%m-%d")
-                else:
-                    post_date = v[:10].replace(".","-")
-                break
-
-        # 본문
-        content = ""
-        for sel in [".se-main-container",".article_body","#tbody",".ArticleContentBox"]:
-            try:
-                el = page.query_selector(sel)
-                if el:
-                    content = el.inner_text(); break
-            except: pass
-        if not content:
-            try: content = page.inner_text("body")
-            except: pass
-        content = re.sub(r'[ \t]+',' ', content)
-        content = re.sub(r'\n{3,}','\n\n', content).strip()
-
-        print(f"  [파싱] 제목:'{title}' / 날짜:{post_date} / 본문:{len(content)}자")
-        return title, content, post_date
+        return None, None, None
 
     except Exception as e:
         print(f"  [오류] {e}")
+        try: page.remove_listener("response", on_response)
+        except: pass
         return None, None, None
 
 def is_proleague_post(title):
@@ -300,6 +283,7 @@ def main():
         context.add_cookies(build_cookies())
         page = context.new_page()
 
+        # 755번만 테스트 (디버그용)
         MAX_FAILS,fails,cur,new_count = 10,0,start_id,0
         while fails < MAX_FAILS:
             if cur in processed_ids: cur+=1; continue
