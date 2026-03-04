@@ -110,10 +110,37 @@ def parse_article_json(data, article_id):
     return None, None, None
 
 def fetch_article_by_id(context, article_id):
-    """페이지 로드 후 브라우저 컨텍스트 안에서 fetch() 호출 — 인증 자동 처리"""
+    """
+    page.route로 article API 요청을 가로채서:
+    1. 실제 요청 헤더 확인
+    2. 응답 본문 캡처
+    """
     page = context.new_page()
+    captured = {}
+
+    def handle_route(route):
+        req = route.request
+        # 요청 헤더 저장 (디버그용, 첫 번째만)
+        if not captured.get("headers"):
+            captured["headers"] = dict(req.headers)
+            print(f"  [요청헤더] {list(req.headers.keys())}")
+        # 정상 진행
+        route.continue_()
+
+    def on_response(response):
+        url = response.url
+        if f"articles/{article_id}" in url and "article.cafe.naver.com" in url:
+            try:
+                captured["body"] = response.body()
+                captured["api_url"] = url
+            except Exception as e:
+                captured["body_err"] = str(e)
+
+    api_pattern = f"**/cafes/{CAFE_ID}/articles/{article_id}**"
+    page.route(api_pattern, handle_route)
+    page.on("response", on_response)
+
     try:
-        # 먼저 cafe.naver.com 페이지 방문 (쿠키/세션 초기화)
         nav_url = f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/{article_id}"
         resp = page.goto(nav_url, wait_until="networkidle", timeout=30000)
         status = resp.status if resp else "?"
@@ -122,44 +149,36 @@ def fetch_article_by_id(context, article_id):
         if resp and resp.status == 404:
             return None, None, None
 
-        # 리다이렉트 감지
         cur = page.url
         if f"articles/{article_id}" not in cur and f"articleid={article_id}" not in cur:
             print(f"  [리다이렉트] → 글 없음")
             return None, None, None
 
-        # 페이지 내부 JS에서 API 직접 호출 (브라우저 인증 상태 활용)
-        api_url = f"https://article.cafe.naver.com/gw/v4/cafes/{CAFE_ID}/articles/{article_id}?query=&useCafeId=true&requestFrom=A"
-        result = page.evaluate(f"""async () => {{
-            try {{
-                const res = await fetch("{api_url}", {{
-                    credentials: "include",
-                    headers: {{
-                        "Accept": "application/json",
-                        "Referer": "https://cafe.naver.com/"
-                    }}
-                }});
-                const data = await res.json();
-                return {{ ok: true, status: res.status, data: JSON.stringify(data) }};
-            }} catch(e) {{
-                return {{ ok: false, error: e.toString() }};
-            }}
-        }}""")
+        page.wait_for_timeout(5000)
+        page.unroute(api_pattern)
 
-        if not result.get("ok"):
-            print(f"  [오류] JS fetch 실패: {result.get('error')}")
+        if not captured.get("body"):
+            print(f"  [오류] API 응답 없음: {captured.get('body_err','')}")
             return None, None, None
 
-        print(f"  [JS fetch] HTTP {result.get('status')}")
-        data = json.loads(result["data"])
-        print(f"  [디버그] 최상위 키: {list(data.keys())[:8]}")
+        data = json.loads(captured["body"])
+        print(f"  [API] {captured.get('api_url','')[:70]}")
+        print(f"  [디버그] 키: {list(data.keys())[:8]}")
+
+        # 로그인 오류면 헤더 전체 출력
+        if data.get("result", {}).get("errorCode") == "0004":
+            print(f"  [인증실패] 요청에 포함된 헤더:")
+            for k, v in captured.get("headers", {}).items():
+                if k.lower() not in ("user-agent", "accept-encoding", "accept-language"):
+                    print(f"    {k}: {v[:80]}")
+            return None, None, None
 
         title, content, post_date = parse_article_json(data, article_id)
         if title:
             print(f"  [파싱] 제목:'{title}' / 날짜:{post_date} / 본문:{len(content)}자")
             return title, content, post_date
         else:
-            print(f"  [디버그] 제목 파싱 실패. 데이터: {str(data)[:400]}")
+            print(f"  [디버그] 파싱 실패: {str(data)[:300]}")
             return None, None, None
 
     except Exception as e:
