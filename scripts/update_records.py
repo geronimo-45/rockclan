@@ -1,6 +1,6 @@
 """
 RockClan 프로리그 기록실 자동화 스크립트
-Playwright(헤드리스 크롬)으로 JavaScript SPA 렌더링
+Playwright + iframe 지원
 """
 import os, json, re
 from datetime import datetime
@@ -33,6 +33,7 @@ NICK_MAP = {
 }
 MONTH_NAMES = {1:"jan",2:"feb",3:"mar",4:"apr",5:"may",6:"jun",
                7:"jul",8:"aug",9:"sep",10:"oct",11:"nov",12:"dec"}
+SKIP_TITLES = {"네이버 카페","내소식","스타크래프트 [Rock] 클랜","NAVER",""}
 
 def resolve_id(nick):
     nick = nick.strip()
@@ -53,8 +54,7 @@ def save_processed_ids(ids):
         json.dump(sorted(list(ids)),f)
 
 def build_cookies():
-    """Playwright용 쿠키 목록 생성"""
-    cookie_defs = [
+    defs = [
         ("NID_AUT",    NID_AUT,         ".naver.com"),
         ("NID_SES",    NID_SES,         ".naver.com"),
         ("JSESSIONID", CAFE_JSESSIONID, ".cafe.naver.com"),
@@ -64,129 +64,125 @@ def build_cookies():
         ("ncvc2",      CAFE_NCVC2,      ".cafe.naver.com"),
         ("ncvid",      CAFE_NCVID,      ".cafe.naver.com"),
     ]
-    return [
-        {"name": name, "value": val, "domain": domain, "path": "/"}
-        for name, val, domain in cookie_defs if val
+    return [{"name":n,"value":v,"domain":d,"path":"/"} for n,v,d in defs if v]
+
+def get_title_from_frame(frame):
+    """frame(또는 page)에서 제목 추출"""
+    selectors = [
+        "h3.ArticleTitle", ".ArticleTitle", ".tit_subject",
+        ".article_header h3", ".tit_h1", "h3.title",
+        "[class*='ArticleTitle']", "[class*='article_title']",
+        "[class*='tit_subject']", "h3",
     ]
+    for sel in selectors:
+        try:
+            el = frame.query_selector(sel)
+            if el:
+                t = el.inner_text().strip()
+                if t and t not in SKIP_TITLES and len(t) > 2:
+                    return t, sel
+        except: pass
+    return None, None
 
 def fetch_article_by_id(page, article_id):
-    """Playwright로 게시글 접근 → (제목, 본문, 날짜) 반환"""
     target_url = f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/{article_id}"
     try:
         resp = page.goto(target_url, wait_until="networkidle", timeout=30000)
         print(f"  [HTTP] {resp.status if resp else '?'}")
-
         if resp and resp.status == 404:
             return None, None, None
 
-        # 리다이렉트 감지: 내소식 또는 다른 페이지로 이동했으면 글 없음
-        current_url = page.url
-        if "articleid" not in current_url and f"articles/{article_id}" not in current_url:
-            print(f"  [리다이렉트] {current_url[:80]} → 글 없음")
+        # 리다이렉트 감지
+        cur = page.url
+        if f"articles/{article_id}" not in cur and f"articleid={article_id}" not in cur:
+            print(f"  [리다이렉트] {cur[:70]} → 글 없음")
             return None, None, None
 
-        # 페이지 렌더링 대기
+        # 렌더링 대기
         try:
-            page.wait_for_selector(
-                "h3.ArticleTitle, .article_header h3, .se-module-text, .ArticleWriteFormView",
-                timeout=10000
-            )
-        except:
-            pass
+            page.wait_for_selector("iframe, h3.ArticleTitle, .tit_subject", timeout=8000)
+        except: pass
 
-        html = page.content()
-        title_el = None
+        # ① iframe 안에서 찾기 (네이버 카페 PC 구조)
+        title, sel = None, None
+        article_frame = None
+        for frame in page.frames:
+            furl = frame.url
+            if frame == page.main_frame: continue
+            if "ArticleRead" in furl or ("cafe.naver.com" in furl and "article" in furl.lower()):
+                article_frame = frame
+                print(f"  [iframe] {furl[:80]}")
+                try:
+                    frame.wait_for_selector("h3, .tit_subject, .ArticleTitle", timeout=5000)
+                except: pass
+                title, sel = get_title_from_frame(frame)
+                if title:
+                    print(f"  [셀렉터/iframe] '{sel}' → '{title}'")
+                break
 
-        # 제목 추출 시도 (더 많은 셀렉터)
-        for selector in [
-            "h3.ArticleTitle",
-            ".article_header h3",
-            ".ArticleTitle",
-            ".tit_h1",
-            "h3.title",
-            ".article-head h3",
-            ".ArticleTitle__title",
-            "[class*='ArticleTitle']",
-            "[class*='article-title']",
-            "[class*='article_title']",
-        ]:
-            try:
-                el = page.query_selector(selector)
-                if el:
-                    t = el.inner_text().strip()
-                    if t and t not in ("네이버 카페","내소식","") and len(t) > 2:
-                        title_el = t
-                        print(f"  [셀렉터] '{selector}' → '{t}'")
-                        break
-            except: pass
+        # ② 메인 페이지에서 찾기
+        if not title:
+            title, sel = get_title_from_frame(page)
+            if title:
+                print(f"  [셀렉터/main] '{sel}' → '{title}'")
 
-        # og:title 시도
-        if not title_el:
-            m = re.search(r'<meta property="og:title" content="([^"]+)"', html)
+        # ③ HTML에서 직접 프로리그 패턴 검색
+        if not title:
+            src = (article_frame or page).content() if article_frame else page.content()
+            pat = re.compile(r"\d+월\s*\d+일\s*프로리그\s*\d+차[^\n<\"]{0,20}")
+            m = pat.search(src)
             if m:
-                t = m.group(1).strip()
-                if t and t not in ("네이버 카페","NAVER","내소식") and len(t) > 2:
-                    title_el = t
-                    print(f"  [og:title] '{t}'")
+                title = m.group(0).strip()
+                print(f"  [직접검색] '{title}'")
 
-        # 마지막: 모든 텍스트에서 프로리그 패턴 직접 검색
-        if not title_el:
-            m = re.search(r"(\d+월\s*\d+일\s*프로리그\s*\d+차[^<\"\n]*)", html)
-            if m:
-                title_el = m.group(1).strip()
-                print(f"  [직접검색] '{title_el}'")
-
-        # 디버그: 페이지의 모든 h2, h3 요소 출력
-        if not title_el:
-            print("  [디버그] 페이지 h2/h3 목록:")
+        # 디버그: 제목 못 찾으면 구조 출력
+        if not title:
+            target = article_frame if article_frame else page
+            print("  [디버그] h1~h4 목록:")
             for tag in ["h1","h2","h3","h4"]:
-                els = page.query_selector_all(tag)
-                for el in els[:5]:
+                for el in (target.query_selector_all(tag) or [])[:3]:
                     try: print(f"    <{tag}> '{el.inner_text().strip()[:80]}'")
                     except: pass
-            print("  [디버그] class에 title 포함 요소:")
-            els = page.query_selector_all("[class*='title']")
-            for el in els[:10]:
-                try:
-                    cls = el.get_attribute("class") or ""
-                    txt = el.inner_text().strip()[:60]
-                    if txt: print(f"    class='{cls[:40]}' → '{txt}'")
-                except: pass
-            print(f"  [실패] 제목 없음 (URL:{current_url[:60]})")
+            # iframe URL 목록
+            print("  [디버그] frames:")
+            for f in page.frames:
+                print(f"    {f.url[:80]}")
+            print(f"  [실패] 제목 없음")
             return None, None, None
 
         # 날짜 추출
-        post_date_str = datetime.now().strftime("%Y-%m-%d")
+        html = (article_frame or page).content()
+        post_date = datetime.now().strftime("%Y-%m-%d")
         for pat in [r'"writeDateTimestamp"\s*:\s*(\d{10,})',
                     r'"writeDate"\s*:\s*"(\d{4}-\d{2}-\d{2})',
-                    r'<span[^>]*class="[^"]*date[^"]*"[^>]*>(\d{4}\.\d{2}\.\d{2})']:
+                    r'(\d{4}\.\d{2}\.\d{2})']:
             m = re.search(pat, html)
             if m:
-                val = m.group(1)
-                if val.isdigit():
-                    post_date_str = datetime.fromtimestamp(int(val)/1000).strftime("%Y-%m-%d")
+                v = m.group(1)
+                if v.isdigit():
+                    post_date = datetime.fromtimestamp(int(v)/1000).strftime("%Y-%m-%d")
                 else:
-                    post_date_str = val[:10].replace(".", "-")
+                    post_date = v[:10].replace(".","-")
                 break
 
         # 본문 추출
         content = ""
-        for selector in [".se-main-container", ".article_body", "#tbody", ".ArticleContentBox"]:
+        target = article_frame if article_frame else page
+        for sel in [".se-main-container",".article_body","#tbody",".ArticleContentBox"]:
             try:
-                el = page.query_selector(selector)
+                el = target.query_selector(sel)
                 if el:
                     content = el.inner_text()
                     break
             except: pass
-
         if not content:
-            content = page.inner_text("body") if page.query_selector("body") else ""
-
+            try: content = target.inner_text("body")
+            except: pass
         content = re.sub(r'[ \t]+',' ', content)
         content = re.sub(r'\n{3,}','\n\n', content).strip()
 
-        print(f"  [파싱] 제목:'{title_el}' / 날짜:{post_date_str} / 본문:{len(content)}자")
-        return title_el, content, post_date_str
+        print(f"  [파싱] 제목:'{title}' / 날짜:{post_date} / 본문:{len(content)}자")
+        return title, content, post_date
 
     except Exception as e:
         print(f"  [오류] {e}")
@@ -213,19 +209,16 @@ def parse_post_content(text, match_date):
         elif re.search(r"Team#?2|팀#?2",line,re.IGNORECASE):
             part = re.split(r"[:：]",line,1)[-1].strip()
             team2 = [resolve_id(n) for n in re.split(r"[\s,]+",part) if n]
-
     pat = re.compile(r"^(\d+)set\s*[▶►▸>]\s*(.+)",re.IGNORECASE)
     sets = [(int(m.group(1)),m.group(2).strip()) for line in lines for m in [pat.match(line)] if m]
     if not sets:
         print("  [경고] 세트 정보 없음"); return []
-
     score_m = re.search(r"(\d+:\d+)\s*$", sets[-1][1])
     final_score = score_m.group(1) if score_m else ""
     winner_team = []
     if final_score:
         a,b = map(int,final_score.split(":"))
         winner_team = team1 if a>b else team2
-
     entries = [{"date":match_date,"map":"Match","team1":team1,"team2":team2,
                 "winner":winner_team,"score":final_score}]
     for _,raw in sets:
@@ -318,7 +311,6 @@ def main():
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
             locale="ko-KR",
         )
-        # 쿠키 주입
         context.add_cookies(build_cookies())
         page = context.new_page()
 
