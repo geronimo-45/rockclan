@@ -1,10 +1,11 @@
 """
 RockClan 프로리그 기록실 자동화 스크립트
-모바일 URL 사용 (서버사이드 렌더링)
+Playwright(헤드리스 크롬)으로 JavaScript SPA 렌더링
 """
-import os, json, re, requests
+import os, json, re
 from datetime import datetime
 from pathlib import Path
+from playwright.sync_api import sync_playwright
 
 CAFE_ID   = "31553306"
 MENU_ID   = "29"
@@ -51,112 +52,111 @@ def save_processed_ids(ids):
     with open(PROCESSED_FILE,"w",encoding="utf-8") as f:
         json.dump(sorted(list(ids)),f)
 
-def get_headers(mobile=False):
-    parts = [f"NID_AUT={NID_AUT}", f"NID_SES={NID_SES}"]
-    if CAFE_JSESSIONID: parts.append(f"JSESSIONID={CAFE_JSESSIONID}")
-    if CAFE_NCI4:       parts.append(f"nci4={CAFE_NCI4}")
-    if CAFE_NCMC4:      parts.append(f"ncmc4={CAFE_NCMC4}")
-    if CAFE_NCU:        parts.append(f"ncu={CAFE_NCU}")
-    if CAFE_NCVC2:      parts.append(f"ncvc2={CAFE_NCVC2}")
-    if CAFE_NCVID:      parts.append(f"ncvid={CAFE_NCVID}")
-    ua = (
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) "
-        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"
-        if mobile else
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
-    )
-    return {
-        "User-Agent": ua,
-        "Referer": f"https://m.cafe.naver.com/ca-fe/cafes/{CAFE_ID}/menus/{MENU_ID}" if mobile
-                   else f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/menus/{MENU_ID}",
-        "Cookie": "; ".join(parts),
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "ko-KR,ko;q=0.9",
-    }
+def build_cookies():
+    """Playwright용 쿠키 목록 생성"""
+    cookie_defs = [
+        ("NID_AUT",    NID_AUT,         ".naver.com"),
+        ("NID_SES",    NID_SES,         ".naver.com"),
+        ("JSESSIONID", CAFE_JSESSIONID, ".cafe.naver.com"),
+        ("nci4",       CAFE_NCI4,       ".cafe.naver.com"),
+        ("ncmc4",      CAFE_NCMC4,      ".cafe.naver.com"),
+        ("ncu",        CAFE_NCU,        ".cafe.naver.com"),
+        ("ncvc2",      CAFE_NCVC2,      ".cafe.naver.com"),
+        ("ncvid",      CAFE_NCVID,      ".cafe.naver.com"),
+    ]
+    return [
+        {"name": name, "value": val, "domain": domain, "path": "/"}
+        for name, val, domain in cookie_defs if val
+    ]
 
-def fetch_article_by_id(article_id):
-    url = f"https://m.cafe.naver.com/ca-fe/cafes/{CAFE_ID}/articles/{article_id}"
+def fetch_article_by_id(page, article_id):
+    """Playwright로 게시글 접근 → (제목, 본문, 날짜) 반환"""
+    url = f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/{article_id}"
     try:
-        resp = requests.get(url, headers=get_headers(mobile=True), timeout=15)
-        print(f"  [HTTP] {resp.status_code}")
-        if resp.status_code == 404: return None,None,None
-        if resp.status_code in (401,403): print("  [오류] 인증 실패"); return None,None,None
-        if not resp.ok: return None,None,None
+        resp = page.goto(url, wait_until="networkidle", timeout=30000)
+        print(f"  [HTTP] {resp.status if resp else '?'}")
 
-        html = resp.text
-        print(f"  [디버그] HTML길이:{len(html)}")
-        print("  [디버그] HTML전체:")
-        print(html)
+        if resp and resp.status == 404:
+            return None, None, None
 
-        # 디버그: 다양한 패턴으로 제목 찾기 시도
-        for i,pat in enumerate([
-            r'<meta property="og:title" content="([^"]+)"',
-            r'"subject"\s*:\s*"([^"]+)"',
-            r'"title"\s*:\s*"([^"]+)"',
-            r'<h2[^>]*>([^<]+)</h2>',
-            r'<h3[^>]*>([^<]+)</h3>',
-            r'class="[^"]*title[^"]*"[^>]*>([^<]+)<',
-            r'<title>([^<|]+)',
-        ]):
-            m = re.search(pat, html)
-            if m: print(f"  [디버그] 패턴{i}: '{m.group(1).strip()[:80]}'")
+        # 페이지 렌더링 대기 — 제목 요소가 나타날 때까지
+        try:
+            page.wait_for_selector("h3.ArticleTitle, .article_header h3, .tit_h1, h3.title", timeout=10000)
+        except:
+            pass  # 타임아웃 무시, 그냥 진행
 
-        # 실제 제목 추출
-        title = ""
-        for pat in [
-            r'<meta property="og:title" content="([^"]+)"',
-            r'"subject"\s*:\s*"([^"]+)"',
-            r'"title"\s*:\s*"([^"]+)"',
-            r'<h2[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<',
-            r'<title>([^<|]+)',
+        html = page.content()
+        title_el = None
+
+        # 제목 추출 시도
+        for selector in [
+            "h3.ArticleTitle",
+            ".article_header h3",
+            ".tit_h1",
+            "h3.title",
+            ".ArticleTitle",
+            "h2.title",
+            "[class*='title'] h2",
+            "[class*='title'] h3",
         ]:
-            m = re.search(pat, html)
+            try:
+                el = page.query_selector(selector)
+                if el:
+                    t = el.inner_text().strip()
+                    if t and t not in ("네이버 카페","") and len(t) > 2:
+                        title_el = t
+                        print(f"  [셀렉터] '{selector}' → '{t}'")
+                        break
+            except: pass
+
+        # og:title 시도
+        if not title_el:
+            m = re.search(r'<meta property="og:title" content="([^"]+)"', html)
             if m:
                 t = m.group(1).strip()
-                if t and t not in ("네이버 카페","NAVER","") and len(t)>2:
-                    title = t; break
+                if t and t not in ("네이버 카페","NAVER") and len(t) > 2:
+                    title_el = t
 
-        if not title:
-            print(f"  [실패] 제목 없음")
-            return None,None,None
+        if not title_el:
+            print(f"  [실패] 제목 없음 (HTML길이:{len(html)})")
+            return None, None, None
 
-        # 날짜
+        # 날짜 추출
         post_date_str = datetime.now().strftime("%Y-%m-%d")
         for pat in [r'"writeDateTimestamp"\s*:\s*(\d{10,})',
-                    r'"writeDate"\s*:\s*"(\d{4}-\d{2}-\d{2})']:
+                    r'"writeDate"\s*:\s*"(\d{4}-\d{2}-\d{2})',
+                    r'<span[^>]*class="[^"]*date[^"]*"[^>]*>(\d{4}\.\d{2}\.\d{2})']:
             m = re.search(pat, html)
             if m:
                 val = m.group(1)
-                post_date_str = datetime.fromtimestamp(int(val)/1000).strftime("%Y-%m-%d") if val.isdigit() else val[:10]
+                if val.isdigit():
+                    post_date_str = datetime.fromtimestamp(int(val)/1000).strftime("%Y-%m-%d")
+                else:
+                    post_date_str = val[:10].replace(".", "-")
                 break
 
-        content = extract_text(html)
-        print(f"  [파싱] 제목:'{title}' / 날짜:{post_date_str} / 본문:{len(content)}자")
-        return title, content, post_date_str
+        # 본문 추출
+        content = ""
+        for selector in [".se-main-container", ".article_body", "#tbody", ".ArticleContentBox"]:
+            try:
+                el = page.query_selector(selector)
+                if el:
+                    content = el.inner_text()
+                    break
+            except: pass
+
+        if not content:
+            content = page.inner_text("body") if page.query_selector("body") else ""
+
+        content = re.sub(r'[ \t]+',' ', content)
+        content = re.sub(r'\n{3,}','\n\n', content).strip()
+
+        print(f"  [파싱] 제목:'{title_el}' / 날짜:{post_date_str} / 본문:{len(content)}자")
+        return title_el, content, post_date_str
 
     except Exception as e:
         print(f"  [오류] {e}")
-    return None,None,None
-
-def extract_text(html):
-    content = ""
-    for pat in [
-        r'<div[^>]+class="[^"]*se-main-container[^"]*"[^>]*>([\s\S]{100,}?)</div>\s*(?:</div>\s*){2}',
-        r'<div[^>]+class="[^"]*article_body[^"]*"[^>]*>([\s\S]{50,}?)</div>',
-        r'<div[^>]+id="tbody"[^>]*>([\s\S]{50,}?)</div>',
-        r'"contentHtml"\s*:\s*"([\s\S]+?)"(?:,|\})',
-    ]:
-        m = re.search(pat, html, re.IGNORECASE)
-        if m: content = m.group(1); break
-    if not content: content = html
-    content = re.sub(r'<br\s*/?>', '\n', content, flags=re.IGNORECASE)
-    content = re.sub(r'</p>', '\n', content, flags=re.IGNORECASE)
-    content = re.sub(r'<[^>]+>', ' ', content)
-    for o,n in [('&nbsp;',' '),('&lt;','<'),('&gt;','>'),('&amp;','&'),('&#39;',"'")]:
-        content = content.replace(o,n)
-    content = re.sub(r'[ \t]+',' ',content)
-    content = re.sub(r'\n{3,}','\n\n',content)
-    return content.strip()
+        return None, None, None
 
 def is_proleague_post(title):
     return bool(re.search(r"\d+월\s*\d+일\s*프로리그\s*\d+차", title.strip()))
@@ -252,57 +252,66 @@ def append_entries(path, entries):
 
 def update_index_html(new_month_filename):
     index_path = REPO_ROOT/"index.html"
-    if not index_path.exists(): print("  [경고] index.html 없음"); return
+    if not index_path.exists(): return
     month_key = new_month_filename.replace("data_","").replace(".json","")
     with open(index_path,"r",encoding="utf-8") as f: content = f.read()
-    if f"'{month_key}'" in content or f'"{month_key}"' in content:
-        print(f"  [정보] 이미 '{month_key}' 존재"); return
+    if f"'{month_key}'" in content or f'"{month_key}"' in content: return
     updated = 0
     def rep(m):
         nonlocal updated
         pre,body,suf = m.group(1),m.group(2),m.group(3)
         q = "'" if "'" in body else '"'
-        if f"{q}{month_key}{q}" in body: return m.group(0)
         nb = body.rstrip() + ("" if body.rstrip().endswith(",") else ",") + f" {q}{month_key}{q}"
         updated += 1; return pre+nb+suf
     nc = re.sub(r"(const\s+months\s*=\s*\[)([\s\S]*?)(\];)",rep,content)
-    if not updated: print(f"  [경고] 패턴 없음 — '{month_key}' 수동 추가 필요"); return
-    with open(index_path,"w",encoding="utf-8") as f: f.write(nc)
-    print(f"  [업데이트] index.html에 '{month_key}' 추가")
+    if updated:
+        with open(index_path,"w",encoding="utf-8") as f: f.write(nc)
+        print(f"  [업데이트] index.html에 '{month_key}' 추가")
 
 def main():
     print(f"[시작] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     if not NID_AUT or not NID_SES:
         print("[오류] 쿠키 없음"); return
-    print(f"[정보] NID_AUT:✅ NID_SES:✅ JSESSIONID:{'✅' if CAFE_JSESSIONID else '❌'} nci4:{'✅' if CAFE_NCI4 else '❌'}")
-    print(f"[정보] 카페ID:{CAFE_ID}, 메뉴ID:{MENU_ID}")
+    print(f"[정보] NID_AUT:✅ NID_SES:✅ JSESSIONID:{'✅' if CAFE_JSESSIONID else '❌'}")
 
     processed_ids = load_processed_ids()
     start_id = max(processed_ids)+1 if processed_ids else 741
     print(f"[정보] 기처리:{len(processed_ids)}개, 시작 ID:{start_id}")
 
-    MAX_FAILS,fails,cur,new_count = 10,0,start_id,0
-    while fails < MAX_FAILS:
-        if cur in processed_ids: cur+=1; continue
-        print(f"\n[시도] ID:{cur}")
-        title,content,post_date = fetch_article_by_id(cur)
-        if title is None:
-            fails+=1; print(f"  [스킵] 연속실패 {fails}/{MAX_FAILS}"); cur+=1; continue
-        fails=0; processed_ids.add(cur)
-        if not is_proleague_post(title):
-            print(f"  [건너뜀] '{title}'"); cur+=1; continue
-        print(f"  [처리] '{title}'")
-        match_date = extract_match_date(title,post_date)
-        print(f"  날짜:{match_date}")
-        if not content: print("  [경고] 본문없음"); cur+=1; continue
-        entries = parse_post_content(content,match_date)
-        if not entries: print("  [경고] 파싱실패"); cur+=1; continue
-        print(f"  항목수:{len(entries)}")
-        df = get_data_file(match_date)
-        is_new = not df.exists()
-        append_entries(df,entries)
-        if is_new: update_index_html(df.name)
-        new_count+=len(entries); cur+=1
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+            locale="ko-KR",
+        )
+        # 쿠키 주입
+        context.add_cookies(build_cookies())
+        page = context.new_page()
+
+        MAX_FAILS,fails,cur,new_count = 10,0,start_id,0
+        while fails < MAX_FAILS:
+            if cur in processed_ids: cur+=1; continue
+            print(f"\n[시도] ID:{cur}")
+            title,content,post_date = fetch_article_by_id(page, cur)
+            if title is None:
+                fails+=1; print(f"  [스킵] 연속실패 {fails}/{MAX_FAILS}"); cur+=1; continue
+            fails=0; processed_ids.add(cur)
+            if not is_proleague_post(title):
+                print(f"  [건너뜀] '{title}'"); cur+=1; continue
+            print(f"  [처리] '{title}'")
+            match_date = extract_match_date(title,post_date)
+            print(f"  날짜:{match_date}")
+            if not content: print("  [경고] 본문없음"); cur+=1; continue
+            entries = parse_post_content(content,match_date)
+            if not entries: print("  [경고] 파싱실패"); cur+=1; continue
+            print(f"  항목수:{len(entries)}")
+            df = get_data_file(match_date)
+            is_new = not df.exists()
+            append_entries(df,entries)
+            if is_new: update_index_html(df.name)
+            new_count+=len(entries); cur+=1
+
+        browser.close()
 
     save_processed_ids(processed_ids)
     print(f"\n[완료] 추가:{new_count}개 / 마지막 ID:{cur-1}")
