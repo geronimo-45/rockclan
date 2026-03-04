@@ -1,10 +1,11 @@
 """
 RockClan 프로리그 기록실 자동화 스크립트
-article.cafe.naver.com API 직접 호출
+Playwright로 API 응답 JSON 직접 캡처
 """
-import os, json, re, requests
+import os, json, re
 from datetime import datetime
 from pathlib import Path
+from playwright.sync_api import sync_playwright
 
 CAFE_ID   = "31553306"
 MENU_ID   = "29"
@@ -51,92 +52,118 @@ def save_processed_ids(ids):
     with open(PROCESSED_FILE,"w",encoding="utf-8") as f:
         json.dump(sorted(list(ids)),f)
 
-def get_headers():
-    parts = [f"NID_AUT={NID_AUT}", f"NID_SES={NID_SES}"]
-    if CAFE_JSESSIONID: parts.append(f"JSESSIONID={CAFE_JSESSIONID}")
-    if CAFE_NCI4:       parts.append(f"nci4={CAFE_NCI4}")
-    if CAFE_NCMC4:      parts.append(f"ncmc4={CAFE_NCMC4}")
-    if CAFE_NCU:        parts.append(f"ncu={CAFE_NCU}")
-    if CAFE_NCVC2:      parts.append(f"ncvc2={CAFE_NCVC2}")
-    if CAFE_NCVID:      parts.append(f"ncvid={CAFE_NCVID}")
-    return {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-        "Referer": f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/",
-        "Cookie": "; ".join(parts),
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "ko-KR,ko;q=0.9",
-        "Origin": "https://cafe.naver.com",
-    }
+def build_cookies():
+    defs = [
+        ("NID_AUT",    NID_AUT,         ".naver.com"),
+        ("NID_SES",    NID_SES,         ".naver.com"),
+        ("JSESSIONID", CAFE_JSESSIONID, ".cafe.naver.com"),
+        ("nci4",       CAFE_NCI4,       ".cafe.naver.com"),
+        ("ncmc4",      CAFE_NCMC4,      ".cafe.naver.com"),
+        ("ncu",        CAFE_NCU,        ".cafe.naver.com"),
+        ("ncvc2",      CAFE_NCVC2,      ".cafe.naver.com"),
+        ("ncvid",      CAFE_NCVID,      ".cafe.naver.com"),
+    ]
+    return [{"name":n,"value":v,"domain":d,"path":"/"} for n,v,d in defs if v]
 
-def fetch_article_by_id(article_id):
-    """article.cafe.naver.com API로 직접 JSON 데이터 가져오기"""
-    url = f"https://article.cafe.naver.com/gw/v4/cafes/{CAFE_ID}/articles/{article_id}?query=&useCafeId=true&requestFrom=A"
-    try:
-        resp = requests.get(url, headers=get_headers(), timeout=15)
-        print(f"  [HTTP] {resp.status_code}")
+def parse_article_json(data, article_id):
+    """API JSON에서 제목/날짜/본문 추출"""
+    # 구조 탐색: 최상위 혹은 중첩된 article 객체
+    candidates = [data]
+    for key in ["article", "result", "data", "articleDetail", "cafeArticle"]:
+        if isinstance(data.get(key), dict):
+            candidates.append(data[key])
 
-        if resp.status_code == 404:
-            return None, None, None
-        if resp.status_code in (401, 403):
-            print("  [오류] 인증 실패")
-            return None, None, None
-        if not resp.ok:
-            print(f"  [오류] 상태코드 {resp.status_code}")
-            return None, None, None
-
-        data = resp.json()
-        print(f"  [디버그] 최상위 키: {list(data.keys())[:10]}")
-
-        # 다양한 JSON 구조 탐색
-        article = None
-        for key in ["article", "result", "data", "articleDetail"]:
-            if key in data and isinstance(data[key], dict):
-                article = data[key]
-                print(f"  [디버그] article 키: '{key}'")
-                break
-        if article is None:
-            article = data  # 최상위가 바로 article인 경우
-
-        # 제목
+    for obj in candidates:
         title = ""
-        for key in ["subject", "title", "articleSubject", "articleTitle"]:
-            if article.get(key):
-                title = str(article[key]).strip()
-                print(f"  [디버그] 제목 키: '{key}' = '{title}'")
+        for k in ["subject", "title", "articleSubject", "articleTitle"]:
+            if obj.get(k) and str(obj[k]).strip() not in ("", "네이버 카페"):
+                title = str(obj[k]).strip()
                 break
-
-        if not title or title in ("네이버 카페", ""):
-            # 전체 JSON 일부 출력
-            print(f"  [디버그] 제목 없음. 데이터 샘플: {str(data)[:300]}")
-            return None, None, None
+        if not title:
+            continue
 
         # 날짜
         post_date = datetime.now().strftime("%Y-%m-%d")
-        for key in ["writeDateTimestamp", "writeDate", "createDate", "regDate"]:
-            val = article.get(key)
+        for k in ["writeDateTimestamp", "writeDate", "createDate", "regDate", "addDate"]:
+            val = obj.get(k)
             if val:
-                if str(val).isdigit():
-                    post_date = datetime.fromtimestamp(int(val)/1000).strftime("%Y-%m-%d")
+                s = str(val)
+                if s.isdigit():
+                    post_date = datetime.fromtimestamp(int(s)/1000).strftime("%Y-%m-%d")
                 else:
-                    post_date = str(val)[:10].replace(".", "-")
+                    post_date = s[:10].replace(".", "-")
                 break
 
         # 본문
         content_raw = ""
-        for key in ["contentHtml", "content", "articleContent", "body"]:
-            if article.get(key):
-                content_raw = str(article[key])
+        for k in ["contentHtml", "content", "articleContent", "body", "contentText"]:
+            if obj.get(k):
+                content_raw = str(obj[k])
                 break
         content = re.sub(r'<[^>]+>', ' ', content_raw)
         content = re.sub(r'[ \t]+',' ', content)
         content = re.sub(r'\n{3,}','\n\n', content).strip()
 
-        print(f"  [파싱] 제목:'{title}' / 날짜:{post_date} / 본문:{len(content)}자")
         return title, content, post_date
+
+    return None, None, None
+
+def fetch_article_by_id(context, article_id):
+    """새 페이지에서 API 응답 캡처 후 즉시 닫기"""
+    page = context.new_page()
+    captured_json = {}
+
+    def on_response(response):
+        url = response.url
+        if f"articles/{article_id}" in url and "article.cafe.naver.com" in url:
+            try:
+                body = response.body()
+                data = json.loads(body)
+                captured_json["data"] = data
+                captured_json["url"] = url
+            except Exception as e:
+                captured_json["err"] = str(e)
+
+    page.on("response", on_response)
+
+    try:
+        nav_url = f"https://cafe.naver.com/f-e/cafes/{CAFE_ID}/articles/{article_id}"
+        resp = page.goto(nav_url, wait_until="networkidle", timeout=30000)
+        status = resp.status if resp else "?"
+        print(f"  [HTTP] {status}")
+
+        if resp and resp.status == 404:
+            return None, None, None
+
+        # 리다이렉트 감지
+        cur = page.url
+        if f"articles/{article_id}" not in cur and f"articleid={article_id}" not in cur:
+            print(f"  [리다이렉트] → 글 없음")
+            return None, None, None
+
+        # API 응답 대기 (최대 5초 추가)
+        page.wait_for_timeout(5000)
+
+        if "data" in captured_json:
+            data = captured_json["data"]
+            print(f"  [API OK] {captured_json['url'][:70]}")
+            print(f"  [디버그] 최상위 키: {list(data.keys())[:8]}")
+            title, content, post_date = parse_article_json(data, article_id)
+            if title:
+                print(f"  [파싱] 제목:'{title}' / 날짜:{post_date} / 본문:{len(content)}자")
+                return title, content, post_date
+            else:
+                print(f"  [디버그] 제목 파싱 실패. 데이터: {str(data)[:400]}")
+        else:
+            print(f"  [디버그] API 응답 없음. err={captured_json.get('err','')}")
+
+        return None, None, None
 
     except Exception as e:
         print(f"  [오류] {e}")
         return None, None, None
+    finally:
+        page.close()
 
 def is_proleague_post(title):
     return bool(re.search(r"\d+월\s*\d+일\s*프로리그\s*\d+차", title.strip()))
@@ -255,28 +282,38 @@ def main():
     start_id = max(processed_ids)+1 if processed_ids else 741
     print(f"[정보] 기처리:{len(processed_ids)}개, 시작 ID:{start_id}")
 
-    MAX_FAILS,fails,cur,new_count = 10,0,start_id,0
-    while fails < MAX_FAILS:
-        if cur in processed_ids: cur+=1; continue
-        print(f"\n[시도] ID:{cur}")
-        title,content,post_date = fetch_article_by_id(cur)
-        if title is None:
-            fails+=1; print(f"  [스킵] 연속실패 {fails}/{MAX_FAILS}"); cur+=1; continue
-        fails=0; processed_ids.add(cur)
-        if not is_proleague_post(title):
-            print(f"  [건너뜀] '{title}'"); cur+=1; continue
-        print(f"  [처리] '{title}'")
-        match_date = extract_match_date(title,post_date)
-        print(f"  날짜:{match_date}")
-        if not content: print("  [경고] 본문없음"); cur+=1; continue
-        entries = parse_post_content(content,match_date)
-        if not entries: print("  [경고] 파싱실패"); cur+=1; continue
-        print(f"  항목수:{len(entries)}")
-        df = get_data_file(match_date)
-        is_new = not df.exists()
-        append_entries(df,entries)
-        if is_new: update_index_html(df.name)
-        new_count+=len(entries); cur+=1
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+            locale="ko-KR",
+        )
+        context.add_cookies(build_cookies())
+
+        MAX_FAILS,fails,cur,new_count = 10,0,start_id,0
+        while fails < MAX_FAILS:
+            if cur in processed_ids: cur+=1; continue
+            print(f"\n[시도] ID:{cur}")
+            title,content,post_date = fetch_article_by_id(context, cur)
+            if title is None:
+                fails+=1; print(f"  [스킵] 연속실패 {fails}/{MAX_FAILS}"); cur+=1; continue
+            fails=0; processed_ids.add(cur)
+            if not is_proleague_post(title):
+                print(f"  [건너뜀] '{title}'"); cur+=1; continue
+            print(f"  [처리] '{title}'")
+            match_date = extract_match_date(title,post_date)
+            print(f"  날짜:{match_date}")
+            if not content: print("  [경고] 본문없음"); cur+=1; continue
+            entries = parse_post_content(content,match_date)
+            if not entries: print("  [경고] 파싱실패"); cur+=1; continue
+            print(f"  항목수:{len(entries)}")
+            df = get_data_file(match_date)
+            is_new = not df.exists()
+            append_entries(df,entries)
+            if is_new: update_index_html(df.name)
+            new_count+=len(entries); cur+=1
+
+        browser.close()
 
     save_processed_ids(processed_ids)
     print(f"\n[완료] 추가:{new_count}개 / 마지막 ID:{cur-1}")
