@@ -11,11 +11,8 @@ MENU_ID   = "29"
 REPO_ROOT = Path(__file__).parent.parent
 PROCESSED_FILE = REPO_ROOT / "scripts" / "processed_ids.json"
 
-# GitHub Secrets — naver.com 공통
-NID_AUT = os.environ.get("NAVER_NID_AUT", "")
-NID_SES = os.environ.get("NAVER_NID_SES", "")
-
-# GitHub Secrets — cafe.naver.com 전용
+NID_AUT         = os.environ.get("NAVER_NID_AUT", "")
+NID_SES         = os.environ.get("NAVER_NID_SES", "")
 CAFE_JSESSIONID = os.environ.get("CAFE_JSESSIONID", "")
 CAFE_NCI4       = os.environ.get("CAFE_NCI4", "")
 CAFE_NCMC4      = os.environ.get("CAFE_NCMC4", "")
@@ -85,6 +82,11 @@ def fetch_article_by_id(article_id):
             if not resp.ok: continue
             html = resp.text
 
+            # 디버그: og:title 원본값 출력
+            og_m = re.search(r'<meta property="og:title" content="([^"]+)"', html)
+            print(f"  [디버그] og:title = '{og_m.group(1) if og_m else '없음'}'")
+            print(f"  [디버그] HTML길이:{len(html)} / 앞200자: {html[:200]}")
+
             title = ""
             for pat in [r'<meta property="og:title" content="([^"]+)"',
                         r'"subject"\s*:\s*"([^"]+)"',
@@ -150,10 +152,10 @@ def parse_post_content(text, match_date):
     team1,team2 = [],[]
     for line in lines:
         if re.search(r"Team#?1|팀#?1",line,re.IGNORECASE):
-            part = re.split(r"[::]",line,1)[-1].strip()
+            part = re.split(r"[:：]",line,1)[-1].strip()
             team1 = [resolve_id(n) for n in re.split(r"[\s,]+",part) if n]
         elif re.search(r"Team#?2|팀#?2",line,re.IGNORECASE):
-            part = re.split(r"[::]",line,1)[-1].strip()
+            part = re.split(r"[:：]",line,1)[-1].strip()
             team2 = [resolve_id(n) for n in re.split(r"[\s,]+",part) if n]
 
     pat = re.compile(r"^(\d+)set\s*[▶►▸>]\s*(.+)",re.IGNORECASE)
