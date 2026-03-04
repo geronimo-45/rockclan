@@ -85,7 +85,7 @@ def fetch_article_by_id(article_id):
             # 디버그: og:title 원본값 출력
             og_m = re.search(r'<meta property="og:title" content="([^"]+)"', html)
             print(f"  [디버그] og:title = '{og_m.group(1) if og_m else '없음'}'")
-            print(f"  [디버그] HTML길이:{len(html)} / 앞200자: {html[:200]}")
+            print(f"  [디버그] HTML전체:\n{html}")
 
             title = ""
             for pat in [r'<meta property="og:title" content="([^"]+)"',
