@@ -21,10 +21,7 @@ jobs:
           python-version: '3.11'
 
       - name: 📦 패키지 설치
-        run: |
-          pip install playwright
-          playwright install chromium
-          playwright install-deps chromium
+        run: pip install requests
 
       - name: 🔄 기록실 업데이트 실행
         env:
