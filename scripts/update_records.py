@@ -111,20 +111,16 @@ def parse_article_json(data, article_id):
 
 def fetch_article_by_id(context, article_id):
     """
-    page.route로 article API 요청을 가로채서:
-    1. 실제 요청 헤더 확인
-    2. 응답 본문 캡처
+    article.cafe.naver.com XHR 요청만 라우팅해서
+    실제 인증 헤더와 응답 캡처
     """
     page = context.new_page()
     captured = {}
 
-    def handle_route(route):
+    def handle_api_route(route):
         req = route.request
-        # 요청 헤더 저장 (디버그용, 첫 번째만)
-        if not captured.get("headers"):
-            captured["headers"] = dict(req.headers)
-            print(f"  [요청헤더] {list(req.headers.keys())}")
-        # 정상 진행
+        # XHR 헤더 전체 저장
+        captured["xhr_headers"] = dict(req.headers)
         route.continue_()
 
     def on_response(response):
@@ -132,12 +128,14 @@ def fetch_article_by_id(context, article_id):
         if f"articles/{article_id}" in url and "article.cafe.naver.com" in url:
             try:
                 captured["body"] = response.body()
-                captured["api_url"] = url
+                captured["xhr_url"] = url
+                captured["xhr_status"] = response.status
             except Exception as e:
                 captured["body_err"] = str(e)
 
-    api_pattern = f"**/cafes/{CAFE_ID}/articles/{article_id}**"
-    page.route(api_pattern, handle_route)
+    # article.cafe.naver.com XHR만 라우팅
+    api_pattern = "https://article.cafe.naver.com/**"
+    page.route(api_pattern, handle_api_route)
     page.on("response", on_response)
 
     try:
@@ -157,20 +155,23 @@ def fetch_article_by_id(context, article_id):
         page.wait_for_timeout(5000)
         page.unroute(api_pattern)
 
+        # XHR 헤더 출력 — 토큰/인증 헤더 확인
+        xhr_h = captured.get("xhr_headers", {})
+        print(f"  [XHR헤더] 키: {list(xhr_h.keys())}")
+        for k, v in xhr_h.items():
+            if k.lower() not in ("user-agent","accept-encoding","accept-language","sec-ch-ua","sec-ch-ua-mobile","sec-ch-ua-platform","upgrade-insecure-requests"):
+                print(f"    {k}: {str(v)[:100]}")
+
         if not captured.get("body"):
-            print(f"  [오류] API 응답 없음: {captured.get('body_err','')}")
+            print(f"  [오류] API 응답 없음")
             return None, None, None
 
+        print(f"  [XHR] status={captured.get('xhr_status')} url={captured.get('xhr_url','')[:60]}")
         data = json.loads(captured["body"])
-        print(f"  [API] {captured.get('api_url','')[:70]}")
         print(f"  [디버그] 키: {list(data.keys())[:8]}")
 
-        # 로그인 오류면 헤더 전체 출력
         if data.get("result", {}).get("errorCode") == "0004":
-            print(f"  [인증실패] 요청에 포함된 헤더:")
-            for k, v in captured.get("headers", {}).items():
-                if k.lower() not in ("user-agent", "accept-encoding", "accept-language"):
-                    print(f"    {k}: {v[:80]}")
+            print(f"  [인증실패] 위 헤더 확인 필요")
             return None, None, None
 
         title, content, post_date = parse_article_json(data, article_id)
