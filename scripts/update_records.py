@@ -1,6 +1,6 @@
 """
 RockClan 프로리그 기록실 자동화 스크립트
-Playwright로 API 응답 JSON 직접 캡처
+Playwright - 쿠키 secure/sameSite 플래그 + 워밍업
 """
 import os, json, re
 from datetime import datetime
@@ -53,10 +53,24 @@ def save_processed_ids(ids):
         json.dump(sorted(list(ids)),f)
 
 def build_cookies():
-    # 모든 쿠키를 .naver.com으로 — article.cafe.naver.com 등 모든 서브도메인에 전달됨
-    defs = [
-        ("NID_AUT",    NID_AUT),
-        ("NID_SES",    NID_SES),
+    """
+    secure=True, sameSite=None 설정:
+    HTTPS 크로스도메인 요청(cafe.naver.com → article.cafe.naver.com)에도 쿠키 전달됨.
+    NID 쿠키는 .naver.com + article.cafe.naver.com 양쪽에 등록.
+    """
+    cookies = []
+
+    # NID 쿠키 — .naver.com 전체 + article 서브도메인 명시적 등록
+    for domain in [".naver.com", "article.cafe.naver.com"]:
+        if NID_AUT:
+            cookies.append({"name":"NID_AUT","value":NID_AUT,
+                            "domain":domain,"path":"/","secure":True,"sameSite":"None"})
+        if NID_SES:
+            cookies.append({"name":"NID_SES","value":NID_SES,
+                            "domain":domain,"path":"/","secure":True,"sameSite":"None"})
+
+    # 카페 쿠키 — .naver.com + .cafe.naver.com 양쪽 등록
+    cafe_cookies = [
         ("JSESSIONID", CAFE_JSESSIONID),
         ("nci4",       CAFE_NCI4),
         ("ncmc4",      CAFE_NCMC4),
@@ -64,44 +78,43 @@ def build_cookies():
         ("ncvc2",      CAFE_NCVC2),
         ("ncvid",      CAFE_NCVID),
     ]
-    return [{"name":n,"value":v,"domain":".naver.com","path":"/"} for n,v in defs if v]
+    for name, value in cafe_cookies:
+        if value:
+            for domain in [".naver.com", ".cafe.naver.com"]:
+                cookies.append({"name":name,"value":value,
+                                "domain":domain,"path":"/","secure":True,"sameSite":"None"})
+    return cookies
 
-def parse_article_json(data, article_id):
-    """API JSON에서 제목/날짜/본문 추출"""
-    # 구조 탐색: 최상위 혹은 중첩된 article 객체
+def parse_article_json(data):
     candidates = [data]
-    for key in ["article", "result", "data", "articleDetail", "cafeArticle"]:
+    for key in ["article","result","data","articleDetail","cafeArticle"]:
         if isinstance(data.get(key), dict):
             candidates.append(data[key])
 
     for obj in candidates:
         title = ""
-        for k in ["subject", "title", "articleSubject", "articleTitle"]:
-            if obj.get(k) and str(obj[k]).strip() not in ("", "네이버 카페"):
-                title = str(obj[k]).strip()
+        for k in ["subject","title","articleSubject","articleTitle"]:
+            v = obj.get(k)
+            if v and str(v).strip() not in ("","네이버 카페"):
+                title = str(v).strip()
                 break
         if not title:
             continue
 
-        # 날짜
         post_date = datetime.now().strftime("%Y-%m-%d")
-        for k in ["writeDateTimestamp", "writeDate", "createDate", "regDate", "addDate"]:
+        for k in ["writeDateTimestamp","writeDate","createDate","regDate","addDate"]:
             val = obj.get(k)
             if val:
                 s = str(val)
-                if s.isdigit():
-                    post_date = datetime.fromtimestamp(int(s)/1000).strftime("%Y-%m-%d")
-                else:
-                    post_date = s[:10].replace(".", "-")
+                post_date = (datetime.fromtimestamp(int(s)/1000).strftime("%Y-%m-%d")
+                             if s.isdigit() else s[:10].replace(".","-"))
                 break
 
-        # 본문
         content_raw = ""
-        for k in ["contentHtml", "content", "articleContent", "body", "contentText"]:
+        for k in ["contentHtml","content","articleContent","body","contentText"]:
             if obj.get(k):
-                content_raw = str(obj[k])
-                break
-        content = re.sub(r'<[^>]+>', ' ', content_raw)
+                content_raw = str(obj[k]); break
+        content = re.sub(r'<[^>]+>',' ', content_raw)
         content = re.sub(r'[ \t]+',' ', content)
         content = re.sub(r'\n{3,}','\n\n', content).strip()
 
@@ -110,51 +123,22 @@ def parse_article_json(data, article_id):
     return None, None, None
 
 def fetch_article_by_id(context, article_id):
-    """
-    article.cafe.naver.com XHR 요청만 라우팅해서
-    실제 인증 헤더와 응답 캡처
-    """
     page = context.new_page()
     captured = {}
-
-    def handle_api_route(route):
-        req = route.request
-        # XHR 헤더 전체 저장
-        captured["xhr_headers"] = dict(req.headers)
-        route.continue_()
 
     def on_response(response):
         url = response.url
         if f"articles/{article_id}" in url and "article.cafe.naver.com" in url:
             try:
                 captured["body"] = response.body()
-                captured["xhr_url"] = url
-                captured["xhr_status"] = response.status
+                captured["status"] = response.status
+                captured["url"] = url
+                # 이 요청의 실제 쿠키 헤더 확인
+                req_headers = response.request.headers
+                captured["req_cookie"] = req_headers.get("cookie","")[:120]
             except Exception as e:
-                captured["body_err"] = str(e)
+                captured["err"] = str(e)
 
-    # article.cafe.naver.com XHR 가로채서 쿠키 강제 주입
-    full_cookie = "; ".join(filter(None, [
-        f"NID_AUT={NID_AUT}" if NID_AUT else "",
-        f"NID_SES={NID_SES}" if NID_SES else "",
-        f"JSESSIONID={CAFE_JSESSIONID}" if CAFE_JSESSIONID else "",
-        f"nci4={CAFE_NCI4}" if CAFE_NCI4 else "",
-        f"ncmc4={CAFE_NCMC4}" if CAFE_NCMC4 else "",
-        f"ncu={CAFE_NCU}" if CAFE_NCU else "",
-        f"ncvc2={CAFE_NCVC2}" if CAFE_NCVC2 else "",
-        f"ncvid={CAFE_NCVID}" if CAFE_NCVID else "",
-    ]))
-
-    def handle_api_route(route):
-        req = route.request
-        captured["xhr_headers"] = dict(req.headers)
-        # 쿠키 강제 주입
-        headers = dict(req.headers)
-        headers["cookie"] = full_cookie
-        route.continue_(headers=headers)
-
-    api_pattern = "https://article.cafe.naver.com/**"
-    page.route(api_pattern, handle_api_route)
     page.on("response", on_response)
 
     try:
@@ -172,34 +156,26 @@ def fetch_article_by_id(context, article_id):
             return None, None, None
 
         page.wait_for_timeout(5000)
-        page.unroute(api_pattern)
-
-        # XHR 헤더 출력 — 토큰/인증 헤더 확인
-        xhr_h = captured.get("xhr_headers", {})
-        print(f"  [XHR헤더] 키: {list(xhr_h.keys())}")
-        for k, v in xhr_h.items():
-            if k.lower() not in ("user-agent","accept-encoding","accept-language","sec-ch-ua","sec-ch-ua-mobile","sec-ch-ua-platform","upgrade-insecure-requests"):
-                print(f"    {k}: {str(v)[:100]}")
 
         if not captured.get("body"):
             print(f"  [오류] API 응답 없음")
             return None, None, None
 
-        print(f"  [XHR] status={captured.get('xhr_status')} url={captured.get('xhr_url','')[:60]}")
+        print(f"  [XHR] status={captured.get('status')} / 요청쿠키: {captured.get('req_cookie','')[:100]}")
+
         data = json.loads(captured["body"])
-        print(f"  [디버그] 키: {list(data.keys())[:8]}")
 
         if data.get("result", {}).get("errorCode") == "0004":
-            print(f"  [인증실패] 위 헤더 확인 필요")
+            print(f"  [인증실패] 요청 쿠키에 NID_AUT 포함 여부: {'NID_AUT' in captured.get('req_cookie','')}")
             return None, None, None
 
-        title, content, post_date = parse_article_json(data, article_id)
+        title, content, post_date = parse_article_json(data)
         if title:
             print(f"  [파싱] 제목:'{title}' / 날짜:{post_date} / 본문:{len(content)}자")
             return title, content, post_date
-        else:
-            print(f"  [디버그] 파싱 실패: {str(data)[:300]}")
-            return None, None, None
+
+        print(f"  [디버그] 파싱 실패. 키: {list(data.keys())} / 샘플: {str(data)[:200]}")
+        return None, None, None
 
     except Exception as e:
         print(f"  [오류] {e}")
@@ -330,7 +306,21 @@ def main():
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
             locale="ko-KR",
         )
+        # 쿠키 주입 (secure+sameSite=None 포함)
         context.add_cookies(build_cookies())
+
+        # 워밍업: 카페 메인 먼저 방문해서 세션 초기화
+        print("[정보] 카페 세션 초기화 중...")
+        warmup = context.new_page()
+        try:
+            warmup.goto(f"https://cafe.naver.com/oprockclan",
+                        wait_until="networkidle", timeout=20000)
+            warmup.wait_for_timeout(3000)
+            print("[정보] 세션 초기화 완료")
+        except:
+            print("[정보] 세션 초기화 타임아웃 (무시)")
+        finally:
+            warmup.close()
 
         MAX_FAILS,fails,cur,new_count = 10,0,start_id,0
         while fails < MAX_FAILS:
