@@ -1,6 +1,6 @@
 """
 RockClan 프로리그 기록실 자동화 스크립트
-Playwright - 쿠키 secure/sameSite 플래그 + 워밍업
+page.route로 article API 요청에 쿠키 강제 주입
 """
 import os, json, re
 from datetime import datetime
@@ -34,6 +34,18 @@ NICK_MAP = {
 MONTH_NAMES = {1:"jan",2:"feb",3:"mar",4:"apr",5:"may",6:"jun",
                7:"jul",8:"aug",9:"sep",10:"oct",11:"nov",12:"dec"}
 
+# 전체 쿠키 문자열 (article API에 주입할 것)
+FULL_COOKIE = "; ".join(filter(None, [
+    f"NID_AUT={NID_AUT}" if NID_AUT else "",
+    f"NID_SES={NID_SES}" if NID_SES else "",
+    f"JSESSIONID={CAFE_JSESSIONID}" if CAFE_JSESSIONID else "",
+    f"nci4={CAFE_NCI4}" if CAFE_NCI4 else "",
+    f"ncmc4={CAFE_NCMC4}" if CAFE_NCMC4 else "",
+    f"ncu={CAFE_NCU}" if CAFE_NCU else "",
+    f"ncvc2={CAFE_NCVC2}" if CAFE_NCVC2 else "",
+    f"ncvid={CAFE_NCVID}" if CAFE_NCVID else "",
+]))
+
 def resolve_id(nick):
     nick = nick.strip()
     if nick in NICK_MAP: return NICK_MAP[nick]
@@ -52,55 +64,18 @@ def save_processed_ids(ids):
     with open(PROCESSED_FILE,"w",encoding="utf-8") as f:
         json.dump(sorted(list(ids)),f)
 
-def build_cookies():
-    """
-    secure=True, sameSite=None 설정:
-    HTTPS 크로스도메인 요청(cafe.naver.com → article.cafe.naver.com)에도 쿠키 전달됨.
-    NID 쿠키는 .naver.com + article.cafe.naver.com 양쪽에 등록.
-    """
-    cookies = []
-
-    # NID 쿠키 — .naver.com 전체 + article 서브도메인 명시적 등록
-    for domain in [".naver.com", "article.cafe.naver.com"]:
-        if NID_AUT:
-            cookies.append({"name":"NID_AUT","value":NID_AUT,
-                            "domain":domain,"path":"/","secure":True,"sameSite":"None"})
-        if NID_SES:
-            cookies.append({"name":"NID_SES","value":NID_SES,
-                            "domain":domain,"path":"/","secure":True,"sameSite":"None"})
-
-    # 카페 쿠키 — .naver.com + .cafe.naver.com 양쪽 등록
-    cafe_cookies = [
-        ("JSESSIONID", CAFE_JSESSIONID),
-        ("nci4",       CAFE_NCI4),
-        ("ncmc4",      CAFE_NCMC4),
-        ("ncu",        CAFE_NCU),
-        ("ncvc2",      CAFE_NCVC2),
-        ("ncvid",      CAFE_NCVID),
-    ]
-    for name, value in cafe_cookies:
-        if value:
-            for domain in [".naver.com", ".cafe.naver.com"]:
-                cookies.append({"name":name,"value":value,
-                                "domain":domain,"path":"/","secure":True,"sameSite":"None"})
-    return cookies
-
 def parse_article_json(data):
     candidates = [data]
     for key in ["article","result","data","articleDetail","cafeArticle"]:
         if isinstance(data.get(key), dict):
             candidates.append(data[key])
-
     for obj in candidates:
         title = ""
         for k in ["subject","title","articleSubject","articleTitle"]:
             v = obj.get(k)
             if v and str(v).strip() not in ("","네이버 카페"):
-                title = str(v).strip()
-                break
-        if not title:
-            continue
-
+                title = str(v).strip(); break
+        if not title: continue
         post_date = datetime.now().strftime("%Y-%m-%d")
         for k in ["writeDateTimestamp","writeDate","createDate","regDate","addDate"]:
             val = obj.get(k)
@@ -109,22 +84,24 @@ def parse_article_json(data):
                 post_date = (datetime.fromtimestamp(int(s)/1000).strftime("%Y-%m-%d")
                              if s.isdigit() else s[:10].replace(".","-"))
                 break
-
         content_raw = ""
         for k in ["contentHtml","content","articleContent","body","contentText"]:
-            if obj.get(k):
-                content_raw = str(obj[k]); break
+            if obj.get(k): content_raw = str(obj[k]); break
         content = re.sub(r'<[^>]+>',' ', content_raw)
         content = re.sub(r'[ \t]+',' ', content)
         content = re.sub(r'\n{3,}','\n\n', content).strip()
-
         return title, content, post_date
-
     return None, None, None
 
 def fetch_article_by_id(context, article_id):
     page = context.new_page()
     captured = {}
+
+    # article.cafe.naver.com 요청 가로채서 쿠키 강제 주입
+    def inject_cookies(route):
+        headers = {**route.request.headers, "cookie": FULL_COOKIE}
+        captured["injected"] = True
+        route.continue_(headers=headers)
 
     def on_response(response):
         url = response.url
@@ -132,13 +109,10 @@ def fetch_article_by_id(context, article_id):
             try:
                 captured["body"] = response.body()
                 captured["status"] = response.status
-                captured["url"] = url
-                # 이 요청의 실제 쿠키 헤더 확인
-                req_headers = response.request.headers
-                captured["req_cookie"] = req_headers.get("cookie","")[:120]
             except Exception as e:
                 captured["err"] = str(e)
 
+    page.route("https://article.cafe.naver.com/**", inject_cookies)
     page.on("response", on_response)
 
     try:
@@ -157,16 +131,17 @@ def fetch_article_by_id(context, article_id):
 
         page.wait_for_timeout(5000)
 
-        if not captured.get("body"):
-            print(f"  [오류] API 응답 없음")
-            return None, None, None
+        print(f"  [주입여부] {'✅' if captured.get('injected') else '❌'} / XHR status={captured.get('status','없음')}")
 
-        print(f"  [XHR] status={captured.get('status')} / 요청쿠키: {captured.get('req_cookie','')[:100]}")
+        if not captured.get("body"):
+            print("  [오류] API 응답 없음")
+            return None, None, None
 
         data = json.loads(captured["body"])
 
         if data.get("result", {}).get("errorCode") == "0004":
-            print(f"  [인증실패] 요청 쿠키에 NID_AUT 포함 여부: {'NID_AUT' in captured.get('req_cookie','')}")
+            print("  [인증실패] 여전히 로그인 필요 응답")
+            print(f"  [디버그] 전송한 쿠키 앞80자: {FULL_COOKIE[:80]}")
             return None, None, None
 
         title, content, post_date = parse_article_json(data)
@@ -206,8 +181,7 @@ def parse_post_content(text, match_date):
             team2 = [resolve_id(n) for n in re.split(r"[\s,]+",part) if n]
     pat = re.compile(r"^(\d+)set\s*[▶►▸>]\s*(.+)",re.IGNORECASE)
     sets = [(int(m.group(1)),m.group(2).strip()) for line in lines for m in [pat.match(line)] if m]
-    if not sets:
-        print("  [경고] 세트 정보 없음"); return []
+    if not sets: print("  [경고] 세트 정보 없음"); return []
     score_m = re.search(r"(\d+:\d+)\s*$", sets[-1][1])
     final_score = score_m.group(1) if score_m else ""
     winner_team = []
@@ -295,6 +269,7 @@ def main():
     if not NID_AUT or not NID_SES:
         print("[오류] 쿠키 없음"); return
     print(f"[정보] NID_AUT:✅ NID_SES:✅ JSESSIONID:{'✅' if CAFE_JSESSIONID else '❌'}")
+    print(f"[정보] 쿠키 길이: {len(FULL_COOKIE)}자")
 
     processed_ids = load_processed_ids()
     start_id = max(processed_ids)+1 if processed_ids else 741
@@ -306,21 +281,6 @@ def main():
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
             locale="ko-KR",
         )
-        # 쿠키 주입 (secure+sameSite=None 포함)
-        context.add_cookies(build_cookies())
-
-        # 워밍업: 카페 메인 먼저 방문해서 세션 초기화
-        print("[정보] 카페 세션 초기화 중...")
-        warmup = context.new_page()
-        try:
-            warmup.goto(f"https://cafe.naver.com/oprockclan",
-                        wait_until="networkidle", timeout=20000)
-            warmup.wait_for_timeout(3000)
-            print("[정보] 세션 초기화 완료")
-        except:
-            print("[정보] 세션 초기화 타임아웃 (무시)")
-        finally:
-            warmup.close()
 
         MAX_FAILS,fails,cur,new_count = 10,0,start_id,0
         while fails < MAX_FAILS:
