@@ -4,6 +4,11 @@ Playwright - page.route로 article API 쿠키 강제 주입
 """
 import os, json, re
 from datetime import datetime
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # GitHub Actions에서는 dotenv 불필요
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
