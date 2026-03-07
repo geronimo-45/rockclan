@@ -72,38 +72,69 @@
     }
     .mode-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-    /* 라운드 입력 */
+    /* 라운드 입력 - 팀 구성 */
     .team-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
     .team-col h3 { font-size: .82rem; color: var(--muted); margin-bottom: 6px; }
-    .player-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; min-height: 28px; }
-    .player-chip {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-      padding: 3px 10px; font-size: .8rem; display: flex; align-items: center; gap: 5px;
+
+    /* 체크박스 드롭다운 */
+    .checkbox-dropdown { position: relative; margin-bottom: 8px; }
+    .dropdown-trigger {
+      width: 100%; text-align: left; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 7px 10px; font-size: .85rem;
+      display: flex; justify-content: space-between; align-items: center; cursor: pointer;
     }
-    .player-chip .rm { cursor: pointer; color: var(--muted); font-size: .9rem; }
-    .player-chip .rm:hover { color: var(--danger); }
-    .add-player-row { display: flex; gap: 6px; }
-    .add-player-row select { flex: 1; }
+    .dropdown-trigger:hover { border-color: var(--accent); }
+    .dropdown-trigger .trigger-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dropdown-panel {
+      display: none; position: absolute; top: calc(100% + 3px); left: 0; right: 0;
+      background: var(--surface); border: 1px solid var(--accent);
+      border-radius: 8px; z-index: 50; max-height: 200px; overflow-y: auto;
+      box-shadow: 0 4px 16px rgba(0,0,0,.5);
+    }
+    .dropdown-panel.open { display: block; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 12px; cursor: pointer; font-size: .83rem; user-select: none;
+    }
+    .dropdown-item:hover { background: rgba(255,106,0,0.12); }
+    .dropdown-item input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; flex-shrink: 0; }
+    .selected-chips { display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; }
+    .s-chip {
+      background: rgba(255,106,0,0.15); border: 1px solid rgba(255,106,0,0.4);
+      border-radius: 10px; padding: 2px 9px; font-size: .78rem; color: var(--accent);
+    }
+    .team-summary {
+      flex: 1; border-radius: 8px; padding: 8px 12px;
+    }
+    .team-summary.t1 { background: rgba(42,74,138,0.2); border: 1px solid #4a6aaa; }
+    .team-summary.t2 { background: rgba(138,42,42,0.2); border: 1px solid #8a4a4a; }
+    .team-summary .ts-label { font-size: .72rem; margin-bottom: 3px; }
+    .team-summary.t1 .ts-label { color: #8ab4f8; }
+    .team-summary.t2 .ts-label { color: #f8a8a8; }
+    .team-summary .ts-players { font-size: .82rem; }
 
     /* 매치업 테이블 */
-    .matchup-list { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+    .matchup-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
     .matchup-row {
-      display: grid; grid-template-columns: 1fr 40px 1fr 100px 1fr; gap: 6px; align-items: center;
+      display: grid; grid-template-columns: 1fr 36px 1fr 100px 1fr 28px; gap: 6px; align-items: center;
       background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px;
     }
     .matchup-row .vs { text-align: center; color: var(--muted); font-size: .8rem; }
     .winner-pick { display: flex; gap: 4px; }
-    .wpick { flex: 1; padding: 4px 6px; font-size: .75rem; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wpick { flex: 1; padding: 4px 5px; font-size: .73rem; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .wpick.sel1 { background: #2a4a8a; color: #8ab4f8; border-color: #4a6aaa; }
     .wpick.sel2 { background: #4a2a2a; color: #f8a8a8; border-color: #8a4a4a; }
-    .matchup-row .rm-btn { padding: 3px 7px; font-size: .75rem; }
 
     /* 팀전 행 */
     .teamgame-row {
-      display: grid; grid-template-columns: 1fr 40px 1fr 100px 1fr; gap: 6px; align-items: center;
+      display: grid; grid-template-columns: 1fr 36px 1fr 100px 1fr 28px; gap: 6px; align-items: start;
       background: rgba(255,106,0,0.05); border: 1px solid rgba(255,106,0,0.2); border-radius: 8px; padding: 7px 10px;
     }
-    .teamgame-row .tg-label { font-size: .75rem; color: #ffb347; text-align: center; }
+    .teamgame-row .tg-label { font-size: .75rem; color: #ffb347; text-align: center; padding-top: 6px; }
+    .tg-checks { display: flex; flex-direction: column; gap: 4px; }
+    .tg-check-item { display: flex; align-items: center; gap: 5px; font-size: .78rem; cursor: pointer; }
+    .tg-check-item input { accent-color: var(--accent); }
 
     /* 최종 결과 행 */
     .final-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; align-items: end; }
@@ -164,7 +195,7 @@
     #toast.error { background: var(--danger); color: #fff; }
 
     @media (max-width: 600px) {
-      .matchup-row, .teamgame-row { grid-template-columns: 1fr 30px 1fr 80px 28px; }
+      .matchup-row, .teamgame-row { grid-template-columns: 1fr 28px 1fr 70px minmax(0,1fr) 24px; }
       .single-grid { grid-template-columns: 1fr 1fr; }
       .add-player-form { grid-template-columns: 1fr 1fr; }
       .team-row { grid-template-columns: 1fr; }
@@ -229,50 +260,89 @@
 
         <!-- ─ 프로리그 라운드 모드 ─ -->
         <div id="mode-round">
-          <div class="team-row">
-            <div class="team-col">
-              <h3>🔵 팀 1</h3>
-              <div class="player-chips" id="t1chips"></div>
-              <div class="add-player-row">
-                <select id="t1add"><option value="">선수 추가...</option></select>
-                <button class="btn-ghost btn-sm" onclick="addChip(1)">추가</button>
+
+          <!-- Phase 1: 팀 구성 -->
+          <div id="teamSetupPhase">
+            <div class="team-row">
+              <div class="team-col">
+                <h3>🔵 팀 1 선수 선택</h3>
+                <div class="checkbox-dropdown" id="t1Dropdown">
+                  <button type="button" class="dropdown-trigger" onclick="toggleDropdown(1)">
+                    <span class="trigger-text" id="t1TriggerText">선수를 선택하세요...</span>
+                    <span style="color:var(--muted);font-size:.8rem">▾</span>
+                  </button>
+                  <div class="dropdown-panel" id="t1Panel"></div>
+                </div>
+                <div class="selected-chips" id="t1chips"></div>
+              </div>
+              <div class="team-col">
+                <h3>🔴 팀 2 선수 선택</h3>
+                <div class="checkbox-dropdown" id="t2Dropdown">
+                  <button type="button" class="dropdown-trigger" onclick="toggleDropdown(2)">
+                    <span class="trigger-text" id="t2TriggerText">선수를 선택하세요...</span>
+                    <span style="color:var(--muted);font-size:.8rem">▾</span>
+                  </button>
+                  <div class="dropdown-panel" id="t2Panel"></div>
+                </div>
+                <div class="selected-chips" id="t2chips"></div>
               </div>
             </div>
-            <div class="team-col">
-              <h3>🔴 팀 2</h3>
-              <div class="player-chips" id="t2chips"></div>
-              <div class="add-player-row">
-                <select id="t2add"><option value="">선수 추가...</option></select>
-                <button class="btn-ghost btn-sm" onclick="addChip(2)">추가</button>
+            <button class="btn-primary" onclick="confirmTeams()" style="margin-top:4px">팀 구성 완료 →</button>
+          </div>
+
+          <!-- Phase 2: 매치업 입력 -->
+          <div id="matchupPhase" style="display:none">
+
+            <!-- 팀 요약 -->
+            <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+              <div class="team-summary t1">
+                <div class="ts-label">🔵 팀 1</div>
+                <div class="ts-players" id="teamSummary1"></div>
+              </div>
+              <div class="team-summary t2">
+                <div class="ts-label">🔴 팀 2</div>
+                <div class="ts-players" id="teamSummary2"></div>
+              </div>
+              <button class="btn-ghost btn-sm" onclick="resetTeams()" style="white-space:nowrap;align-self:center">← 팀 재구성</button>
+            </div>
+
+            <!-- 매치업 헤더 -->
+            <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;flex-wrap:wrap">
+              <span style="font-size:.82rem;color:var(--muted)">매치업 추가</span>
+              <button class="btn-ghost btn-sm" onclick="addMatchup()">+ 개인전</button>
+              <button class="btn-ghost btn-sm" onclick="addTeamGame()">+ 팀전</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 36px 1fr 100px 1fr 28px;gap:6px;padding:0 10px;margin-bottom:2px">
+              <span style="font-size:.72rem;color:var(--muted)">🔵 팀1 선수</span>
+              <span></span>
+              <span style="font-size:.72rem;color:var(--muted)">🔴 팀2 선수</span>
+              <span style="font-size:.72rem;color:var(--muted)">맵</span>
+              <span style="font-size:.72rem;color:var(--muted)">승자</span>
+              <span></span>
+            </div>
+            <div class="matchup-list" id="matchupList"></div>
+
+            <!-- 최종 결과 -->
+            <div class="final-row">
+              <div class="field-group">
+                <label>최종 스코어</label>
+                <input type="text" id="roundScore" placeholder="예: 3:4" />
+              </div>
+              <div class="field-group">
+                <label>승리팀</label>
+                <div class="team-winner-btns">
+                  <button class="twbtn" id="twBtn1" onclick="setTeamWinner(1)">팀 1 승</button>
+                  <button class="twbtn" id="twBtn2" onclick="setTeamWinner(2)">팀 2 승</button>
+                </div>
+              </div>
+              <div>
+                <button class="btn-primary" id="roundSaveBtn" onclick="saveRound()" style="width:100%;margin-top:20px">
+                  라운드 전체 저장
+                </button>
               </div>
             </div>
           </div>
 
-          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
-            <span style="font-size:.82rem;color:var(--muted)">개인전 매치업</span>
-            <button class="btn-ghost btn-sm" onclick="addMatchup()">+ 개인전 추가</button>
-            <button class="btn-ghost btn-sm" onclick="addTeamGame()">+ 팀전 추가</button>
-          </div>
-          <div class="matchup-list" id="matchupList"></div>
-
-          <div class="final-row">
-            <div class="field-group">
-              <label>최종 스코어</label>
-              <input type="text" id="roundScore" placeholder="예: 3:4" />
-            </div>
-            <div class="field-group">
-              <label>승리팀</label>
-              <div class="team-winner-btns">
-                <button class="twbtn" id="twBtn1" onclick="setTeamWinner(1)">팀 1 승</button>
-                <button class="twbtn" id="twBtn2" onclick="setTeamWinner(2)">팀 2 승</button>
-              </div>
-            </div>
-            <div>
-              <button class="btn-primary" id="roundSaveBtn" onclick="saveRound()" style="width:100%;margin-top:20px">
-                라운드 전체 저장
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- ─ 개인전 모드 ─ -->
@@ -506,7 +576,8 @@ function playerOpts(exclude = []) {
 }
 
 function fillPlayerSelects() {
-  ['t1add','t2add','soloP1','soloP2'].forEach(id => {
+  renderCheckboxDropdowns();
+  ['soloP1','soloP2'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = playerOpts();
   });
@@ -521,61 +592,98 @@ function setMode(mode) {
   if (mode === 'solo') { buildSoloWinner(); }
 }
 
-// ── 라운드 입력 ───────────────────────────────────────────────
-function renderChips() {
-  ['t1','t2'].forEach((tk, ti) => {
-    const arr = ti === 0 ? t1 : t2;
-    document.getElementById(tk + 'chips').innerHTML = arr.map(p =>
-      `<span class="player-chip">${esc(p)} <span class="rm" onclick="removeChip(${ti+1},'${esc(p)}')">×</span></span>`
-    ).join('');
+// ── 체크박스 드롭다운 (팀 구성) ──────────────────────────────
+function renderCheckboxDropdowns() {
+  [1, 2].forEach(team => {
+    const panel = document.getElementById('t' + team + 'Panel');
+    if (!panel) return;
+    const arr = team === 1 ? t1 : t2;
+    panel.innerHTML = playerList.map(p => `
+      <label class="dropdown-item">
+        <input type="checkbox" value="${esc(p.id)}" ${arr.includes(p.id) ? 'checked' : ''}
+          onchange="onCheckPlayer(${team}, '${esc(p.id)}', this.checked)" />
+        ${esc(p.id)} <span style="color:var(--muted);font-size:.73rem">(${p.race[0]}/${p.tier})</span>
+      </label>`).join('');
   });
 }
 
-function addChip(team) {
-  const sel = document.getElementById('t' + team + 'add');
-  const val = sel.value;
-  if (!val) return;
+function toggleDropdown(team) {
+  const panel = document.getElementById('t' + team + 'Panel');
+  const isOpen = panel.classList.contains('open');
+  // 다른 드롭다운 닫기
+  [1, 2].forEach(t => document.getElementById('t' + t + 'Panel').classList.remove('open'));
+  if (!isOpen) panel.classList.add('open');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.checkbox-dropdown')) {
+    [1, 2].forEach(t => {
+      const panel = document.getElementById('t' + t + 'Panel');
+      if (panel) panel.classList.remove('open');
+    });
+  }
+});
+
+function onCheckPlayer(team, id, checked) {
   const arr = team === 1 ? t1 : t2;
-  if (!arr.includes(val)) { arr.push(val); renderChips(); autoMatchups(); }
-  sel.value = '';
+  if (checked && !arr.includes(id)) arr.push(id);
+  if (!checked) { const i = arr.indexOf(id); if (i !== -1) arr.splice(i, 1); }
+  updateTeamDisplay(team);
 }
 
-function removeChip(team, name) {
-  if (team === 1) t1 = t1.filter(p => p !== name);
-  else            t2 = t2.filter(p => p !== name);
-  renderChips();
-  autoMatchups();
+function updateTeamDisplay(team) {
+  const arr = team === 1 ? t1 : t2;
+  const triggerText = document.getElementById('t' + team + 'TriggerText');
+  const chipsEl = document.getElementById('t' + team + 'chips');
+  if (triggerText) triggerText.textContent = arr.length ? `${arr.length}명 선택됨` : '선수를 선택하세요...';
+  if (chipsEl) chipsEl.innerHTML = arr.map(p => `<span class="s-chip">${esc(p)}</span>`).join('');
 }
 
-function autoMatchups() {
-  const list = document.getElementById('matchupList');
-  const target = Math.max(t1.length, t2.length, 0);
-  while (list.querySelectorAll('.matchup-row').length < target) addMatchup();
-  const rows = [...list.querySelectorAll('.matchup-row')];
-  rows.slice(target).forEach(r => r.remove());
-  list.querySelectorAll('.matchup-row').forEach((row, i) => {
-    const s1 = row.querySelector('.mp1');
-    const s2 = row.querySelector('.mp2');
-    if (t1[i] && s1) s1.value = t1[i];
-    if (t2[i] && s2) s2.value = t2[i];
-    updateWpickLabels(row);
-  });
+function confirmTeams() {
+  if (!t1.length || !t2.length) { toast('양 팀에 선수를 선택하세요', true); return; }
+  [1, 2].forEach(t => document.getElementById('t' + t + 'Panel').classList.remove('open'));
+  document.getElementById('teamSetupPhase').style.display = 'none';
+  document.getElementById('matchupPhase').style.display = 'block';
+  document.getElementById('teamSummary1').textContent = t1.join(', ');
+  document.getElementById('teamSummary2').textContent = t2.join(', ');
+  // 팀원 수에 맞게 개인전 매치업 자동 생성
+  document.getElementById('matchupList').innerHTML = '';
+  const n = Math.max(t1.length, t2.length);
+  for (let i = 0; i < n; i++) addMatchup(t1[i] || '', t2[i] || '');
 }
 
-function addMatchup() {
+function resetTeams() {
+  t1 = []; t2 = []; teamWinner = null;
+  document.getElementById('teamSetupPhase').style.display = 'block';
+  document.getElementById('matchupPhase').style.display = 'none';
+  document.getElementById('matchupList').innerHTML = '';
+  document.getElementById('roundScore').value = '';
+  document.getElementById('twBtn1').classList.remove('sel');
+  document.getElementById('twBtn2').classList.remove('sel');
+  // 체크박스 초기화
+  document.querySelectorAll('#t1Panel input, #t2Panel input').forEach(cb => cb.checked = false);
+  updateTeamDisplay(1); updateTeamDisplay(2);
+}
+
+// ── 라운드 매치업 ─────────────────────────────────────────────
+function addMatchup(defaultP1 = '', defaultP2 = '') {
   const list = document.getElementById('matchupList');
   const div  = document.createElement('div');
   div.className = 'matchup-row';
+  const t1Opts = '<option value="">선택</option>' +
+    t1.map(p => `<option value="${esc(p)}"${p === defaultP1 ? ' selected' : ''}>${esc(p)}</option>`).join('');
+  const t2Opts = '<option value="">선택</option>' +
+    t2.map(p => `<option value="${esc(p)}"${p === defaultP2 ? ' selected' : ''}>${esc(p)}</option>`).join('');
   div.innerHTML = `
-    <select class="mp1" onchange="updateWpickLabels(this.closest('.matchup-row'))">${playerOpts()}</select>
+    <select class="mp1" onchange="updateWpickLabels(this.closest('.matchup-row'))">${t1Opts}</select>
     <div class="vs">vs</div>
-    <select class="mp2" onchange="updateWpickLabels(this.closest('.matchup-row'))">${playerOpts()}</select>
-    <input type="text" class="mpmap" placeholder="맵 (투혼 등)" style="font-size:.78rem;padding:5px 7px" />
+    <select class="mp2" onchange="updateWpickLabels(this.closest('.matchup-row'))">${t2Opts}</select>
+    <input type="text" class="mpmap" placeholder="맵" style="font-size:.78rem;padding:5px 7px" />
     <div class="winner-pick">
-      <button class="wpick" onclick="pickWinner(this,'1')">선수1</button>
-      <button class="wpick" onclick="pickWinner(this,'2')">선수2</button>
-      <button class="btn-ghost btn-sm rm-btn" onclick="this.closest('.matchup-row').remove()">✕</button>
-    </div>`;
+      <button class="wpick" onclick="pickWinner(this,'1')">${esc(defaultP1) || '팀1'}</button>
+      <button class="wpick" onclick="pickWinner(this,'2')">${esc(defaultP2) || '팀2'}</button>
+    </div>
+    <button class="btn-ghost btn-sm" style="padding:3px 7px;font-size:.75rem" onclick="this.closest('.matchup-row').remove()">✕</button>`;
   list.appendChild(div);
 }
 
@@ -583,16 +691,24 @@ function addTeamGame() {
   const list = document.getElementById('matchupList');
   const div  = document.createElement('div');
   div.className = 'teamgame-row';
+  const t1checks = t1.map(p => `
+    <label class="tg-check-item">
+      <input type="checkbox" class="tg-t1-cb" value="${esc(p)}" /> ${esc(p)}
+    </label>`).join('');
+  const t2checks = t2.map(p => `
+    <label class="tg-check-item">
+      <input type="checkbox" class="tg-t2-cb" value="${esc(p)}" /> ${esc(p)}
+    </label>`).join('');
   div.innerHTML = `
-    <input type="text" class="tg-t1" placeholder="팀1 선수 (쉼표 구분)" style="font-size:.78rem;padding:5px 7px" />
+    <div class="tg-checks">${t1checks}</div>
     <div class="tg-label">vs</div>
-    <input type="text" class="tg-t2" placeholder="팀2 선수 (쉼표 구분)" style="font-size:.78rem;padding:5px 7px" />
+    <div class="tg-checks">${t2checks}</div>
     <input type="text" class="tg-map" placeholder="맵" style="font-size:.78rem;padding:5px 7px" />
     <div class="winner-pick">
       <button class="wpick" onclick="pickWinner(this,'1')">팀1</button>
       <button class="wpick" onclick="pickWinner(this,'2')">팀2</button>
-      <button class="btn-ghost btn-sm rm-btn" onclick="this.closest('.teamgame-row').remove()">✕</button>
-    </div>`;
+    </div>
+    <button class="btn-ghost btn-sm" style="padding:3px 7px;font-size:.75rem" onclick="this.closest('.teamgame-row').remove()">✕</button>`;
   list.appendChild(div);
 }
 
@@ -638,14 +754,12 @@ async function saveRound() {
   });
 
   document.querySelectorAll('#matchupList .teamgame-row').forEach(row => {
-    const raw1 = row.querySelector('.tg-t1')?.value.trim();
-    const raw2 = row.querySelector('.tg-t2')?.value.trim();
+    const tt1 = [...row.querySelectorAll('.tg-t1-cb:checked')].map(cb => cb.value);
+    const tt2 = [...row.querySelectorAll('.tg-t2-cb:checked')].map(cb => cb.value);
     const map  = row.querySelector('.tg-map')?.value.trim() || '';
     const sel  = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
     const side = sel?.dataset.side;
-    if (raw1 && raw2 && side) {
-      const tt1 = raw1.split(',').map(s => s.trim()).filter(Boolean);
-      const tt2 = raw2.split(',').map(s => s.trim()).filter(Boolean);
+    if (tt1.length && tt2.length && side) {
       rows.push({ type: 'team', tt1, tt2, map, winSide: side });
     }
   });
@@ -671,12 +785,7 @@ async function saveRound() {
     if (error) throw error;
 
     toast(`라운드 저장 완료 (${toInsert.length}경기)`);
-    t1 = []; t2 = []; teamWinner = null;
-    renderChips();
-    document.getElementById('matchupList').innerHTML = '';
-    document.getElementById('roundScore').value = '';
-    document.getElementById('twBtn1').classList.remove('sel');
-    document.getElementById('twBtn2').classList.remove('sel');
+    resetTeams();
     await loadRecent();
   } catch (e) {
     toast('저장 실패: ' + e.message, true);
