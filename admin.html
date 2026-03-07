@@ -563,6 +563,10 @@ async function submitMatch() {
   btn.disabled = true;
   btn.textContent = '저장 중...';
 
+  // 현재 최대 seq + 1을 자동 부여 (기록실 표시 순서 보장)
+  const { data: maxRow } = await sb.from('matches').select('seq').order('seq', { ascending: false }).limit(1);
+  row.seq = (maxRow?.[0]?.seq || 0) + 1;
+
   const { error } = await sb.from('matches').insert(row);
   btn.disabled = false;
   btn.textContent = '경기 결과 저장';
