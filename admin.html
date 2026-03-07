@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RockClan 관리자</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0f0f1a;
+      --surface: #1a1a2e;
+      --card:    #16213e;
+      --accent:  #ff6a00;
+      --accent2: #e05200;
+      --text:    #e0e0e0;
+      --muted:   #888;
+      --border:  #2a2a4a;
+      --danger:  #e05252;
+      --success: #52c087;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── 헤더 ── */
+    header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 1.2rem; }
+    header h1 span { color: var(--accent); }
+    #userInfo { font-size: .85rem; color: var(--muted); display: flex; align-items: center; gap: 12px; }
+    #userInfo strong { color: var(--text); }
+
+    /* ── 공통 버튼 ── */
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: .9rem;
+      transition: background .15s;
+    }
+    .btn-primary  { background: var(--accent);  color: #fff; }
+    .btn-primary:hover  { background: var(--accent2); }
+    .btn-danger   { background: var(--danger);  color: #fff; }
+    .btn-danger:hover   { background: #c04040; }
+    .btn-ghost    { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-ghost:hover    { border-color: var(--accent); color: var(--accent); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* ── 레이아웃 ── */
+    main { max-width: 860px; margin: 0 auto; padding: 28px 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card h2 { font-size: 1rem; color: var(--accent); margin-bottom: 18px; }
+
+    /* ── 로그인 ── */
+    #loginSection { max-width: 400px; margin: 60px auto; }
+    #loginSection h2 { font-size: 1.1rem; margin-bottom: 20px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: 5px; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 9px 12px;
+      font-size: .9rem;
+    }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    #loginError { color: var(--danger); font-size: .85rem; margin-top: 10px; min-height: 20px; }
+
+    /* ── 경기 유형 탭 ── */
+    .type-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .type-tab {
+      padding: 7px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: .85rem;
+      cursor: pointer;
+    }
+    .type-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── 선수 선택 그리드 ── */
+    .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .team-box h3 { font-size: .85rem; color: var(--muted); margin-bottom: 8px; }
+    .player-select-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .player-slot select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 7px 10px;
+      font-size: .85rem;
+    }
+
+    /* ── 승자 선택 ── */
+    .winner-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .winner-btn {
+      padding: 7px 18px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+    .winner-btn.selected { background: var(--success); color: #000; border-color: var(--success); }
+
+    /* ── 알림 ── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--success);
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: .9rem;
+      opacity: 0;
+      transition: all .3s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.error { background: var(--danger); color: #fff; }
+
+    /* ── 최근 경기 목록 ── */
+    #recentList { display: flex; flex-direction: column; gap: 8px; }
+    .match-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: .85rem;
+      gap: 10px;
+    }
+    .match-row .meta { color: var(--muted); font-size: .78rem; }
+    .match-row .del { font-size: .78rem; padding: 4px 10px; }
+
+    /* ── 반응형 ── */
+    @media (max-width: 520px) {
+      .team-grid { grid-template-columns: 1fr; }
+      header h1 { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>RockClan <span>관리자</span></h1>
+  <div id="userInfo" style="display:none">
+    <span>👤 <strong id="userNick"></strong></span>
+    <span id="roleTag"></span>
+    <button class="btn-ghost" style="padding:4px 12px;font-size:.8rem" onclick="logout()">로그아웃</button>
+  </div>
+</header>
+
+<!-- ── 로그인 섹션 ── -->
+<main id="loginSection">
+  <div class="card">
+    <h2>🔐 로그인</h2>
+    <div class="field">
+      <label>이메일</label>
+      <input type="email" id="email" placeholder="이메일 입력" />
+    </div>
+    <div class="field">
+      <label>비밀번호</label>
+      <input type="password" id="password" placeholder="비밀번호 입력"
+             onkeydown="if(event.key==='Enter') login()" />
+    </div>
+    <button class="btn-primary" id="loginBtn" onclick="login()" style="width:100%">로그인</button>
+    <div id="loginError"></div>
+  </div>
+</main>
+
+<!-- ── 관리자 패널 ── -->
+<main id="adminSection" style="display:none">
+
+  <!-- 경기 입력 폼 -->
+  <div class="card">
+    <h2>⚔️ 경기 결과 입력</h2>
+
+    <!-- 경기 유형 -->
+    <div class="type-tabs">
+      <button class="type-tab active" data-type="pro"  onclick="setType('pro')">프로리그 (Match)</button>
+      <button class="type-tab"        data-type="solo" onclick="setType('solo')">개인전 (1v1)</button>
+      <button class="type-tab"        data-type="team" onclick="setType('team')">팀전 (2v2/3v3)</button>
+    </div>
+
+    <!-- 공통 필드: 날짜, 맵, 점수 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="field" style="margin:0">
+        <label>날짜</label>
+        <input type="date" id="matchDate" />
+      </div>
+      <div class="field" style="margin:0">
+        <label>맵 <span id="mapHint" style="color:var(--accent);font-size:.75rem">(자동)</span></label>
+        <input type="text" id="matchMap" placeholder="예: 투혼, 2:2생컨" />
+      </div>
+      <div class="field" style="margin:0">
+        <label>스코어</label>
+        <input type="text" id="matchScore" placeholder="예: 3:4, 0:1" />
+      </div>
+    </div>
+
+    <!-- 팀전 인원 수 선택 (team 타입만) -->
+    <div id="teamSizeRow" style="display:none;margin-bottom:14px">
+      <div class="field" style="margin:0;max-width:160px">
+        <label>팀 인원</label>
+        <select id="teamSize" onchange="buildTeamSlots()">
+          <option value="2">2 vs 2</option>
+          <option value="3">3 vs 3</option>
+          <option value="4">4 vs 4</option>
+          <option value="5">5 vs 5</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 개인전 선수 선택 -->
+    <div id="soloForm" style="display:none;margin-bottom:16px">
+      <div class="team-grid">
+        <div class="team-box">
+          <h3>선수 1</h3>
+          <select id="soloP1" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px;font-size:.9rem">
+            <option value="">-- 선택 --</option>
+          </select>
+        </div>
+        <div class="team-box">
+          <h3>선수 2</h3>
+          <select id="soloP2" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px;font-size:.9rem">
+            <option value="">-- 선택 --</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 팀 선수 선택 (pro / team 공통) -->
+    <div id="teamForm" style="margin-bottom:16px">
+      <div class="team-grid">
+        <div class="team-box">
+          <h3>🔵 팀 1</h3>
+          <div class="player-select-list" id="team1Slots"></div>
+        </div>
+        <div class="team-box">
+          <h3>🔴 팀 2</h3>
+          <div class="player-select-list" id="team2Slots"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 승자 선택 -->
+    <div style="margin-bottom:20px">
+      <label style="font-size:.82rem;color:var(--muted);display:block;margin-bottom:8px">승자</label>
+      <div class="winner-row" id="winnerRow"></div>
+    </div>
+
+    <button class="btn-primary" id="submitBtn" onclick="submitMatch()">경기 결과 저장</button>
+  </div>
+
+  <!-- 최근 입력 경기 목록 -->
+  <div class="card">
+    <h2 style="display:flex;justify-content:space-between;align-items:center">
+      <span>📋 최근 입력 경기 (50건)</span>
+      <button class="btn-ghost" style="font-size:.8rem;padding:4px 10px" onclick="loadRecent()">새로고침</button>
+    </h2>
+    <div id="recentList"><p style="color:var(--muted);font-size:.85rem">불러오는 중...</p></div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ── 설정 ──────────────────────────────────────────────────────
+const SUPABASE_URL      = 'https://ugrvylgrkwjtyekpznau.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVncnZ5bGdya3dqdHlla3B6bmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MDgxNDMsImV4cCI6MjA4ODM4NDE0M30.tIBkee7X97IDuBQQg8ugwOrLsW2RzCRoqM-CNEnR4Ao';
+// ─────────────────────────────────────────────────────────────
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let currentRole = null;
+let playerList  = [];
+let matchType   = 'pro';   // 'pro' | 'solo' | 'team'
+let winnerSide  = null;    // 'team1' | 'team2' | 선수 이름(solo)
+
+// ── 초기화 ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('matchDate').value = new Date().toISOString().slice(0, 10);
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) await onLogin(session.user);
+
+  sb.auth.onAuthStateChange((_e, s) => {
+    if (s) onLogin(s.user); else showLogin();
+  });
+});
+
+// ── 로그인 ────────────────────────────────────────────────────
+async function login() {
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const errEl    = document.getElementById('loginError');
+  const btn      = document.getElementById('loginBtn');
+
+  errEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = '로그인 중...';
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false;
+  btn.textContent = '로그인';
+
+  if (error) { errEl.textContent = '❌ ' + error.message; return; }
+  await onLogin(data.user);
+}
+
+async function onLogin(user) {
+  currentUser = user;
+
+  // 역할 확인
+  const { data: roleRow } = await sb.from('user_roles').select('role, nickname').eq('user_id', user.id).single();
+  if (!roleRow) {
+    await sb.auth.signOut();
+    document.getElementById('loginError').textContent = '❌ 권한이 없습니다. 관리자에게 문의하세요.';
+    return;
+  }
+  currentRole = roleRow.role;
+
+  document.getElementById('userNick').textContent = roleRow.nickname || user.email;
+  document.getElementById('roleTag').textContent  = currentRole === 'admin' ? '🛡 관리자' : '✏️ 에디터';
+  document.getElementById('userInfo').style.display = 'flex';
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('adminSection').style.display  = 'block';
+
+  await loadPlayers();
+  setType('pro');
+  await loadRecent();
+}
+
+function showLogin() {
+  currentUser = null; currentRole = null;
+  document.getElementById('loginSection').style.display = 'block';
+  document.getElementById('adminSection').style.display  = 'none';
+  document.getElementById('userInfo').style.display = 'none';
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  showLogin();
+}
+
+// ── 선수 목록 로드 ────────────────────────────────────────────
+async function loadPlayers() {
+  const { data, error } = await sb.from('players').select('id, race, tier').order('id');
+  if (!error) playerList = data || [];
+}
+
+function playerOption(selected = '') {
+  const opts = ['<option value="">-- 선택 --</option>'];
+  playerList.forEach(p => {
+    const sel = p.id === selected ? ' selected' : '';
+    opts.push(`<option value="${p.id}"${sel}>${p.id} (${p.race[0]} / ${p.tier})</option>`);
+  });
+  return opts.join('');
+}
+
+// ── 경기 유형 전환 ────────────────────────────────────────────
+function setType(type) {
+  matchType = type;
+  winnerSide = null;
+
+  document.querySelectorAll('.type-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.type === type)
+  );
+
+  const soloForm    = document.getElementById('soloForm');
+  const teamForm    = document.getElementById('teamForm');
+  const teamSizeRow = document.getElementById('teamSizeRow');
+  const mapInput    = document.getElementById('matchMap');
+  const mapHint     = document.getElementById('mapHint');
+
+  if (type === 'solo') {
+    soloForm.style.display    = 'block';
+    teamForm.style.display    = 'none';
+    teamSizeRow.style.display = 'none';
+    mapInput.placeholder      = '예: 투혼, 투혼(에결)';
+    mapHint.style.display     = 'none';
+    buildSoloWinner();
+    // 선수 선택 드롭다운 채우기
+    document.getElementById('soloP1').innerHTML = playerOption();
+    document.getElementById('soloP2').innerHTML = playerOption();
+    document.getElementById('soloP1').onchange = buildSoloWinner;
+    document.getElementById('soloP2').onchange = buildSoloWinner;
+  } else if (type === 'team') {
+    soloForm.style.display    = 'none';
+    teamForm.style.display    = 'block';
+    teamSizeRow.style.display = 'block';
+    mapInput.placeholder      = '예: 2:2생컨, 2:2투혼, 3:3헌터';
+    mapHint.style.display     = 'none';
+    buildTeamSlots();
+  } else {  // pro
+    soloForm.style.display    = 'none';
+    teamForm.style.display    = 'block';
+    teamSizeRow.style.display = 'none';
+    mapInput.value            = 'Match';
+    mapHint.style.display     = 'inline';
+    buildProSlots();
+  }
+}
+
+function buildProSlots() {
+  buildSlots(4);
+}
+
+function buildTeamSlots() {
+  const n = parseInt(document.getElementById('teamSize').value, 10);
+  buildSlots(n);
+}
+
+function buildSlots(n) {
+  const t1 = document.getElementById('team1Slots');
+  const t2 = document.getElementById('team2Slots');
+  t1.innerHTML = '';
+  t2.innerHTML = '';
+
+  for (let i = 0; i < n; i++) {
+    t1.innerHTML += `<div class="player-slot"><select data-team="1" data-idx="${i}" onchange="buildTeamWinner()">${playerOption()}</select></div>`;
+    t2.innerHTML += `<div class="player-slot"><select data-team="2" data-idx="${i}" onchange="buildTeamWinner()">${playerOption()}</select></div>`;
+  }
+  buildTeamWinner();
+}
+
+// ── 승자 버튼 ─────────────────────────────────────────────────
+function buildSoloWinner() {
+  winnerSide = null;
+  const p1 = document.getElementById('soloP1').value;
+  const p2 = document.getElementById('soloP2').value;
+  const row = document.getElementById('winnerRow');
+  row.innerHTML = '';
+
+  [p1, p2].filter(Boolean).forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'winner-btn';
+    btn.textContent = name;
+    btn.onclick = () => {
+      winnerSide = name;
+      row.querySelectorAll('.winner-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    row.appendChild(btn);
+  });
+}
+
+function buildTeamWinner() {
+  winnerSide = null;
+  const row = document.getElementById('winnerRow');
+  row.innerHTML = '';
+
+  const t1names = [...document.querySelectorAll('[data-team="1"]')].map(s => s.value).filter(Boolean);
+  const t2names = [...document.querySelectorAll('[data-team="2"]')].map(s => s.value).filter(Boolean);
+
+  if (t1names.length === 0 && t2names.length === 0) {
+    row.innerHTML = '<span style="color:var(--muted);font-size:.85rem">팀 선수를 먼저 선택하세요</span>';
+    return;
+  }
+
+  const makeBtn = (label, side) => {
+    const btn = document.createElement('button');
+    btn.className = 'winner-btn';
+    btn.textContent = label;
+    btn.onclick = () => {
+      winnerSide = side;
+      row.querySelectorAll('.winner-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    return btn;
+  };
+
+  row.appendChild(makeBtn(`🔵 팀1 승 (${t1names.join(', ')})`, 'team1'));
+  row.appendChild(makeBtn(`🔴 팀2 승 (${t2names.join(', ')})`, 'team2'));
+}
+
+// ── 경기 저장 ─────────────────────────────────────────────────
+async function submitMatch() {
+  const date  = document.getElementById('matchDate').value;
+  const map   = document.getElementById('matchMap').value.trim();
+  const score = document.getElementById('matchScore').value.trim();
+
+  if (!date) { toast('날짜를 선택하세요', true); return; }
+  if (!winnerSide) { toast('승자를 선택하세요', true); return; }
+
+  let row;
+
+  if (matchType === 'solo') {
+    const p1 = document.getElementById('soloP1').value;
+    const p2 = document.getElementById('soloP2').value;
+    if (!p1 || !p2) { toast('선수를 모두 선택하세요', true); return; }
+    if (p1 === p2)  { toast('선수가 중복됩니다', true); return; }
+    if (!map)       { toast('맵을 입력하세요', true); return; }
+
+    row = {
+      match_date: date,
+      map,
+      player1:    p1,
+      player2:    p2,
+      winner:     winnerSide,
+      score:      score || null,
+      created_by: currentUser.id,
+    };
+  } else {
+    const t1 = [...document.querySelectorAll('[data-team="1"]')].map(s => s.value).filter(Boolean);
+    const t2 = [...document.querySelectorAll('[data-team="2"]')].map(s => s.value).filter(Boolean);
+    if (t1.length === 0 || t2.length === 0) { toast('팀 선수를 선택하세요', true); return; }
+
+    const winnerArr = winnerSide === 'team1' ? t1 : t2;
+    row = {
+      match_date:  date,
+      map:         matchType === 'pro' ? 'Match' : (map || null),
+      team1:       t1,
+      team2:       t2,
+      winner_arr:  winnerArr,
+      score:       score || null,
+      created_by:  currentUser.id,
+    };
+
+    if (!matchType === 'pro' && !map) { toast('맵을 입력하세요', true); return; }
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
+
+  const { error } = await sb.from('matches').insert(row);
+  btn.disabled = false;
+  btn.textContent = '경기 결과 저장';
+
+  if (error) {
+    toast('저장 실패: ' + error.message, true);
+  } else {
+    toast('✅ 저장 완료!');
+    // 폼 초기화 (날짜, 유형 유지)
+    document.getElementById('matchScore').value = '';
+    winnerSide = null;
+    setType(matchType);
+    await loadRecent();
+  }
+}
+
+// ── 최근 경기 목록 ────────────────────────────────────────────
+async function loadRecent() {
+  const listEl = document.getElementById('recentList');
+  listEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem">불러오는 중...</p>';
+
+  const { data, error } = await sb
+    .from('matches')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) { listEl.innerHTML = '<p style="color:var(--danger)">불러오기 실패</p>'; return; }
+  if (!data.length) { listEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem">경기 기록 없음</p>'; return; }
+
+  listEl.innerHTML = '';
+  data.forEach(m => {
+    const isTeam = Array.isArray(m.team1);
+    let desc, winnerText;
+
+    if (isTeam) {
+      const t1 = m.team1.join(', ');
+      const t2 = m.team2.join(', ');
+      const wArr = m.winner_arr || [];
+      const wonSide = JSON.stringify(wArr) === JSON.stringify(m.team1) ? '🔵팀1' : '🔴팀2';
+      desc = `[${m.map}] ${t1} vs ${t2}`;
+      winnerText = `${wonSide} 승 ${m.score || ''}`;
+    } else {
+      desc = `[${m.map}] ${m.player1} vs ${m.player2}`;
+      winnerText = `${m.winner} 승 ${m.score || ''}`;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'match-row';
+    row.innerHTML = `
+      <div>
+        <div>${desc}</div>
+        <div class="meta">${m.match_date} · ${winnerText}</div>
+      </div>
+      ${currentRole === 'admin'
+        ? `<button class="btn-danger del" onclick="deleteMatch('${m.id}', this)">삭제</button>`
+        : ''}
+    `;
+    listEl.appendChild(row);
+  });
+}
+
+async function deleteMatch(id, btn) {
+  if (!confirm('이 경기 기록을 삭제하시겠습니까?')) return;
+  btn.disabled = true;
+  const { error } = await sb.from('matches').delete().eq('id', id);
+  if (error) { toast('삭제 실패: ' + error.message, true); btn.disabled = false; return; }
+  toast('삭제 완료');
+  await loadRecent();
+}
+
+// ── 토스트 알림 ───────────────────────────────────────────────
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (isError ? ' error' : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = ''; }, 2800);
+}
+</script>
+</body>
+</html>
