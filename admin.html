@@ -182,6 +182,7 @@
       max-height: 90vh; overflow-y: auto;
     }
     .modal-box h2 { font-size: .95rem; color: var(--accent); margin-bottom: 16px; }
+    .modal-box.pro-edit { width: min(720px, 95vw); }
     .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
     .edit-field { margin-bottom: 10px; }
     .edit-winner-row { display: flex; gap: 6px; }
@@ -501,6 +502,12 @@ let soloWinner = null;
 let editingMatch = null;
 let editWinnerSide = null;   // 팀전/프로리그 수정 시 승리팀 (1 or 2)
 let editSoloWinner = null;   // 개인전 수정 시 승자 이름
+
+// 프로리그 라운드 수정 상태
+let editingProHeader = null;
+let editingProRowIds = [];
+let editProT1 = [], editProT2 = [];
+let editProWinner = null;
 
 // ── 초기화 ────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
@@ -971,28 +978,8 @@ async function editMatch(id) {
     </div>`;
 
   if (isMatchHeader) {
-    // 프로리그 헤더 수정
-    html += `
-      <div class="edit-field">
-        <label class="field-label">팀 1 (쉼표로 구분)</label>
-        <input type="text" id="editTeam1" value="${esc(m.team1.join(', '))}" />
-      </div>
-      <div class="edit-field">
-        <label class="field-label">팀 2 (쉼표로 구분)</label>
-        <input type="text" id="editTeam2" value="${esc(m.team2.join(', '))}" />
-      </div>
-      <div class="edit-field">
-        <label class="field-label">최종 스코어</label>
-        <input type="text" id="editScore" value="${esc(m.score || '')}" placeholder="예: 3:4" />
-      </div>
-      <div class="edit-field">
-        <label class="field-label">승리팀</label>
-        <div class="edit-winner-row">
-          <button class="ewbtn" id="ewBtn1" onclick="setEditWinner(1)">팀 1 승</button>
-          <button class="ewbtn" id="ewBtn2" onclick="setEditWinner(2)">팀 2 승</button>
-        </div>
-      </div>`;
-    editWinnerSide = arrEq(m.winner_arr, m.team1) ? 1 : 2;
+    await editProLeagueMatch(m);
+    return;
   } else if (isTeam) {
     // 팀전 수정
     html += `
@@ -1089,9 +1076,16 @@ function buildEditSoloWinner(preselect) {
 
 function closeEdit() {
   document.getElementById('editModal').classList.remove('open');
+  document.querySelector('#editModal .modal-box').classList.remove('pro-edit');
+  document.querySelector('#editModal h2').textContent = '✏️ 경기 수정';
+  document.getElementById('editSaveBtn').onclick = saveEdit;
   editingMatch = null;
   editWinnerSide = null;
   editSoloWinner = null;
+  editingProHeader = null;
+  editingProRowIds = [];
+  editProT1 = []; editProT2 = [];
+  editProWinner = null;
 }
 
 async function saveEdit() {
@@ -1106,16 +1100,14 @@ async function saveEdit() {
 
   let updates = { match_date: date };
 
-  if (isMatchHeader || isTeam) {
+  if (!isMatchHeader && isTeam) {
     const t1v = document.getElementById('editTeam1').value.split(',').map(s => s.trim()).filter(Boolean);
     const t2v = document.getElementById('editTeam2').value.split(',').map(s => s.trim()).filter(Boolean);
     const score = document.getElementById('editScore').value.trim();
     if (!t1v.length || !t2v.length) { toast('팀 구성을 입력하세요', true); return; }
     if (!editWinnerSide) { toast('승리팀을 선택하세요', true); return; }
     updates = { ...updates, team1: t1v, team2: t2v, winner_arr: editWinnerSide === 1 ? t1v : t2v, score: score || null };
-    if (!isMatchHeader) {
-      updates.map = document.getElementById('editMap').value.trim();
-    }
+    updates.map = document.getElementById('editMap').value.trim();
   } else {
     const p1  = document.getElementById('editP1').value;
     const p2  = document.getElementById('editP2').value;
@@ -1136,6 +1128,250 @@ async function saveEdit() {
   toast('수정 완료');
   closeEdit();
   await loadRecent();
+}
+
+// ── 프로리그 라운드 수정 ──────────────────────────────────────
+async function editProLeagueMatch(m) {
+  // 관련 매치업 행 로드 (같은 날짜, seq > header.seq, 다음 Match 행 전까지)
+  const { data: siblings } = await sb.from('matches')
+    .select('*')
+    .eq('match_date', m.match_date)
+    .gt('seq', m.seq)
+    .order('seq');
+
+  const matchupRows = [];
+  for (const row of (siblings || [])) {
+    if (row.map === 'Match') break;
+    matchupRows.push(row);
+  }
+
+  editingProHeader = m;
+  editingProRowIds = matchupRows.map(r => r.id);
+  editProT1 = [...(m.team1 || [])];
+  editProT2 = [...(m.team2 || [])];
+  editProWinner = arrEq(m.winner_arr, m.team1) ? 1 : 2;
+
+  const box = document.querySelector('#editModal .modal-box');
+  box.classList.add('pro-edit');
+  document.querySelector('#editModal h2').textContent = '✏️ 프로리그 라운드 수정';
+  document.getElementById('editSaveBtn').onclick = saveProLeagueEdit;
+
+  document.getElementById('editForm').innerHTML = `
+    <div class="edit-field">
+      <label class="field-label">날짜</label>
+      <input type="date" id="editDate" value="${m.match_date}" />
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+      <div class="team-summary t1">
+        <div class="ts-label">🔵 팀 1</div>
+        <div class="ts-players">${esc(editProT1.join(', '))}</div>
+      </div>
+      <div class="team-summary t2">
+        <div class="ts-label">🔴 팀 2</div>
+        <div class="ts-players">${esc(editProT2.join(', '))}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:.82rem;color:var(--muted)">매치업 추가</span>
+      <button class="btn-ghost btn-sm" onclick="addEditMatchup()">+ 개인전</button>
+      <button class="btn-ghost btn-sm" onclick="addEditTeamGame()">+ 팀전</button>
+    </div>
+    <div style="display:grid;grid-template-columns:22px 1fr 36px 1fr 100px 1fr 28px;gap:6px;padding:0 10px;margin-bottom:2px">
+      <span></span>
+      <span style="font-size:.72rem;color:var(--muted)">🔵 팀1 선수</span>
+      <span></span>
+      <span style="font-size:.72rem;color:var(--muted)">🔴 팀2 선수</span>
+      <span style="font-size:.72rem;color:var(--muted)">맵</span>
+      <span style="font-size:.72rem;color:var(--muted)">승자</span>
+      <span></span>
+    </div>
+    <div class="matchup-list" id="editMatchupList"></div>
+    <div class="final-row" style="margin-top:14px">
+      <div class="field-group">
+        <label class="field-label">최종 스코어</label>
+        <input type="text" id="editRoundScore" value="${esc(m.score || '')}" placeholder="예: 3:4" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">승리팀</label>
+        <div class="team-winner-btns">
+          <button class="twbtn" id="editTwBtn1" onclick="setEditProWinner(1)">팀 1 승</button>
+          <button class="twbtn" id="editTwBtn2" onclick="setEditProWinner(2)">팀 2 승</button>
+        </div>
+      </div>
+    </div>`;
+
+  // 기존 매치업 행들 채우기
+  matchupRows.forEach(row => {
+    if (row.player1 != null) {
+      addEditMatchup(row.player1, row.player2, row.map, row.winner);
+    } else {
+      addEditTeamGame(row.team1 || [], row.team2 || [], row.map, row.winner_arr || []);
+    }
+  });
+
+  setTimeout(() => setEditProWinner(editProWinner), 0);
+  document.getElementById('editModal').classList.add('open');
+}
+
+function addEditMatchup(defaultP1 = '', defaultP2 = '', defaultMap = '', winner = null) {
+  const list = document.getElementById('editMatchupList');
+  const div = document.createElement('div');
+  div.className = 'matchup-row';
+  const t1Opts = '<option value="">선택</option>' +
+    editProT1.map(p => `<option value="${esc(p)}"${p === defaultP1 ? ' selected' : ''}>${esc(p)}</option>`).join('');
+  const t2Opts = '<option value="">선택</option>' +
+    editProT2.map(p => `<option value="${esc(p)}"${p === defaultP2 ? ' selected' : ''}>${esc(p)}</option>`).join('');
+  div.innerHTML = `
+    <div class="order-btns">
+      <button class="order-btn" onclick="moveEditRow(this,-1)" title="위로">▲</button>
+      <button class="order-btn" onclick="moveEditRow(this,1)"  title="아래로">▼</button>
+    </div>
+    <select class="mp1" onchange="updateEditWpickLabels(this.closest('.matchup-row'))">${t1Opts}</select>
+    <div class="vs">vs</div>
+    <select class="mp2" onchange="updateEditWpickLabels(this.closest('.matchup-row'))">${t2Opts}</select>
+    <input type="text" class="mpmap" placeholder="맵" value="${esc(defaultMap)}" style="font-size:.78rem;padding:5px 7px" />
+    <div class="winner-pick">
+      <button class="wpick" onclick="pickEditWinner(this,'1')">${esc(defaultP1) || '팀1'}</button>
+      <button class="wpick" onclick="pickEditWinner(this,'2')">${esc(defaultP2) || '팀2'}</button>
+    </div>
+    <button class="btn-ghost btn-sm" style="padding:3px 7px;font-size:.75rem" onclick="this.closest('.matchup-row').remove()">✕</button>`;
+  list.appendChild(div);
+  if (winner) {
+    const btns = div.querySelectorAll('.wpick');
+    if (winner === defaultP1)  { btns[0].classList.add('sel1'); btns[0].dataset.side = '1'; }
+    else if (winner === defaultP2) { btns[1].classList.add('sel2'); btns[1].dataset.side = '2'; }
+  }
+}
+
+function addEditTeamGame(t1arr = [], t2arr = [], defaultMap = '', winnerArr = []) {
+  const list = document.getElementById('editMatchupList');
+  const div = document.createElement('div');
+  div.className = 'teamgame-row';
+  const t1checks = editProT1.map(p => `
+    <label class="tg-check-item">
+      <input type="checkbox" class="tg-t1-cb" value="${esc(p)}" ${t1arr.includes(p) ? 'checked' : ''} /> ${esc(p)}
+    </label>`).join('');
+  const t2checks = editProT2.map(p => `
+    <label class="tg-check-item">
+      <input type="checkbox" class="tg-t2-cb" value="${esc(p)}" ${t2arr.includes(p) ? 'checked' : ''} /> ${esc(p)}
+    </label>`).join('');
+  const winSide = arrEq(winnerArr, t1arr) ? '1' : (arrEq(winnerArr, t2arr) ? '2' : null);
+  div.innerHTML = `
+    <div class="order-btns">
+      <button class="order-btn" onclick="moveEditRow(this,-1)" title="위로">▲</button>
+      <button class="order-btn" onclick="moveEditRow(this,1)"  title="아래로">▼</button>
+    </div>
+    <div class="tg-checks">${t1checks}</div>
+    <div class="tg-label">vs</div>
+    <div class="tg-checks">${t2checks}</div>
+    <input type="text" class="tg-map" placeholder="맵" value="${esc(defaultMap)}" style="font-size:.78rem;padding:5px 7px" />
+    <div class="winner-pick">
+      <button class="wpick${winSide === '1' ? ' sel1' : ''}" onclick="pickEditWinner(this,'1')" ${winSide === '1' ? 'data-side="1"' : ''}>팀1</button>
+      <button class="wpick${winSide === '2' ? ' sel2' : ''}" onclick="pickEditWinner(this,'2')" ${winSide === '2' ? 'data-side="2"' : ''}>팀2</button>
+    </div>
+    <button class="btn-ghost btn-sm" style="padding:3px 7px;font-size:.75rem" onclick="this.closest('.teamgame-row').remove()">✕</button>`;
+  list.appendChild(div);
+}
+
+function moveEditRow(btn, dir) {
+  const row  = btn.closest('.matchup-row, .teamgame-row');
+  const list = document.getElementById('editMatchupList');
+  if (dir === -1) { const prev = row.previousElementSibling; if (prev) list.insertBefore(row, prev); }
+  else            { const next = row.nextElementSibling;     if (next) list.insertBefore(next, row); }
+}
+
+function pickEditWinner(btn, side) {
+  const row = btn.closest('.matchup-row, .teamgame-row');
+  row.querySelectorAll('.wpick').forEach(b => b.classList.remove('sel1','sel2'));
+  btn.classList.add(side === '1' ? 'sel1' : 'sel2');
+  btn.dataset.side = side;
+}
+
+function updateEditWpickLabels(row) {
+  const p1 = row.querySelector('.mp1')?.value || '선수1';
+  const p2 = row.querySelector('.mp2')?.value || '선수2';
+  const btns = row.querySelectorAll('.wpick');
+  if (btns[0]) btns[0].textContent = p1;
+  if (btns[1]) btns[1].textContent = p2;
+}
+
+function setEditProWinner(side) {
+  editProWinner = side;
+  document.getElementById('editTwBtn1')?.classList.toggle('sel', side === 1);
+  document.getElementById('editTwBtn2')?.classList.toggle('sel', side === 2);
+}
+
+async function saveProLeagueEdit() {
+  const m = editingProHeader;
+  if (!m) return;
+
+  const date  = document.getElementById('editDate').value;
+  const score = document.getElementById('editRoundScore').value.trim();
+  if (!date)         { toast('날짜를 선택하세요', true); return; }
+  if (!editProWinner){ toast('승리팀을 선택하세요', true); return; }
+  if (!score)        { toast('최종 스코어를 입력하세요', true); return; }
+
+  const winTeam = editProWinner === 1 ? [...editProT1] : [...editProT2];
+  const newRows = [];
+
+  document.querySelectorAll('#editMatchupList .matchup-row').forEach(row => {
+    const p1  = row.querySelector('.mp1')?.value;
+    const p2  = row.querySelector('.mp2')?.value;
+    const map = row.querySelector('.mpmap')?.value.trim() || '투혼';
+    const sel = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
+    const side = sel?.dataset.side;
+    if (p1 && p2 && side) newRows.push({ type: 'solo', p1, p2, map, winner: side === '1' ? p1 : p2 });
+  });
+
+  document.querySelectorAll('#editMatchupList .teamgame-row').forEach(row => {
+    const tt1 = [...row.querySelectorAll('.tg-t1-cb:checked')].map(cb => cb.value);
+    const tt2 = [...row.querySelectorAll('.tg-t2-cb:checked')].map(cb => cb.value);
+    const map = row.querySelector('.tg-map')?.value.trim() || '';
+    const sel = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
+    const side = sel?.dataset.side;
+    if (tt1.length && tt2.length && side) newRows.push({ type: 'team', tt1, tt2, map, winSide: side });
+  });
+
+  const saveBtn = document.getElementById('editSaveBtn');
+  saveBtn.disabled = true; saveBtn.textContent = '저장 중...';
+
+  try {
+    // 1. Match 헤더 업데이트
+    const { error: hErr } = await sb.from('matches').update({
+      match_date: date,
+      winner_arr: winTeam,
+      score: score || null,
+    }).eq('id', m.id);
+    if (hErr) throw hErr;
+
+    // 2. 기존 매치업 행 삭제
+    if (editingProRowIds.length) {
+      const { error: dErr } = await sb.from('matches').delete().in('id', editingProRowIds);
+      if (dErr) throw dErr;
+    }
+
+    // 3. 새 매치업 행 삽입
+    if (newRows.length) {
+      const nextSeq = await getNextSeq();
+      const toInsert = newRows.map((r, i) => {
+        if (r.type === 'solo') {
+          return { match_date: date, map: r.map, player1: r.p1, player2: r.p2, winner: r.winner, score: null, created_by: currentUser.id, seq: nextSeq + i };
+        } else {
+          return { match_date: date, map: r.map, team1: r.tt1, team2: r.tt2, winner_arr: r.winSide === '1' ? r.tt1 : r.tt2, score: null, created_by: currentUser.id, seq: nextSeq + i };
+        }
+      });
+      const { error: iErr } = await sb.from('matches').insert(toInsert);
+      if (iErr) throw iErr;
+    }
+
+    toast(`프로리그 라운드 수정 완료 (매치업 ${newRows.length}경기)`);
+    closeEdit();
+    await loadRecent();
+  } catch (e) {
+    toast('수정 실패: ' + e.message, true);
+  }
+
+  saveBtn.disabled = false; saveBtn.textContent = '저장';
 }
 
 // ── 선수 관리 ─────────────────────────────────────────────────
