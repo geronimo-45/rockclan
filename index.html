@@ -419,6 +419,7 @@
           .from('matches')
           .select('*')
           .order('match_date', { ascending: true })
+          .order('seq', { ascending: true })
           .range(from, from + PAGE - 1);
         if (error) throw new Error('경기 데이터 로드 실패: ' + error.message);
         allRows = allRows.concat(data || []);
