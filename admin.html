@@ -116,8 +116,11 @@
 
     /* 매치업 테이블 */
     .matchup-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+    .order-btns { display: flex; flex-direction: column; gap: 2px; }
+    .order-btn { background: transparent; border: 1px solid var(--border); border-radius: 3px; color: var(--muted); width: 20px; height: 15px; font-size: .6rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+    .order-btn:hover { border-color: var(--accent); color: var(--accent); }
     .matchup-row {
-      display: grid; grid-template-columns: 1fr 36px 1fr 100px 1fr 28px; gap: 6px; align-items: center;
+      display: grid; grid-template-columns: 22px 1fr 36px 1fr 100px 1fr 28px; gap: 6px; align-items: center;
       background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px;
     }
     .matchup-row .vs { text-align: center; color: var(--muted); font-size: .8rem; }
@@ -128,7 +131,7 @@
 
     /* 팀전 행 */
     .teamgame-row {
-      display: grid; grid-template-columns: 1fr 36px 1fr 100px 1fr 28px; gap: 6px; align-items: start;
+      display: grid; grid-template-columns: 22px 1fr 36px 1fr 100px 1fr 28px; gap: 6px; align-items: start;
       background: rgba(255,106,0,0.05); border: 1px solid rgba(255,106,0,0.2); border-radius: 8px; padding: 7px 10px;
     }
     .teamgame-row .tg-label { font-size: .75rem; color: #ffb347; text-align: center; padding-top: 6px; }
@@ -195,7 +198,7 @@
     #toast.error { background: var(--danger); color: #fff; }
 
     @media (max-width: 600px) {
-      .matchup-row, .teamgame-row { grid-template-columns: 1fr 28px 1fr 70px minmax(0,1fr) 24px; }
+      .matchup-row, .teamgame-row { grid-template-columns: 18px 1fr 28px 1fr 70px minmax(0,1fr) 22px; }
       .single-grid { grid-template-columns: 1fr 1fr; }
       .add-player-form { grid-template-columns: 1fr 1fr; }
       .team-row { grid-template-columns: 1fr; }
@@ -675,6 +678,10 @@ function addMatchup(defaultP1 = '', defaultP2 = '') {
   const t2Opts = '<option value="">선택</option>' +
     t2.map(p => `<option value="${esc(p)}"${p === defaultP2 ? ' selected' : ''}>${esc(p)}</option>`).join('');
   div.innerHTML = `
+    <div class="order-btns">
+      <button class="order-btn" onclick="moveRow(this,-1)" title="위로">▲</button>
+      <button class="order-btn" onclick="moveRow(this,1)"  title="아래로">▼</button>
+    </div>
     <select class="mp1" onchange="updateWpickLabels(this.closest('.matchup-row'))">${t1Opts}</select>
     <div class="vs">vs</div>
     <select class="mp2" onchange="updateWpickLabels(this.closest('.matchup-row'))">${t2Opts}</select>
@@ -700,6 +707,10 @@ function addTeamGame() {
       <input type="checkbox" class="tg-t2-cb" value="${esc(p)}" /> ${esc(p)}
     </label>`).join('');
   div.innerHTML = `
+    <div class="order-btns">
+      <button class="order-btn" onclick="moveRow(this,-1)" title="위로">▲</button>
+      <button class="order-btn" onclick="moveRow(this,1)"  title="아래로">▼</button>
+    </div>
     <div class="tg-checks">${t1checks}</div>
     <div class="tg-label">vs</div>
     <div class="tg-checks">${t2checks}</div>
@@ -710,6 +721,18 @@ function addTeamGame() {
     </div>
     <button class="btn-ghost btn-sm" style="padding:3px 7px;font-size:.75rem" onclick="this.closest('.teamgame-row').remove()">✕</button>`;
   list.appendChild(div);
+}
+
+function moveRow(btn, dir) {
+  const row  = btn.closest('.matchup-row, .teamgame-row');
+  const list = document.getElementById('matchupList');
+  if (dir === -1) {
+    const prev = row.previousElementSibling;
+    if (prev) list.insertBefore(row, prev);
+  } else {
+    const next = row.nextElementSibling;
+    if (next) list.insertBefore(next, row);
+  }
 }
 
 function updateWpickLabels(row) {
