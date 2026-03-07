@@ -406,15 +406,27 @@
 
     async function loadSupabaseData() {
       if (_cachedData) return _cachedData;
-      const [{ data: playerRows, error: pe }, { data: matchRows, error: me }] =
-        await Promise.all([
-          _sb.from('players').select('*'),
-          _sb.from('matches').select('*').order('match_date', { ascending: true }).limit(10000),
-        ]);
-      if (pe) throw new Error('선수 데이터 로드 실패: ' + pe.message);
-      if (me) throw new Error('경기 데이터 로드 실패: ' + me.message);
 
-      const matches = matchRows.map(row => {
+      // 선수 로드
+      const { data: playerRows, error: pe } = await _sb.from('players').select('*');
+      if (pe) throw new Error('선수 데이터 로드 실패: ' + pe.message);
+
+      // 경기 데이터: 1000개씩 페이지네이션으로 전체 로드
+      const PAGE = 1000;
+      let allRows = [], from = 0, done = false;
+      while (!done) {
+        const { data, error } = await _sb
+          .from('matches')
+          .select('*')
+          .order('match_date', { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) throw new Error('경기 데이터 로드 실패: ' + error.message);
+        allRows = allRows.concat(data || []);
+        if (!data || data.length < PAGE) done = true;
+        else from += PAGE;
+      }
+
+      const matches = allRows.map(row => {
         const isTeam = Array.isArray(row.team1) && row.team1.length > 0;
         return {
           date:    row.match_date,
