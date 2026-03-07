@@ -1,1898 +1,647 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RockClan Records</title>
-
-  <!-- ✅ React / ReactDOM -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" defer></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" defer></script>
-
-  <!-- ✅ PropTypes (전역 주입: Recharts보다 반드시 먼저 로드) -->
-  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js" defer></script>
-
-  <!-- ✅ 안정 버전 Recharts (버그 회피) -->
-  <script src="https://cdn.jsdelivr.net/npm/recharts@2.10.3/umd/Recharts.min.js" defer></script>
-
-  <!-- favicon 404 억제 -->
-  <link rel="icon" type="image/x-icon" href="data:;base64,iVBORw0KGgo=">
-
+  <title>RockClan 관리자</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --bg1:#0b0710; --bg2:#14050a; --accent:#ff6a00; --muted:#a7a0a8; --card:rgba(255,255,255,0.03);
+      --bg:      #0f0f1a;
+      --surface: #1a1a2e;
+      --card:    #16213e;
+      --accent:  #ff6a00;
+      --accent2: #e05200;
+      --text:    #e0e0e0;
+      --muted:   #888;
+      --border:  #2a2a4a;
+      --danger:  #e05252;
+      --success: #52c087;
     }
-    *{box-sizing:border-box}
-    body{
-      font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
-      margin:0;color:#eee;
-      background:linear-gradient(180deg,var(--bg1),var(--bg2));
-    }
-    header{
-      padding:20px;text-align:center;
-      background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));
-      box-shadow:0 6px 30px rgba(0,0,0,0.5)
-    }
-    header h1{margin:0;color:var(--accent)}
-    header .sub{color:var(--muted);font-size:13px;margin-top:6px}
-    nav{
-      display:flex;gap:10px;justify-content:center;
-      padding:10px;background:#14141a;position:sticky;top:0;z-index:2
-    }
-    nav button{
-      background:#1a1a22;border:1px solid #232532;color:#ddd;
-      padding:10px 14px;border-radius:10px;cursor:pointer
-    }
-    nav button.active{background:var(--accent);color:#111}
-    main{max-width:1100px;margin:18px auto;padding:0 16px}
-    section{display:none}
-    section.active{display:block}
-    .card{
-      background:var(--card);padding:14px;border-radius:12px;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);margin-bottom:16px
-    }
-    table{width:100%;border-collapse:collapse}
-    th,td{
-      padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);
-      text-align:center
-    }
-    th{color:var(--muted);font-size:12px;text-transform:uppercase}
-    tr:hover{background:rgba(255,255,255,0.03)}
-    .tier-Stone{color:#8b8b8b}
-    .tier-Bronze{color:#cd7f32}
-    .tier-Silver{color:#c0c0c0}
-    .tier-Gold{color:#ffd700}
-    .tier-Diamond{color:#67e8f9}
-    .tier-Legend{color:#ff7f50}
-    .muted{color:var(--muted)}
-    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-    .filters>*{flex:1 1 160px}
-    .match{
-      border:1px solid rgba(255,255,255,0.08);padding:10px;border-radius:10px;
-      background:rgba(255,255,255,0.02);margin-bottom:10px
-    }
-    .match-header{font-weight:700;margin-bottom:6px;cursor:pointer;color:#ffb347}
-    .match-item{color:#ddd;font-size:14px;margin:4px 0;padding-left:8px}
-    .hidden{display:none;}
-    
-    /* 탭 활성화 색상 일관 적용 */
-.month-tab.active,
-.old-season-tab.active {
-  background: var(--accent) !important;
-  color: #111 !important;
-  font-weight: 700;
-}
 
-    /* Old Records 전용 테이블 폰트 */
-.old-records-table th,
-.old-records-table td {
-  font-size: 14px;
-}
-    
-/* 티어별 개인전 통계 매트릭스 */
-.tier-matrix th, .tier-matrix td { font-size:13px; }
-.tier-matrix td { line-height:1.25; }
-.tier-matrix .cell-muted { color: var(--muted); font-size:12px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
 
-    /* 티어별 개인전 통계 드롭다운 */
-#tier-solo .dropdown {
-  position: relative;
-}
-#tier-solo .dropdown > button {
-  background:#1f1f28;
-  border-radius:999px;
-  padding:6px 12px;
-  border:1px solid rgba(255,255,255,0.08);
-  cursor:pointer;
-  font-size:12px;
-  color:#eee;
-}
-#tier-solo .dropdown-panel {
-  position:absolute;
-  top:110%;
-  left:0;
-  min-width:200px;
-  max-height:260px;
-  overflow-y:auto;
-  background:#17171f;
-  border-radius:10px;
-  padding:8px;
-  border:1px solid rgba(255,255,255,0.08);
-  box-shadow:0 8px 20px rgba(0,0,0,0.6);
-  display:none;
-  z-index:20;
-}
-#tier-solo .dropdown-panel.open {
-  display:block;
-}
-#tier-solo .dropdown-item {
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:12px;
-  padding:2px 0;
-}
-#tier-solo .dropdown-scroll {
-  max-height:200px;
-  overflow-y:auto;
-  margin-top:4px;
-  padding-top:4px;
-  border-top:1px solid rgba(255,255,255,0.08);
-}
+    /* ── 헤더 ── */
+    header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 1.2rem; }
+    header h1 span { color: var(--accent); }
+    #userInfo { font-size: .85rem; color: var(--muted); display: flex; align-items: center; gap: 12px; }
+    #userInfo strong { color: var(--text); }
 
-/* 기존 매트릭스 살짝 정리 */
-.tier-matrix th, .tier-matrix td { font-size:13px; }
-.tier-matrix td { line-height:1.25; }
-.tier-matrix .cell-muted { color: var(--muted); font-size:12px; }
+    /* ── 공통 버튼 ── */
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: .9rem;
+      transition: background .15s;
+    }
+    .btn-primary  { background: var(--accent);  color: #fff; }
+    .btn-primary:hover  { background: var(--accent2); }
+    .btn-danger   { background: var(--danger);  color: #fff; }
+    .btn-danger:hover   { background: #c04040; }
+    .btn-ghost    { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-ghost:hover    { border-color: var(--accent); color: var(--accent); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
 
+    /* ── 레이아웃 ── */
+    main { max-width: 860px; margin: 0 auto; padding: 28px 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card h2 { font-size: 1rem; color: var(--accent); margin-bottom: 18px; }
 
+    /* ── 로그인 ── */
+    #loginSection { max-width: 400px; margin: 60px auto; }
+    #loginSection h2 { font-size: 1.1rem; margin-bottom: 20px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: 5px; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 9px 12px;
+      font-size: .9rem;
+    }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    #loginError { color: var(--danger); font-size: .85rem; margin-top: 10px; min-height: 20px; }
+
+    /* ── 경기 유형 탭 ── */
+    .type-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .type-tab {
+      padding: 7px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: .85rem;
+      cursor: pointer;
+    }
+    .type-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── 선수 선택 그리드 ── */
+    .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .team-box h3 { font-size: .85rem; color: var(--muted); margin-bottom: 8px; }
+    .player-select-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .player-slot select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 7px 10px;
+      font-size: .85rem;
+    }
+
+    /* ── 승자 선택 ── */
+    .winner-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .winner-btn {
+      padding: 7px 18px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+    .winner-btn.selected { background: var(--success); color: #000; border-color: var(--success); }
+
+    /* ── 알림 ── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--success);
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: .9rem;
+      opacity: 0;
+      transition: all .3s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.error { background: var(--danger); color: #fff; }
+
+    /* ── 최근 경기 목록 ── */
+    #recentList { display: flex; flex-direction: column; gap: 8px; }
+    .match-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: .85rem;
+      gap: 10px;
+    }
+    .match-row .meta { color: var(--muted); font-size: .78rem; }
+    .match-row .del { font-size: .78rem; padding: 4px 10px; }
+
+    /* ── 반응형 ── */
+    @media (max-width: 520px) {
+      .team-grid { grid-template-columns: 1fr; }
+      header h1 { font-size: 1rem; }
+    }
   </style>
 </head>
-
 <body>
-  <header>
-    <h1>RockClan Records</h1>
-    <div class="sub">클랜원 랭킹 • 기록실 • Old Records • ELO 시스템 설명 • 상대 전적 조회 • 티어별 개인전 통계</div>
-  </header>
 
-  <nav>
-    <button class="tab active" data-tab="players">클랜원 랭킹</button>
-    <button class="tab" data-tab="records">기록실</button>
-    <button class="tab" data-tab="old-records">Old Records</button>
-    <button class="tab" data-tab="elo-info">ELO 시스템 설명</button>
-    <button class="tab" data-tab="h2h">상대 전적 조회</button>
-    <button class="tab" data-tab="tier-solo">티어별 개인전 통계</button>
-  </nav>
-
-  <!-- 🔹 플레이어 히스토리 팝업 -->
-  <div id="playerModal" class="modal" style="position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.6);padding-top:60px;display:none;">
-    <div class="modal-content" style="background:#1a1a22;margin:auto;padding:20px;border-radius:12px;width:85%;max-height:80%;overflow-y:auto;color:#eee;box-shadow:0 0 20px rgba(0,0,0,.6)">
-      <span id="closeModal" class="close" style="float:right;font-size:28px;cursor:pointer;color:#aaa">&times;</span>
-      <h2 id="modalPlayerName" style="color:#ff6a00;margin-top:0;"></h2>
-      <div id="modalPlayerInfo" style="font-size:14px;margin-bottom:12px;color:#ccc;"></div>
-      <canvas id="modalEloChart" width="600" height="250" style="background:#111;border-radius:8px;margin-bottom:16px;"></canvas>
-      <div id="modalMatchHistory" style="font-size:14px;color:#ddd;"></div>
-    </div>
+<header>
+  <h1>RockClan <span>관리자</span></h1>
+  <div id="userInfo" style="display:none">
+    <span>👤 <strong id="userNick"></strong></span>
+    <span id="roleTag"></span>
+    <button class="btn-ghost" style="padding:4px 12px;font-size:.8rem" onclick="logout()">로그아웃</button>
   </div>
+</header>
 
-  <main>
-    <!-- 랭킹 -->
-    <section id="players" class="active">
-      <div class="card">
-        <h2 style="margin:6px 0;color:var(--accent)">클랜원 랭킹</h2>
-        <div class="filters">
-          <input id="search" placeholder="ID 검색" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-          <select id="raceFilter" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-            <option value="">종족 전체</option>
-            <option>Protoss</option><option>Terran</option><option>Zerg</option><option>Random</option>
-          </select>
-          <select id="tierFilter" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-            <option value="">티어 전체</option>
-            <option>Stone</option><option>Bronze</option><option>Silver</option><option>Gold</option><option>Diamond</option><option>Legend</option>
-          </select>
-                    <select id="rankMode" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-            <option value="all" selected>전체</option>
-            <option value="pro">프로리그</option>
-            <option value="solo">개인전</option>
-            <option value="team">팀전</option>
-          </select>
-          <!-- 📅 랭킹 기준 날짜 선택 --> 
-          <input id="rankDate" type="date" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-        </div>
-        <div id="currentSeasonDesc"
-         class="muted"
-         style="font-size:13px;margin-bottom:2px"></div>
-        <div class="muted" id="rankDateLabel" style="font-size:12px;margin-bottom:6px"></div>
-        <table id="players-table">
-          <thead><tr><th>Rank</th><th>ID</th><th>종족</th><th>티어</th><th>ELO</th><th>승</th><th>패</th><th>승률</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- 기록실 -->
-    <section id="records">
-      <div class="card">
-        <h2 style="margin:6px 0;color:var(--accent)">기록실</h2>
-        <div id="records-months" class="filters" style="margin-bottom:10px;"></div>
-        <div id="match-list"></div>
-      </div>
-    </section>
-
-    <!-- Old Records -->
-    <section id="old-records">
-      <div class="card">
-        <h2 style="margin:6px 0;color:var(--accent)">Old Records</h2>
-        <div class="muted" style="font-size:12px">
-          이전 시즌(완료된 시즌)의 최종 ELO 랭킹입니다. 아래에서 시즌을 선택하세요.
-        </div>
-        <div id="oldSeasonTabs" class="filters" style="margin-top:10px;"></div>
-        <div id="oldSeasonContent" style="margin-top:10px;"></div>
-      </div>
-    </section>
-
-    <!-- ELO 설명 -->
-    <section id="elo-info">
-      <div class="card">
-        <h2 style="margin:6px 0;color:var(--accent)">ELO 시스템 설명</h2>
-
-        <p style="line-height:1.6;color:#ddd">
-          RockClan의 ELO 시스템은 단순한 점수 차이뿐 아니라 <b>티어(Tier) 보정</b>을 포함하여 실제 실력 격차를 반영합니다.<br>
-          모든 계산은 기록실(match) 데이터를 기반으로 자동 수행됩니다.
-        </p>
-
-        <ul style="line-height:1.8;color:#ccc;margin-left:12px">
-          <li><b>초기 ELO</b>: 신규 플레이어는 1000점으로 시작합니다.</li>
-          <li><b>K 값</b>:
-            <ul>
-              <li>개인전(1:1): <b>K = 12</b></li>
-              <li>팀전(2:2, 3:3, 4:4 등): <b>K = 8</b></li>
-            </ul>
-          </li>
-          <li><b>티어 인덱스 보정</b>:
-            <ul>
-              <li>Stone=0, Bronze=1, Silver=2, Gold=3, Diamond=4, Legend=5</li>
-              <li>실제 계산은 <code>EffectiveElo = ELO + (TierIndex × 40)</code> 으로 수행됩니다.</li>
-            </ul>
-          </li>
-          <li>예상 승률은 두 플레이어의 <b>EffectiveElo</b> 차이를 기준으로 계산됩니다.</li>
-          <li>경기 결과는 예상 승률 대비 실제 승패 차이만큼 ELO가 변동합니다.</li>
-        </ul>
-
-        <h3 style="margin-top:16px;color:var(--accent)">📈 ELO 계산 예시</h3>
-        <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:14px;color:#ddd">
-          <thead>
-            <tr style="background:rgba(255,255,255,0.05)">
-              <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">상황</th>
-              <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">ELO 차이</th>
-              <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">티어 차이</th>
-              <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">예상 승률</th>
-              <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">승리 시</th>
-              <th style="padding:6px;border:1px solid rgba(255,255,255,0.1)">패배 시</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td style="padding:6px;border:1px solid rgba(255,255,255,0.1)">1:1 (동티어, 동일 ELO)</td><td>0</td><td>0</td><td>50%</td><td>+6</td><td>−6</td></tr>
-            <tr><td style="padding:6px;border:1px solid rgba(255,255,255,0.1)">Silver(2) vs Gold(3)</td><td>0</td><td>+1</td><td>46%</td><td>+7</td><td>−5</td></tr>
-            <tr><td style="padding:6px;border:1px solid rgba(255,255,255,0.1)">Gold(3) vs Silver(2)</td><td>0</td><td>−1</td><td>54%</td><td>+5</td><td>−7</td></tr>
-            <tr><td style="padding:6px;border:1px solid rgba(255,255,255,0.1)">팀전 (평균 동티어)</td><td>0</td><td>0</td><td>50%</td><td>+4</td><td>−4</td></tr>
-            <tr><td style="padding:6px;border:1px solid rgba(255,255,255,0.1)">팀전 (상대팀 평균 Diamond↑)</td><td>−150</td><td>+2</td><td>32%</td><td>+6</td><td>−3</td></tr>
-          </tbody>
-        </table>
-
-        <p style="margin-top:10px;color:#999">
-          ※ ELO 계산식: <code>NewElo = OldElo + K × (Actual − Expected)</code><br>
-          ※ 티어 인덱스 보정으로 인해 상위 티어를 이길 경우 상승폭이 더 커집니다.
-        </p>
-
-        <!-- 🔹 시뮬레이터 -->
-        <h3 style="margin-top:30px;color:var(--accent)">🧮 ELO 계산 시뮬레이터</h3>
-        <div style="color:#ddd;font-size:14px;line-height:1.8;">
-          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px;">
-            <label>플레이어 A ELO <input id="eloA" type="number" value="1000" style="width:80px;margin-left:6px;padding:4px;background:#111;border:1px solid #333;color:#fff;"></label>
-            <label>티어
-              <select id="tierA" style="padding:4px;background:#111;border:1px solid #333;color:#fff;">
-                <option>Stone</option><option>Bronze</option><option selected>Silver</option><option>Gold</option><option>Diamond</option><option>Legend</option>
-              </select>
-            </label>
-            <span style="margin:0 12px;">vs</span>
-            <label>플레이어 B ELO <input id="eloB" type="number" value="1000" style="width:80px;margin-left:6px;padding:4px;background:#111;border:1px solid #333;color:#fff;"></label>
-            <label>티어
-              <select id="tierB" style="padding:4px;background:#111;border:1px solid #333;color:#fff;">
-                <option>Stone</option><option>Bronze</option><option>Silver</option><option selected>Gold</option><option>Diamond</option><option>Legend</option>
-              </select>
-            </label>
-            <label style="margin-left:16px;">경기 타입
-              <select id="gameType" style="padding:4px;background:#111;border:1px solid #333;color:#fff;">
-                <option value="1v1" selected>1:1</option>
-                <option value="team">팀전</option>
-              </select>
-            </label>
-            <button id="calcBtn" style="margin-left:12px;padding:6px 12px;border:none;border-radius:6px;background:var(--accent);color:#111;cursor:pointer;">계산</button>
-          </div>
-
-          <div id="simResult" style="margin-top:10px;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;background:rgba(255,255,255,0.03);">
-            계산 결과가 여기에 표시됩니다.
-          </div>
-        </div>
-
-        <script>
-          document.getElementById("calcBtn").addEventListener("click",()=>{
-            const getTierIndex=t=>["Stone","Bronze","Silver","Gold","Diamond","Legend"].indexOf(t);
-            const eloA=parseFloat(document.getElementById("eloA").value||1000);
-            const eloB=parseFloat(document.getElementById("eloB").value||1000);
-            const tierA=document.getElementById("tierA").value;
-            const tierB=document.getElementById("tierB").value;
-            const gameType=document.getElementById("gameType").value;
-            const K=(gameType==="team")?8:12;
-
-            const effA=eloA+getTierIndex(tierA)*40;
-            const effB=eloB+getTierIndex(tierB)*40;
-            const expectedA=1/(1+Math.pow(10,(effB-effA)/400));
-            const deltaWin = K*(1-expectedA);
-            const deltaLose = -K*(expectedA);
-            const winPct=(expectedA*100).toFixed(1);
-
-            document.getElementById("simResult").innerHTML=`
-              <div><b>예상 승률</b>: A ${winPct}% / B ${(100-expectedA*100).toFixed(1)}%</div>
-              <div><b>K값</b>: ${K}</div>
-              <div><b>A 승리 시</b>: A +${deltaWin.toFixed(2)} / B ${deltaLose.toFixed(2)}</div>
-              <div><b>B 승리 시</b>: A ${(-deltaWin).toFixed(2)} / B +${(-deltaLose).toFixed(2)}</div>
-            `;
-          });
-        </script>
-
-      </div>
-    </section>
-
-    <!-- 상대 전적 조회 -->
-    <section id="h2h">
-      <div class="card">
-        <h2 style="margin:6px 0;color:var(--accent)">상대 전적 조회</h2>
-        <div class="muted" style="margin-top:6px">
-          Player#1은 필수, Player#2는 선택입니다. Player#2를 비우면 Player#1이 상대했던 사람 목록이 표시됩니다. (▼로 날짜/맵/스코어 확인)
-        </div>
-
-        <div class="filters" style="margin-top:12px">
-          <select id="h2hP1" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-            <option value="">Player#1 선택 (필수)</option>
-          </select>
-
-          <select id="h2hP2" style="padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-            <option value="">Player#2 선택 (선택)</option>
-          </select>
-
-          <button id="h2hSearchBtn" style="padding:10px 14px;border:none;border-radius:10px;background:var(--accent);color:#111;cursor:pointer;flex:0 0 auto">조회</button>
-          <button id="h2hClearBtn" style="padding:10px 14px;border:1px solid #232532;border-radius:10px;background:#1a1a22;color:#ddd;cursor:pointer;flex:0 0 auto">초기화</button>
-        </div>
-
-        <div id="h2hResult" style="margin-top:12px"></div>
-      </div>
-    </section>
-    
-<!-- 티어별 개인전 통계 -->
-<section id="tier-solo">
+<!-- ── 로그인 섹션 ── -->
+<main id="loginSection">
   <div class="card">
-    <h2 style="margin:6px 0;color:var(--accent)">티어별 개인전 통계</h2>
-    <div class="muted" style="font-size:12px;margin-bottom:8px">
-      선택한 시즌의 <b>개인전(1:1)</b>만 집계합니다. (행=내 티어, 열=상대 티어 → 해당 구간 승률)
+    <h2>🔐 로그인</h2>
+    <div class="field">
+      <label>이메일</label>
+      <input type="email" id="email" placeholder="이메일 입력" />
+    </div>
+    <div class="field">
+      <label>비밀번호</label>
+      <input type="password" id="password" placeholder="비밀번호 입력"
+             onkeydown="if(event.key==='Enter') login()" />
+    </div>
+    <button class="btn-primary" id="loginBtn" onclick="login()" style="width:100%">로그인</button>
+    <div id="loginError"></div>
+  </div>
+</main>
+
+<!-- ── 관리자 패널 ── -->
+<main id="adminSection" style="display:none">
+
+  <!-- 경기 입력 폼 -->
+  <div class="card">
+    <h2>⚔️ 경기 결과 입력</h2>
+
+    <!-- 경기 유형 -->
+    <div class="type-tabs">
+      <button class="type-tab active" data-type="pro"  onclick="setType('pro')">프로리그 (Match)</button>
+      <button class="type-tab"        data-type="solo" onclick="setType('solo')">개인전 (1v1)</button>
+      <button class="type-tab"        data-type="team" onclick="setType('team')">팀전 (2v2/3v3)</button>
     </div>
 
-    <!-- 🔹 클랜원 필터 드롭다운 -->
-    <div id="tierSoloFilter" class="filters" style="margin-bottom:10px;"></div>
-    
-    <div id="tierSoloSeasonTabs" class="filters" style="margin-bottom:10px;"></div>
-    <div id="tierSoloMatrix"></div>
-  </div>
-</section>
-
-  </main>
-
-  <!-- ✅ Chart.js 로드 (defer 추가) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-
-  <!-- ✅ 스크립트 -->
-  <script>
-  (function(){
-    // --- 탭 전환 ---
-    document.querySelectorAll('nav .tab').forEach(btn=>{
-      btn.addEventListener('click', e=>{
-        document.querySelectorAll('nav .tab').forEach(b=>b.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-        document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));
-        document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
-      });
-    });
-
-    // --- 안전 로더 ---
-    const safe = async (url) => {
-      try {
-        const res = await fetch(url + (url.includes('?')?'&':'?') + 'v=' + Date.now(), { cache: 'no-store' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const txt = await res.text();
-        try { return JSON.parse(txt); }
-        catch (e) { console.error('❌ JSON 파싱 실패:', url, txt.slice(0,200)); return {players:[], matches:[]}; }
-      } catch (e) {
-        console.error('❌ 로드 실패:', url, e);
-        return {players:[], matches:[]};
-      }
-    };
-
-    const basePath = location.pathname.replace(/[^\/]*$/, '');
-    const path = (name) => basePath + name;
-
-    const TierOrder=['Stone','Bronze','Silver','Gold','Diamond','Legend'];
-    const getTierIndex = t => Math.max(0, TierOrder.indexOf(t||'Silver'));
-    const toMMDD = d => d ? d.split('-').slice(1).join('/') : '';
-
-    const $search = document.getElementById('search');
-    const $race   = document.getElementById('raceFilter');
-    const $tier   = document.getElementById('tierFilter');
-    const $rankDate = document.getElementById('rankDate');
-    const $rankDateLabel = document.getElementById('rankDateLabel');
-
-        const $rankMode = document.getElementById('rankMode');
-// 🔹 시즌 정의
-const SEASONS = [
-  { key:'2025',   label:'2025 시즌',    start:'2025-09-01',  end:'2025-12-31' },
-  { key:'2026Q1', label:'2026 시즌 1Q', start:'2026-01-01', end:'2026-03-31' },
-  { key:'2026Q2', label:'2026 시즌 2Q', start:'2026-04-01', end:'2026-06-30' },
-  { key:'2026Q3', label:'2026 시즌 3Q', start:'2026-07-01', end:'2026-09-30' },
-  { key:'2026Q4', label:'2026 시즌 4Q', start:'2026-10-01', end:'2026-12-31' },
-];
-    
-    // 🔹 시즌별 티어 스냅샷 (Old Records 전용)
-    // 2025 시즌이 끝난 시점의 티어를 여기 기록해두면,
-    // 나중에 data.json에서 티어를 바꿔도 Old Records(2025 시즌) 결과는 그대로 유지된다.
-    const SEASON_TIER_SNAPSHOT = {
-      '2025': {
-        'Attaboy': 'Diamond',
-        'Basic': 'Silver',
-        'Chan': 'Silver',
-        'DanielK': 'Silver',
-        'Essence': 'Bronze',
-        'Friend': 'Silver',
-        'Gdragon': 'Diamond',
-        'GgoMajin': 'Silver',
-        'Hani': 'Gold',
-        'Hyunho': 'Silver',
-        'IN': 'Gold',
-        'MGZG': 'Bronze',
-        'Macho': 'Diamond',
-        'MiSTY': 'Silver',
-        'Miny': 'Silver',
-        'Mukddak': 'Silver',
-        'Rocky': 'Silver',
-        'Rupark': 'Diamond',
-        'Shinny': 'Legend',
-        'Skidashi': 'Gold',
-        'Strive': 'Legend',
-        'Templar': 'Gold',
-        'Veeny': 'Gold',
-        'Winter': 'Gold',
-        'Yolo': 'Diamond',
-        'umi': 'Bronze',
-        'Zeze': 'Gold',
-        'coolguy': 'Silver',
-        'dong9': 'Diamond',
-        'dopamine': 'Diamond',
-        'dalsun2': 'Diamond',
-        'qooqoo': 'Silver',
-        'ToTo': 'Diamond',
-        'eun': 'Silver',
-        '5making': 'Gold',
-        'Jangbi': 'Silver',
-        'Pang': 'Gold',
-        'SunnySea': 'Diamond',
-        'JeJu': 'Diamond',
-        'Nangman': 'Gold',
-        'PE': 'Diamond',
-        'JoJo': 'Bronze'
-      }
-      // 나중에 2026 시즌1이 끝난 뒤에 스냅샷을 고정하고 싶으면
-      // 여기에 '2026Q1': { ... } 형태로 한 번 더 추가하면 됨.
-    };
-
-    // 🔹 현재 시즌 설정 (지금은 2026 시즌 1Q)
-    const CURRENT_SEASON_KEY = '2026Q1';
-    const CURRENT_SEASON = SEASONS.find(s => s.key === CURRENT_SEASON_KEY) || SEASONS[0];
-
-    // 🔹 탈퇴/숨김 ID
-    const HIDE_IDS = new Set(['Wonder','ceta','sika']);
-
-    const isInSeason = (match, season)=>{
-      if(!season) return false;
-      const d = String(match.date || '');
-      if(!d) return false;
-      if(season.start && d < season.start) return false;
-      if(season.end   && d > season.end)   return false;
-      return true;
-    };
-
-    start();
-
-    async function start() {
-      const base = await safe(path('data.json'));
-
-      // 🔹 추가 월 데이터 로드 (필요시 여기만 수정)
-      const months = ['oct','nov','dec','jan','feb','mar']; // data_oct.json, data_nov.json, data_dec.json, data_jan.json ...
-
-      for (const m of months) {
-        try {
-          const data = await safe(path(`data_${m}.json`));
-          base.matches = (base.matches || []).concat(data.matches || []);
-          const seen = new Set((base.players || []).map(p => p.id));
-          (data.players || []).forEach(p => { if (!seen.has(p.id)) base.players.push(p); });
-        } catch (err) {
-          console.warn(`⚠️ data_${m}.json 로드 중 오류 발생:`, err);
-        }
-      }
-
-renderAll(base);
-}
-// 여기 삽입
-{
-  const cs = SEASONS.find(s=>s.key===CURRENT_SEASON_KEY);
-  if (cs) {
-    document.getElementById('currentSeasonDesc').innerHTML =
-      `${cs.label} 경기 기준 랭킹입니다. (달력에서 날짜를 선택하면 해당 시즌 내 시점 기준 랭킹을 볼 수 있습니다.)`;
-  }
-}
-
-
-    function renderAll(data){
-      
-      const playersMeta = new Map((data.players||[]).map(p=>[p.id,p]));
-
-      // --- 랭킹 계산 유틸 ---
-      const calc = (A,B,res,isTeam)=>{
-        const K = isTeam? 8 : 12;
-        const effA = A.elo + getTierIndex(A.tier)*40;
-        const effB = B.elo + getTierIndex(B.tier)*40;
-        const expectedA = 1/(1+Math.pow(10,(effB-effA)/400));
-        const delta = K*(res-expectedA);
-        A.elo += delta; B.elo -= delta;
-      };
-
-      const matchesAll = (data.matches||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-
-      // ✅ 현재 시즌(예: 2026 시즌1Q) 랭킹 계산에 사용할 경기만 추출
-      const matchesForRanking = matchesAll.filter(m => isInSeason(m, CURRENT_SEASON));
-
-      // --- 랭킹용 날짜 범위 계산 (달력 min/max 세팅용) ---
-      let minRankDate = null;
-      let maxRankDate = null;
-      for (const m of matchesForRanking) {
-        if (!m || !m.date) continue;
-        const d = String(m.date);
-        if (!minRankDate || d < minRankDate) minRankDate = d;
-        if (!maxRankDate || d > maxRankDate) maxRankDate = d;
-      }
-
-      // --- 모드/날짜에 따라 랭킹을 "매번" 재계산 (실수/누락 방지) ---
-      const buildRankingRows = (mode, isoDate)=>{
-        const stat = new Map();
-        const ensure = (id)=>{
-          if(stat.has(id)) return stat.get(id);
-          const meta = playersMeta.get(id) || {};
-          const o = { id, elo:1000, tier:meta.tier||'Silver', race:meta.race||'Protoss', win:0, loss:0, played:0 };
-          stat.set(id,o);
-          return o;
-        };
-
-        let usedGames = 0;
-
-        for(const m of matchesForRanking){
-          if(!m || !m.date) continue;
-          if(isoDate && String(m.date) > isoDate) continue;
-
-          const isPro  = (m.map === 'Match' && Array.isArray(m.team1) && Array.isArray(m.team2));
-          const isSolo = !!(m.player1 && m.player2) && (m.map !== 'Match');
-          const isTeam = Array.isArray(m.team1) && Array.isArray(m.team2) && (m.map !== 'Match');
-
-          if(mode==='pro'){
-            if(!isPro) continue;
-            const t1 = m.team1||[], t2 = m.team2||[];
-            const winners = Array.isArray(m.winner) ? m.winner : [];
-            const win1 = winners.some(x=>t1.includes(x)) ? 1 : 0;
-
-            const involved = new Set([...(t1||[]), ...(t2||[])]);
-            involved.forEach(id=>{
-              const p = ensure(id);
-              p.played++;
-              const inT1 = t1.includes(id);
-              const isWin = inT1 ? !!win1 : !win1;
-              isWin ? p.win++ : p.loss++;
-            });
-            usedGames++;
-            continue;
-          }
-
-          if(mode==='solo' && !isSolo) continue;
-          if(mode==='team' && !isTeam) continue;
-
-          if(isSolo){
-            const p1=ensure(m.player1), p2=ensure(m.player2);
-            const res = (m.winner===m.player1)?1:(m.winner===m.player2)?0:null;
-            if(res!==null){
-              calc(p1,p2,res,false);
-              if(res===1){ p1.win++; p2.loss++; } else { p2.win++; p1.loss++; }
-              p1.played++; p2.played++;
-              usedGames++;
-            }
-          }
-
-          if(isTeam){
-            const T1=(m.team1||[]).map(ensure), T2=(m.team2||[]).map(ensure);
-            if(!T1.length || !T2.length) continue;
-
-            const winners=Array.isArray(m.winner)?m.winner:[];
-            const win1=winners.some(x=>(m.team1||[]).includes(x))?1:0;
-
-            const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
-            const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
-            const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
-            calc(dA,dB,win1,true);
-            const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
-
-            T1.forEach(p=>{ p.elo+=diffA; p.played++; win1?p.win++:p.loss++; });
-            T2.forEach(p=>{ p.elo+=diffB; p.played++; !win1?p.win++:p.loss++; });
-            usedGames++;
-          }
-        }
-
-        let rows = [...stat.values()].filter(p => !HIDE_IDS.has(p.id));
-
-        if(mode==='pro'){
-          // 프로리그: 득실(승-패) 우선 정렬 → 승수 → 패수(적을수록) → ID
-          rows.sort((a,b)=>{
-            const ad = (a.win||0) - (a.loss||0);
-            const bd = (b.win||0) - (b.loss||0);
-            if(bd!==ad) return bd-ad;
-            if((b.win||0)!==(a.win||0)) return (b.win||0)-(a.win||0);
-            if((a.loss||0)!==(b.loss||0)) return (a.loss||0)-(b.loss||0);
-            return String(a.id).localeCompare(String(b.id));
-          });
-        } else {
-          rows.sort((a,b)=>b.elo-a.elo);
-        }
-
-        // 프로리그는 ELO 대신 득실(승-패)을 표시용으로 보관
-        if(mode==='pro'){
-          rows.forEach(p=>{
-            p.diff = (p.win||0) - (p.loss||0);
-            p.elo = null;
-          });
-        }
-
-        return { rows, noGames: usedGames===0 };
-      };
-
-      // --- 랭킹 표시 + 필터 ---
-      const tbody = document.querySelector('#players-table tbody');
-      const theadRow = document.querySelector('#players-table thead tr');
-
-      let currentMode = ($rankMode && $rankMode.value) ? $rankMode.value : 'all';
-      let currentDate = ($rankDate && $rankDate.value) ? $rankDate.value : null;
-      let activeRows = [];
-
-      function renderTableHeader(mode){
-        if(!theadRow) return;
-        // (요청대로 컬럼은 유지) 단, 프로리그는 ELO가 '-'로 표시됨
-        theadRow.innerHTML = '<th>Rank</th><th>ID</th><th>종족</th><th>티어</th><th>ELO</th><th>승</th><th>패</th><th>승률</th>';
-      }
-
-      function applyFilters(){
-        const modeNow = ($rankMode && $rankMode.value) ? $rankMode.value : currentMode;
-        const q = ($search.value||'').trim().toLowerCase();
-        const r = $race.value||'';
-        const t = $tier.value||'';
-
-        const filtered = activeRows.filter(p=>{
-          if(q && !p.id.toLowerCase().includes(q)) return false;
-          if(r && p.race!==r) return false;
-          if(t && p.tier!==t) return false;
-          return true;
-        });
-
-        tbody.innerHTML = filtered.map((p,i)=>{
-          const played = p.played||0;
-          const wr = played? ((p.win/played)*100).toFixed(1) : '0.0';
-          let eloText;
-          if(modeNow==='pro'){
-            const d = (typeof p.diff==='number') ? p.diff : ((p.win||0)-(p.loss||0));
-            eloText = (d>0? `+${d}` : String(d));
-          } else {
-            eloText = (p.elo===null || typeof p.elo==='undefined') ? '-' : Math.round(p.elo);
-          }
-          return `<tr>
-            <td>${i+1}</td><td>${p.id}</td><td>${p.race}</td>
-            <td class="tier-${p.tier}">${p.tier}</td>
-            <td>${eloText}</td><td>${p.win}</td><td>${p.loss}</td><td>${wr}%</td>
-          </tr>`;
-        }).join('');
-      }
-
-      function updateRankDateLabel(iso, noGames){
-        if(!$rankDateLabel) return;
-        if(!iso){
-          $rankDateLabel.textContent = `📅 기준 날짜: 시즌 전체 (${CURRENT_SEASON.start} ~ ${CURRENT_SEASON.end} 기준)`;
-          return;
-        }
-        const parts = String(iso).split('-');
-        if(parts.length===3){
-          const [y,m,d] = parts;
-          const mm = parseInt(m,10);
-          const dd = parseInt(d,10);
-          $rankDateLabel.textContent =
-            `📅 기준 날짜: ${y}년 ${mm}월 ${dd}일 (해당일까지의 경기만 반영)` +
-            (noGames ? ' - 선택한 날짜까지 기록된 경기가 없습니다.' : '');
-        } else {
-          $rankDateLabel.textContent = `📅 기준 날짜: ${iso}`;
-        }
-      }
-
-      function rebuildRanking(){
-        const out = buildRankingRows(currentMode, currentDate);
-        activeRows = out.rows;
-        renderTableHeader(currentMode);
-        updateRankDateLabel(currentDate, out.noGames);
-        applyFilters();
-      }
-
-      // 검색/필터
-      ['input','change'].forEach(ev=>{
-        $search.addEventListener(ev,applyFilters);
-        $race.addEventListener(ev,applyFilters);
-        $tier.addEventListener(ev,applyFilters);
-      });
-
-      // 모드 변경
-      if($rankMode){
-        $rankMode.addEventListener('change', ()=>{
-          currentMode = $rankMode.value || 'all';
-          rebuildRanking();
-        });
-      }
-
-      // 날짜 변경 (모드 상관없이 공통 적용)
-      if($rankDate){
-        if(minRankDate) $rankDate.min = minRankDate;
-        if(maxRankDate) $rankDate.max = maxRankDate;
-        $rankDate.addEventListener('change', ()=>{
-          currentDate = ($rankDate.value||'') ? $rankDate.value : null;
-          rebuildRanking();
-        });
-      }
-
-      rebuildRanking();
-// --- Old Records (완료된 시즌) ---
-      (function buildOldRecords(){
-        const tabsEl = document.getElementById('oldSeasonTabs');
-        const contentEl = document.getElementById('oldSeasonContent');
-        if(!tabsEl || !contentEl) return;
-
-        // 현재 시즌 시작 이전에 끝난 시즌만 Old Records 대상
-        const currentStart = CURRENT_SEASON.start;
-        const archivedSeasons = SEASONS.filter(s=>{
-          if(s.key === CURRENT_SEASON_KEY) return false;
-          if(!currentStart) return false;
-          if(!s.end) return false;
-          return s.end < currentStart;
-        });
-
-        if(!archivedSeasons.length){
-          tabsEl.innerHTML = '<div class="muted">아직 이전 시즌 기록이 없습니다.</div>';
-          contentEl.innerHTML = '';
-          return;
-        }
-
-        const seasonRankings = {};
-
-        function computeSeasonRanking(season){
-          const st = new Map();
-
-            // ✅ 이 시즌에 해당하는 티어 스냅샷 (없으면 빈 객체)
-          const seasonTierMap = SEASON_TIER_SNAPSHOT[season.key] || {};
-          const ensureS = (id)=>{
-            if (st.has(id)) return st.get(id);
-          const m = playersMeta.get(id) || {};
-            
-    // 스냅샷에 값이 있으면 그 티어를 우선 사용,
-    // 없으면 현재 data.json의 tier 사용 (예: 새로 합류한 사람 등)
-            const snapshotTier = seasonTierMap[id];
-            const tier = snapshotTier || m.tier || 'Silver';
-            const o = { id, elo:1000, tier, race:m.race || 'Protoss', win:0, loss:0, played:0 };
-            st.set(id, o);
-            return o;
-          };
-
-          for(const m of matchesAll){
-            if(!isInSeason(m, season)) continue;
-            if(!m || !m.map || m.map==='Match') continue;
-
-            if(m.player1 && m.player2){
-              const p1=ensureS(m.player1), p2=ensureS(m.player2);
-              if(m.winner===m.player1){ calc(p1,p2,1,false); p1.win++; p2.loss++; }
-              else if(m.winner===m.player2){ calc(p1,p2,0,false); p2.win++; p1.loss++; }
-              p1.played++; p2.played++;
-            }
-
-            if(Array.isArray(m.team1) && Array.isArray(m.team2)){
-              const T1=m.team1.map(ensureS), T2=m.team2.map(ensureS);
-              const winners = Array.isArray(m.winner)? m.winner : [];
-              const win1 = winners.some(x=>m.team1.includes(x)) ? 1 : 0;
-
-              const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
-              const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
-              const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
-              calc(dA,dB,win1,true);
-              const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
-
-              T1.forEach(p=>{ p.elo+=diffA; p.played++; win1?p.win++:p.loss++; });
-              T2.forEach(p=>{ p.elo+=diffB; p.played++; !win1?p.win++:p.loss++; });
-            }
-          }
-
-          return [...st.values()]
-            .filter(p=>!HIDE_IDS.has(p.id))
-            .sort((a,b)=>b.elo-a.elo);
-        }
-
-        archivedSeasons.forEach(s=>{
-          seasonRankings[s.key] = computeSeasonRanking(s);
-        });
-
-        tabsEl.innerHTML = archivedSeasons.map((s,i)=>`
-          <button class="old-season-tab ${i===0?'active':''}"
-            data-season="${s.key}"
-            style="background:#1a1a22;border:1px solid #232532;color:#ddd;padding:8px 12px;border-radius:10px;cursor:pointer;">
-            ${escapeHtml(s.label)}
-          </button>
-        `).join(' ');
-
-        function renderSeason(key){
-          const season = archivedSeasons.find(s=>s.key===key);
-          const rows = seasonRankings[key] || [];
-          if(!season){
-            contentEl.innerHTML = '';
-            return;
-          }
-          if(!rows.length){
-            contentEl.innerHTML = `<div class="muted">${escapeHtml(season.label)} 기록이 없습니다.</div>`;
-            return;
-          }
-
-          const bodyHtml = rows.map((p,i)=>{
-            const wr = p.played ? ((p.win/p.played)*100).toFixed(1) : '0.0';
-            return `
-              <tr>
-                <td>${i+1}</td>
-                <td>${escapeHtml(p.id)}</td>
-                <td>${p.race}</td>
-                <td class="tier-${p.tier}">${p.tier}</td>
-                <td>${Math.round(p.elo)}</td>
-                <td>${p.win}</td>
-                <td>${p.loss}</td>
-                <td>${wr}%</td>
-              </tr>
-            `;
-          }).join('');
-
-          const rangeText =
-            (season.start ? season.start : '시작일 미정')
-            + ' ~ ' +
-            (season.end   ? season.end   : '종료일 미정');
-
-           contentEl.innerHTML = `
-            <div class="muted" style="font-size:12px;margin-bottom:6px;">
-              시즌 기간: ${rangeText}
-            </div>
-              <div class="old-records-wrap" style="max-height:660px;overflow-y:auto;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px;">
-               <table class="old-records-table" style="width:100%;border-collapse:collapse;">
-                <thead>
-                  <tr>
-                    <th>Rank</th><th>ID</th><th>종족</th><th>티어</th><th>ELO</th><th>승</th><th>패</th><th>승률</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${bodyHtml}
-                </tbody>
-              </table>
-            </div>
-          `;
-        }
-
-        // 초기 표시 (첫 시즌)
-        renderSeason(archivedSeasons[0].key);
-
-        tabsEl.addEventListener('click', e=>{
-          const btn = e.target.closest('.old-season-tab');
-          if(!btn) return;
-          tabsEl.querySelectorAll('.old-season-tab').forEach(b=>b.classList.remove('active'));
-          btn.classList.add('active');
-          renderSeason(btn.dataset.season);
-        });
-      })();
-
-      // --- 기록실 (월별 탭) ---
-      const list = document.getElementById('match-list');
-      const tabsWrap = document.getElementById('records-months');
-
-      const getMonthKey = (iso) => {
-        if(!iso || !iso.includes('-')) return 'unknown';
-        const [y,m] = iso.split('-');
-        return `${y}-${m}`;
-      };
-      const getMonthLabel = (key) => {
-        const [y,m] = key.split('-');
-        const yy = String(y).slice(2);
-        const mm = String(parseInt(m,10));
-        return `${yy}년 ${mm}월`;
-      };
-
-      const byMonth = new Map();
-      for (const m of matchesAll) {
-        const key = getMonthKey(m.date);
-        if (!byMonth.has(key)) byMonth.set(key, []);
-        byMonth.get(key).push(m);
-      }
-      const monthsSorted = [...byMonth.keys()].sort((a,b)=> a.localeCompare(b));
-
-      tabsWrap.innerHTML = monthsSorted.map((key,i)=>`
-        <button class="month-tab${i===monthsSorted.length-1?' active':''}"
-          data-month="${key}"
-          style="background:#1a1a22;border:1px solid #232532;color:#ddd;padding:8px 12px;border-radius:10px;cursor:pointer;">
-          ${getMonthLabel(key)}
-        </button>
-      `).join(' ');
-
-      function renderMonth(key){
-        const dataM = (byMonth.get(key)||[]).slice().sort((a,b)=> String(a.date).localeCompare(String(b.date)));
-        list.innerHTML = '';
-
-        let curDate=null, box=null, mCount=0, curRound=null;
-        const flushHeader = ()=>{ if(box && mCount>0){ box.querySelector('.match-header').textContent += ` (Match ${mCount}게임)`; } };
-
-        for(const m of dataM){
-          if(m.date !== curDate){
-            flushHeader();
-            curDate = m.date; mCount = 0; curRound = null;
-
-            box = document.createElement('div');
-            box.className = 'match';
-
-            const hdr = document.createElement('div');
-            hdr.className = 'match-header';
-            hdr.textContent = `${curDate}`;
-
-            const inner = document.createElement('div');
-            inner.className = 'match-inner hidden';
-            hdr.addEventListener('click',()=> inner.classList.toggle('hidden'));
-
-            box.appendChild(hdr);
-            box.appendChild(inner);
-            list.appendChild(box);
-          }
-
-          const wrap = box.querySelector('.match-inner');
-
-          if(m.map === 'Match'){
-            mCount++;
-            const line = document.createElement('div');
-            line.className = 'match-item';
-            line.style.color = '#a8e0a8';
-            const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
-            line.textContent = `[Match] 승자: ${win}${m.score?` | 스코어: ${m.score}`:''}`;
-            wrap.appendChild(line);
-            continue;
-          }
-// ✅ 라운드 구분 표시 (match: "Round1/2/3" 등)
-const round = (typeof m.match === 'string' && m.match.trim()) ? m.match.trim() : null;
-if(round && round !== curRound){
-  curRound = round;
-
-  const sep = document.createElement('div');
-  sep.className = 'match-item';
-  sep.style.marginTop = '10px';
-  sep.style.fontWeight = '700';
-  sep.style.color = '#a8e0a8';
-  sep.textContent = `▶ ${curRound}`;
-  wrap.appendChild(sep);
-}
-
-          if(m.player1 && m.player2){
-            const l = document.createElement('div'); l.className='match-item';
-            l.textContent = `${m.map||'-'} — ${m.player1} vs ${m.player2} | 승자: ${m.winner||'-'}${m.score?` | ${m.score}`:''}`;
-            wrap.appendChild(l);
-          }
-
-          if(Array.isArray(m.team1) && Array.isArray(m.team2)){
-            const l = document.createElement('div'); l.className='match-item';
-            const win = Array.isArray(m.winner)? m.winner.join(', ') : (m.winner||'-');
-            l.textContent = `${m.map||'-'} — [${m.team1.join(', ')}] vs [${m.team2.join(', ')}] | 승자: ${win}${m.score?` | ${m.score}`:''}`;
-            wrap.appendChild(l);
-          }
-        }
-        flushHeader();
-      }
-
-      if (monthsSorted.length){
-        renderMonth(monthsSorted[monthsSorted.length-1]);
-      }
-
-      tabsWrap.addEventListener('click', (e)=>{
-        const btn = e.target.closest('.month-tab');
-        if(!btn) return;
-        tabsWrap.querySelectorAll('.month-tab').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        renderMonth(btn.dataset.month);
-      });
-
-      // --- 상대 전적 조회 ---
-      renderHeadToHead(data, matchesAll, playersMeta);
-      renderTierSoloStats(matchesAll, playersMeta);
-    }
-
-    // ===== 상대 전적 조회 구현 =====
-    function renderHeadToHead(data, matches, playersMeta){
-      const $p1 = document.getElementById('h2hP1');
-      const $p2 = document.getElementById('h2hP2');
-      const $btn = document.getElementById('h2hSearchBtn');
-      const $clr = document.getElementById('h2hClearBtn');
-      const $out = document.getElementById('h2hResult');
-
-      if(!$p1 || !$p2 || !$btn || !$out) return;
-
-      const HIDE = new Set(['Wonder','ceta','sika']);
-
-      const ids = [...new Set([
-        ...(data.players||[]).map(p=>p.id),
-        ...matches.flatMap(m=>{
-          const a=[];
-          if(m.player1) a.push(m.player1);
-          if(m.player2) a.push(m.player2);
-          if(Array.isArray(m.team1)) a.push(...m.team1);
-          if(Array.isArray(m.team2)) a.push(...m.team2);
-          return a;
-        })
-      ])].filter(Boolean).filter(id=>!HIDE.has(id)).sort((a,b)=>a.localeCompare(b));
-
-      function fillSelectOptions(){
-        const prev1 = $p1.value || '';
-        const prev2 = $p2.value || '';
-
-        $p1.innerHTML =
-          `<option value="">Player#1 선택 (필수)</option>` +
-          ids.map(id => `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join('');
-
-        $p2.innerHTML =
-          `<option value="">Player#2 선택 (선택)</option>` +
-          ids.map(id => `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join('');
-
-        if(prev1 && ids.includes(prev1)) $p1.value = prev1;
-        if(prev2 && ids.includes(prev2)) $p2.value = prev2;
-      }
-      fillSelectOptions();
-
-      function normalizeId(v){ return (v||'').trim(); }
-      function pct(w,l){ const n=w+l; return n? ((w/n)*100).toFixed(1) : '0.0'; }
-
-      function computePair(p1, p2){
-        let soloW=0, soloL=0, teamW=0, teamL=0;
-        const soloDetails=[];
-        const teamDetails=[];
-
-        for(const m of matches){
-          if(!m || !m.map) continue;
-          if(m.map === 'Match') continue;
-
-          if(m.player1 && m.player2){
-            const a=m.player1, b=m.player2;
-            if(!((a===p1 && b===p2) || (a===p2 && b===p1))) continue;
-            const winner=m.winner||'';
-            const p1Win = (winner===p1);
-            const p2Win = (winner===p2);
-            if(!p1Win && !p2Win) continue;
-
-            if(p1Win) soloW++; else soloL++;
-            soloDetails.push({
-              date: m.date||'-',
-              map: m.map||'-',
-              score: m.score||'',
-              result: p1Win ? '승' : '패',
-              opponent: p2
-            });
-            continue;
-          }
-
-          if(Array.isArray(m.team1) && Array.isArray(m.team2)){
-            const t1=m.team1, t2=m.team2;
-            const p1In1=t1.includes(p1), p1In2=t2.includes(p1);
-            const p2In1=t1.includes(p2), p2In2=t2.includes(p2);
-
-            if((p1In1 && p2In1) || (p1In2 && p2In2)) continue;
-
-            const opposed = (p1In1 && p2In2) || (p1In2 && p2In1);
-            if(!opposed) continue;
-
-            const winners = Array.isArray(m.winner) ? m.winner : [];
-            const win1 = winners.some(x=>t1.includes(x)) ? 1 : 0;
-            const p1Win = p1In1 ? !!win1 : !win1;
-
-            if(p1Win) teamW++; else teamL++;
-
-            teamDetails.push({
-              date: m.date||'-',
-              map: m.map||'-',
-              score: m.score||'',
-              result: p1Win ? '승' : '패',
-              myTeam: p1In1 ? t1.slice() : t2.slice(),
-              oppTeam: p1In1 ? t2.slice() : t1.slice(),
-              opponent: p2
-            });
-            continue;
-          }
-        }
-
-        return {
-          p1, p2,
-          soloW, soloL,
-          teamW, teamL,
-          soloDetails,
-          teamDetails
-        };
-      }
-
-      function listOpponents(p1){
-        const opp = new Map();
-        const bump = (id, key)=>{
-          if(!id || id===p1) return;
-          if(HIDE.has(id)) return;
-          if(!opp.has(id)) opp.set(id,{id, solo:0, team:0});
-          opp.get(id)[key]++;
-        };
-
-        for(const m of matches){
-          if(!m || !m.map) continue;
-          if(m.map === 'Match') continue;
-
-          if(m.player1 && m.player2){
-            const a=m.player1, b=m.player2;
-            if(a===p1) bump(b,'solo');
-            if(b===p1) bump(a,'solo');
-          }
-
-          if(Array.isArray(m.team1) && Array.isArray(m.team2)){
-            const t1=m.team1, t2=m.team2;
-            const in1=t1.includes(p1), in2=t2.includes(p1);
-            if(!in1 && !in2) continue;
-            const other = in1 ? t2 : t1;
-            for(const o of other) bump(o,'team');
-          }
-        }
-
-        const arr=[...opp.values()].map(o=>({ ...o, total:o.solo+o.team }));
-        arr.sort((a,b)=> b.total-a.total || a.id.localeCompare(b.id));
-        return arr;
-      }
-
-      function renderDetailList(title, items, mode){
-        if(!items || !items.length){
-          return `<div class="muted">${title}: 데이터 없음</div>`;
-        }
-        const rows = items
-          .slice()
-          .sort((a,b)=> String(a.date).localeCompare(String(b.date)))
-          .map(it=>{
-            const color = (it.result==='승') ? '#4ade80' : '#f87171';
-            const score = it.score ? ` | ${escapeHtml(it.score)}` : '';
-            if(mode==='solo'){
-              return `<div style="margin:4px 0;color:#ddd">
-                ${escapeHtml(it.date)} | ${escapeHtml(it.map)} | <b style="color:${color}">${it.result}</b>${score}
-              </div>`;
-            }
-            return `<div style="margin:4px 0;color:#ddd">
-             ${escapeHtml(it.date)} | ${escapeHtml(it.map)} | <b style="color:${color}">${it.result}</b>${score}
-             <span class="muted" style="font-size:12px;margin-left:10px">
-               우리팀: [${(it.myTeam||[]).map(escapeHtml).join(', ')}] / 상대팀: [${(it.oppTeam||[]).map(escapeHtml).join(', ')}]
-             </span>
-            </div>`;
-          }).join('');
-        return `<div style="font-weight:700;color:#ffb347;margin-bottom:6px">${title}</div>${rows}`;
-      }
-
-      function renderPairResult(pair){
-        const {p1,p2,soloW,soloL,teamW,teamL,soloDetails,teamDetails} = pair;
-        const soloN=soloW+soloL, teamN=teamW+teamL;
-
-        const soloWr=pct(soloW,soloL);
-        const teamWr=pct(teamW,teamL);
-
-        const html = `
-          <div class="card" style="margin-top:12px">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-             <div style="font-weight:800;color:#ffb347">${escapeHtml(p1)} vs ${escapeHtml(p2)}</div>
-             <div class="muted" style="font-size:12px">개인전/팀전 분리 집계</div>
-            </div>
-
-            <table style="margin-top:10px">
-              <thead>
-                <tr>
-                  <th>구분</th><th>승</th><th>패</th><th>승률</th><th>게임수</th><th>상세</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>개인전</td>
-                  <td>${soloW}</td><td>${soloL}</td><td>${soloWr}%</td><td>${soloN}</td>
-                  <td style="text-align:center">
-                    <button class="h2h-toggle" data-target="solo"
-                      style="border:1px solid #232532;background:#1a1a22;color:#ddd;border-radius:8px;padding:6px 10px;cursor:pointer">
-                      ▼
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>팀전</td>
-                  <td>${teamW}</td><td>${teamL}</td><td>${teamWr}%</td><td>${teamN}</td>
-                  <td style="text-align:center">
-                    <button class="h2h-toggle" data-target="team"
-                      style="border:1px solid #232532;background:#1a1a22;color:#ddd;border-radius:8px;padding:6px 10px;cursor:pointer">
-                      ▼
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div id="h2hDetailSolo" class="hidden" style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px">
-              ${renderDetailList('개인전 상세', soloDetails, 'solo')}
-            </div>
-
-            <div id="h2hDetailTeam" class="hidden" style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px">
-              ${renderDetailList('팀전 상세', teamDetails, 'team')}
-            </div>
-          </div>
-        `;
-        return html;
-      }
-
-      function renderOpponentList(p1){
-        const opponents = listOpponents(p1);
-        if(!opponents.length){
-          $out.innerHTML = `<div class="muted">상대 전적이 없습니다.</div>`;
-          return;
-        }
-
-        const listHtml = `
-          <div class="card" style="margin-top:12px">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-              <div style="font-weight:800;color:#ffb347">${escapeHtml(p1)} 상대 목록</div>
-              <div class="muted" style="font-size:12px">클릭하면 아래에 전적이 표시됩니다.</div>
-            </div>
-
-            <table style="margin-top:10px">
-              <thead>
-                <tr><th>상대 ID</th><th>개인전 게임</th><th>팀전 게임</th><th>총 게임</th><th>선택</th></tr>
-              </thead>
-              <tbody>
-                ${opponents.map(o=>`
-                  <tr>
-                    <td>${escapeHtml(o.id)}</td>
-                    <td>${o.solo}</td>
-                    <td>${o.team}</td>
-                    <td>${o.total}</td>
-                    <td>
-                      <button class="h2h-pick" data-opp="${escapeHtml(o.id)}"
-                        style="border:1px solid #232532;background:#1a1a22;color:#ddd;border-radius:8px;padding:6px 10px;cursor:pointer">
-                        선택
-                      </button>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-
-            <div id="h2hPickedArea" style="margin-top:12px"></div>
-          </div>
-        `;
-        $out.innerHTML = listHtml;
-
-        const picked = document.getElementById('h2hPickedArea');
-        $out.querySelectorAll('.h2h-pick').forEach(btn=>{
-          btn.addEventListener('click', ()=>{
-            const oppId = btn.dataset.opp;
-            $p2.value = oppId;
-            const pair = computePair(p1, oppId);
-            picked.innerHTML = renderPairResult(pair);
-            bindPairToggles(picked);
-          });
-        });
-      }
-
-      function bindPairToggles(root){
-        root.querySelectorAll('.h2h-toggle').forEach(btn=>{
-          btn.addEventListener('click', ()=>{
-            const t = btn.dataset.target;
-            const soloEl = root.querySelector('#h2hDetailSolo');
-            const teamEl = root.querySelector('#h2hDetailTeam');
-            if(t==='solo' && soloEl) soloEl.classList.toggle('hidden');
-            if(t==='team' && teamEl) teamEl.classList.toggle('hidden');
-          });
-        });
-      }
-
-      function doSearch(){
-        const p1 = normalizeId($p1.value);
-        const p2 = normalizeId($p2.value);
-
-        if(!p1){
-          $out.innerHTML = `<div class="muted">Player#1 ID를 선택하세요.</div>`;
-          return;
-        }
-        if(HIDE.has(p1) || (p2 && HIDE.has(p2))){
-          $out.innerHTML = `<div class="muted">해당 ID는 조회 대상에서 제외되어 있습니다.</div>`;
-          return;
-        }
-        if(p2 && p1===p2){
-          $out.innerHTML = `<div class="muted">Player#1과 Player#2는 서로 다른 ID여야 합니다.</div>`;
-          return;
-        }
-
-        const known = new Set(ids);
-        if(!known.has(p1)){
-          $out.innerHTML = `<div class="muted">Player#1(${escapeHtml(p1)})을 데이터에서 찾을 수 없습니다.</div>`;
-          return;
-        }
-        if(p2 && !known.has(p2)){
-          $out.innerHTML = `<div class="muted">Player#2(${escapeHtml(p2)})을 데이터에서 찾을 수 없습니다.</div>`;
-          return;
-        }
-
-        if(!p2){
-          renderOpponentList(p1);
-          return;
-        }
-
-        const pair = computePair(p1,p2);
-        $out.innerHTML = renderPairResult(pair);
-        bindPairToggles($out);
-      }
-
-      $btn.addEventListener('click', doSearch);
-      $clr.addEventListener('click', ()=>{
-        $p1.value=''; $p2.value='';
-        $out.innerHTML = `<div class="muted">Player#1 / Player#2를 선택 후 조회하세요.</div>`;
-      });
-
-      $out.innerHTML = `<div class="muted">Player#1 / Player#2를 선택 후 조회하세요.</div>`;
-    }
-
-    function escapeHtml(s){
-      return String(s??'')
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'","&#39;");
-    }
-function renderTierSoloStats(matchesAll, playersMeta){
-  const filterEl = document.getElementById('tierSoloFilter');
-  const tabs     = document.getElementById('tierSoloSeasonTabs');
-  const out      = document.getElementById('tierSoloMatrix');
-  if(!filterEl || !tabs || !out) return;
-
-  const seasonsForTabs = SEASONS.slice(); // 2025, 2026S1, 2026S2...
-  let activeKey = CURRENT_SEASON_KEY || (seasonsForTabs[0] && seasonsForTabs[0].key);
-
-  const allPlayers = Array.from(playersMeta.keys()).sort();
-  let selectedSet = new Set(); // size==0 이면 "전체"
-
-  const getSeasonTier = (id, seasonKey)=>{
-    const snap = SEASON_TIER_SNAPSHOT && SEASON_TIER_SNAPSHOT[seasonKey];
-    if(snap && snap[id]) return snap[id];
-    const m = playersMeta.get(id) || {};
-    return m.tier || 'Silver';
-  };
-
-  const tiers = TierOrder.slice();
-
-  const draw = ()=>{
-    const season = seasonsForTabs.find(s=>s.key===activeKey) || seasonsForTabs[0];
-    if(!season){
-      out.innerHTML = `<div class="muted">시즌 정보가 없습니다.</div>`;
-      return;
-    }
-
-    const mat = new Map(); // key "row|col" -> {w,l}
-    const bump = (row,col,isWin)=>{
-      const k = row+'|'+col;
-      if(!mat.has(k)) mat.set(k,{w:0,l:0});
-      const o = mat.get(k);
-      isWin ? o.w++ : o.l++;
-    };
-
-    const hasFilter = selectedSet.size>0;
-
-    for(const m of matchesAll){
-      if(!m || !m.map || m.map==='Match') continue;
-      if(!isInSeason(m, season)) continue;
-
-      // 개인전만
-      if(!(m.player1 && m.player2)) continue;
-
-      const p1 = m.player1;
-      const p2 = m.player2;
-      if(HIDE_IDS && (HIDE_IDS.has(p1) || HIDE_IDS.has(p2))) continue;
-
-      const w = m.winner || '';
-      if(w!==p1 && w!==p2) continue;
-
-      const t1 = getSeasonTier(p1, season.key);
-      const t2 = getSeasonTier(p2, season.key);
-
-      const s1 = selectedSet.has(p1);
-      const s2 = selectedSet.has(p2);
-
-      if(!hasFilter){
-        // 전체 클랜원 기준: 양방향 반영
-        if(w===p1){ bump(t1,t2,true);  bump(t2,t1,false); }
-        else      { bump(t2,t1,true);  bump(t1,t2,false); }
-      }else{
-        // 필터가 있을 때: 선택된 사람 기준으로만 집계
-        if(w===p1){
-          if(s1) bump(t1,t2,true);
-          if(s2) bump(t2,t1,false);
-        }else{ // w===p2
-          if(s2) bump(t2,t1,true);
-          if(s1) bump(t1,t2,false);
-        }
-      }
-    }
-
-    const cellHtml = (row,col)=>{
-      const o = mat.get(row+'|'+col) || {w:0,l:0};
-      const n = o.w + o.l;
-      if(!n) return `<div class="cell-muted">-</div>`;
-      const wr = ((o.w/n)*100).toFixed(1);
-      return `<div>${o.w}-${o.l}</div><div class="cell-muted">${wr}%</div>`;
-    };
-
-    out.innerHTML = `
-      <div class="muted" style="font-size:12px;margin:6px 0 10px">
-        시즌: <b>${escapeHtml(season.label)}</b> (개인전만)
-        ${selectedSet.size===0
-          ? ' • 기준: 전체 클랜원'
-          : ` • 기준: 선택 ${selectedSet.size}명`}
+    <!-- 공통 필드: 날짜, 맵, 점수 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="field" style="margin:0">
+        <label>날짜</label>
+        <input type="date" id="matchDate" />
       </div>
-      <table class="tier-matrix">
-        <thead>
-          <tr>
-            <th>본인\\상대</th>
-            ${tiers.map(t=>`<th class="tier-${t}">${t}</th>`).join('')}
-          </tr>
-        </thead>
-        <tbody>
-          ${tiers.map(r=>`
-            <tr>
-              <th class="tier-${r}">${r}</th>
-              ${tiers.map(c=>`<td>${cellHtml(r,c)}</td>`).join('')}
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
-  };
+      <div class="field" style="margin:0">
+        <label>맵 <span id="mapHint" style="color:var(--accent);font-size:.75rem">(자동)</span></label>
+        <input type="text" id="matchMap" placeholder="예: 투혼, 2:2생컨" />
+      </div>
+      <div class="field" style="margin:0">
+        <label>스코어</label>
+        <input type="text" id="matchScore" placeholder="예: 3:4, 0:1" />
+      </div>
+    </div>
 
-  // 🔹 시즌 탭 렌더링
-  tabs.innerHTML = seasonsForTabs.map(s=>`
-    <button class="old-season-tab ${s.key===activeKey?'active':''}" data-season="${escapeHtml(s.key)}"
-      style="border:1px solid #232532;background:#1a1a22;color:#ddd;border-radius:10px;padding:10px 12px;cursor:pointer">
-      ${escapeHtml(s.label)}
-    </button>
-  `).join('');
+    <!-- 팀전 인원 수 선택 (team 타입만) -->
+    <div id="teamSizeRow" style="display:none;margin-bottom:14px">
+      <div class="field" style="margin:0;max-width:160px">
+        <label>팀 인원</label>
+        <select id="teamSize" onchange="buildTeamSlots()">
+          <option value="2">2 vs 2</option>
+          <option value="3">3 vs 3</option>
+          <option value="4">4 vs 4</option>
+          <option value="5">5 vs 5</option>
+        </select>
+      </div>
+    </div>
 
-  tabs.addEventListener('click', (e)=>{
-    const btn = e.target.closest('.old-season-tab');
-    if(!btn) return;
-    tabs.querySelectorAll('.old-season-tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    activeKey = btn.dataset.season;
-    draw();
-  });
-
-  // 🔹 클랜원 필터 드롭다운 렌더링
-  const playerItems = allPlayers.map(id=>`
-    <label class="dropdown-item">
-      <input type="checkbox" value="${escapeHtml(id)}">
-      <span>${escapeHtml(id)}</span>
-    </label>
-  `).join('');
-
-  filterEl.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div class="muted" style="font-size:12px;">클랜원 필터</div>
-      <div class="dropdown" id="tierSoloPlayerDropdown">
-        <button type="button" id="tierSoloPlayerBtn">전체 클랜원</button>
-        <div class="dropdown-panel" id="tierSoloPlayerPanel">
-          <label class="dropdown-item">
-            <input type="checkbox" value="__ALL__">
-            <span>전체 선택</span>
-          </label>
-          <div class="dropdown-scroll">
-            ${playerItems}
-          </div>
+    <!-- 개인전 선수 선택 -->
+    <div id="soloForm" style="display:none;margin-bottom:16px">
+      <div class="team-grid">
+        <div class="team-box">
+          <h3>선수 1</h3>
+          <select id="soloP1" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px;font-size:.9rem">
+            <option value="">-- 선택 --</option>
+          </select>
+        </div>
+        <div class="team-box">
+          <h3>선수 2</h3>
+          <select id="soloP2" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px;font-size:.9rem">
+            <option value="">-- 선택 --</option>
+          </select>
         </div>
       </div>
     </div>
-  `;
 
-  const btn   = document.getElementById('tierSoloPlayerBtn');
-  const panel = document.getElementById('tierSoloPlayerPanel');
-  const allChk = panel.querySelector('input[value="__ALL__"]');
-  const checkboxes = panel.querySelectorAll('.dropdown-scroll input[type="checkbox"]');
+    <!-- 팀 선수 선택 (pro / team 공통) -->
+    <div id="teamForm" style="margin-bottom:16px">
+      <div class="team-grid">
+        <div class="team-box">
+          <h3>🔵 팀 1</h3>
+          <div class="player-select-list" id="team1Slots"></div>
+        </div>
+        <div class="team-box">
+          <h3>🔴 팀 2</h3>
+          <div class="player-select-list" id="team2Slots"></div>
+        </div>
+      </div>
+    </div>
 
-  const updateButtonLabel = ()=>{
-    if(selectedSet.size===0){
-      btn.textContent = '전체 클랜원';
-    }else if(selectedSet.size===1){
-      btn.textContent = Array.from(selectedSet)[0];
-    }else{
-      btn.textContent = `선택 ${selectedSet.size}명`;
-    }
-  };
+    <!-- 승자 선택 -->
+    <div style="margin-bottom:20px">
+      <label style="font-size:.82rem;color:var(--muted);display:block;margin-bottom:8px">승자</label>
+      <div class="winner-row" id="winnerRow"></div>
+    </div>
 
-  btn.addEventListener('click', ()=>{
-    panel.classList.toggle('open');
+    <button class="btn-primary" id="submitBtn" onclick="submitMatch()">경기 결과 저장</button>
+  </div>
+
+  <!-- 최근 입력 경기 목록 -->
+  <div class="card">
+    <h2 style="display:flex;justify-content:space-between;align-items:center">
+      <span>📋 최근 입력 경기 (50건)</span>
+      <button class="btn-ghost" style="font-size:.8rem;padding:4px 10px" onclick="loadRecent()">새로고침</button>
+    </h2>
+    <div id="recentList"><p style="color:var(--muted);font-size:.85rem">불러오는 중...</p></div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ── 설정 ──────────────────────────────────────────────────────
+const SUPABASE_URL      = 'https://ugrvylgrkwjtyekpznau.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVncnZ5bGdya3dqdHlla3B6bmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MDgxNDMsImV4cCI6MjA4ODM4NDE0M30.tIBkee7X97IDuBQQg8ugwOrLsW2RzCRoqM-CNEnR4Ao';
+// ─────────────────────────────────────────────────────────────
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let currentRole = null;
+let playerList  = [];
+let matchType   = 'pro';   // 'pro' | 'solo' | 'team'
+let winnerSide  = null;    // 'team1' | 'team2' | 선수 이름(solo)
+
+// ── 초기화 ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('matchDate').value = new Date().toISOString().slice(0, 10);
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) await onLogin(session.user);
+
+  sb.auth.onAuthStateChange((_e, s) => {
+    if (s) onLogin(s.user); else showLogin();
   });
-
-allChk.addEventListener('change', ()=>{
-  if(allChk.checked){
-    // ✅ 전체 인원 선택
-    selectedSet = new Set(allPlayers);
-    checkboxes.forEach(c=>{ c.checked = true; });
-  } else {
-    // ✅ 전체 해제 → 필터 없음(전체 클랜원 기준)
-    selectedSet.clear();
-    checkboxes.forEach(c=>{ c.checked = false; });
-  }
-  updateButtonLabel();
-  draw();
 });
 
+// ── 로그인 ────────────────────────────────────────────────────
+async function login() {
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const errEl    = document.getElementById('loginError');
+  const btn      = document.getElementById('loginBtn');
 
-  checkboxes.forEach(chk=>{
-    chk.addEventListener('change', ()=>{
-      const id = chk.value;
-      if(chk.checked) selectedSet.add(id);
-      else selectedSet.delete(id);
+  errEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = '로그인 중...';
 
-if (selectedSet.size === allPlayers.length) {
-  // 전원 선택된 상태
-  allChk.checked = true;
-} else {
-  // 일부만 선택 or 아무도 선택 안 함
-  allChk.checked = false;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false;
+  btn.textContent = '로그인';
+
+  if (error) { errEl.textContent = '❌ ' + error.message; return; }
+  await onLogin(data.user);
 }
 
+async function onLogin(user) {
+  currentUser = user;
 
-      updateButtonLabel();
-      draw();
-    });
-  });
+  // 역할 확인
+  const { data: roleRow } = await sb.from('user_roles').select('role, nickname').eq('user_id', user.id).single();
+  if (!roleRow) {
+    await sb.auth.signOut();
+    document.getElementById('loginError').textContent = '❌ 권한이 없습니다. 관리자에게 문의하세요.';
+    return;
+  }
+  currentRole = roleRow.role;
 
-  // 드롭다운 외부 클릭 시 닫기
-  document.addEventListener('click', (e)=>{
-    if(!filterEl.contains(e.target)) panel.classList.remove('open');
-  });
+  document.getElementById('userNick').textContent = roleRow.nickname || user.email;
+  document.getElementById('roleTag').textContent  = currentRole === 'admin' ? '🛡 관리자' : '✏️ 에디터';
+  document.getElementById('userInfo').style.display = 'flex';
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('adminSection').style.display  = 'block';
 
-  updateButtonLabel();
-  draw();
+  await loadPlayers();
+  setType('pro');
+  await loadRecent();
 }
 
+function showLogin() {
+  currentUser = null; currentRole = null;
+  document.getElementById('loginSection').style.display = 'block';
+  document.getElementById('adminSection').style.display  = 'none';
+  document.getElementById('userInfo').style.display = 'none';
+}
 
-    // --- (현재는 미사용) Recharts 그래프용 함수: 필요하면 추후 활성화 ---
-    function renderChart(eloByDate){
-      const container=document.getElementById('elo-chart-container');
-      if(!container) return;
+async function logout() {
+  await sb.auth.signOut();
+  showLogin();
+}
 
-      const HIDE = new Set(['Wonder', 'ceta','sika']);
+// ── 선수 목록 로드 ────────────────────────────────────────────
+async function loadPlayers() {
+  const { data, error } = await sb.from('players').select('id, race, tier').order('id');
+  if (!error) playerList = data || [];
+}
 
-      container.innerHTML = `
-        <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-          <div>
-            <div style="font-size:13px;color:#aaa;margin-bottom:6px">비교할 플레이어 선택 (Ctrl/⌘ 다중 선택)</div>
-            <select id="eloPlayerSelect" multiple size="10"
-              style="min-width:220px;height:200px;padding:10px;border-radius:8px;border:1px solid #2c2f3a;background:#101018;color:#fff;">
-              ${Object.keys(eloByDate)
-                  .filter(id => !HIDE.has(id))
-                  .sort()
-                  .map(id => `<option value="${id}">${id}</option>`)
-                  .join('')}
-              </select>
-            </div>
-            <div id="eloChartArea" style="flex:1;min-width:320px;width:100%;height:460px"></div>
-          </div>
-        `;
+function playerOption(selected = '') {
+  const opts = ['<option value="">-- 선택 --</option>'];
+  playerList.forEach(p => {
+    const sel = p.id === selected ? ' selected' : '';
+    opts.push(`<option value="${p.id}"${sel}>${p.id} (${p.race[0]} / ${p.tier})</option>`);
+  });
+  return opts.join('');
+}
 
-      const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = window.Recharts || {};
-      const area = document.getElementById('eloChartArea');
-      if(!LineChart){ area.innerHTML=`<div class="muted">Recharts가 아직 로드되지 않았습니다.</div>`; return; }
+// ── 경기 유형 전환 ────────────────────────────────────────────
+function setType(type) {
+  matchType = type;
+  winnerSide = null;
 
-      const palette=["#ff6a00","#4ade80","#60a5fa","#f472b6","#facc15","#38bdf8","#a78bfa","#fb923c","#22d3ee","#94a3b8"];
+  document.querySelectorAll('.type-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.type === type)
+  );
 
-      function draw(sel){
-        if(!sel.length){ area.innerHTML=`<div class="muted">왼쪽에서 1명 이상 선택하세요.</div>`; return; }
-        const dates=[...new Set(sel.flatMap(id=>Object.keys(eloByDate[id]||{})))].sort((a,b)=>{
-          const [am,ad]=a.split('/').map(Number), [bm,bd]=b.split('/').map(Number);
-          return am===bm? ad-bd : am-bm;
-        });
-        const rows=dates.map(d=>{ const r={date:d}; sel.forEach(id=>r[id]=eloByDate[id]?.[d]??null); return r; });
+  const soloForm    = document.getElementById('soloForm');
+  const teamForm    = document.getElementById('teamForm');
+  const teamSizeRow = document.getElementById('teamSizeRow');
+  const mapInput    = document.getElementById('matchMap');
+  const mapHint     = document.getElementById('mapHint');
 
-        ReactDOM.render(
-          React.createElement(
-            ResponsiveContainer,{width:"100%",height:460},
-            React.createElement(LineChart,{data:rows,margin:{top:20,right:30,left:0,bottom:0}},
-              React.createElement(CartesianGrid,{strokeDasharray:"3 3",stroke:"rgba(255,255,255,0.12)"}),
-              React.createElement(XAxis,{dataKey:"date",stroke:"#aaa",tick:{fontSize:12}}),
-              React.createElement(YAxis,{stroke:"#aaa",domain:[800,1200],tick:{fontSize:12}}),
-              React.createElement(Tooltip,{formatter:v=>Math.round(v),contentStyle:{backgroundColor:"#1a1a22",border:"1px solid #333"}}),
-              React.createElement(Legend,null),
-              ...sel.map((id,i)=>React.createElement(Line,{
-                key:id, type:"monotone", dataKey:id, name:id,
-                stroke:palette[i%palette.length], dot:false, strokeWidth:2, isAnimationActive:false
-              }))
-            )
-          ), area
-        );
-      }
+  if (type === 'solo') {
+    soloForm.style.display    = 'block';
+    teamForm.style.display    = 'none';
+    teamSizeRow.style.display = 'none';
+    mapInput.placeholder      = '예: 투혼, 투혼(에결)';
+    mapHint.style.display     = 'none';
+    buildSoloWinner();
+    // 선수 선택 드롭다운 채우기
+    document.getElementById('soloP1').innerHTML = playerOption();
+    document.getElementById('soloP2').innerHTML = playerOption();
+    document.getElementById('soloP1').onchange = buildSoloWinner;
+    document.getElementById('soloP2').onchange = buildSoloWinner;
+  } else if (type === 'team') {
+    soloForm.style.display    = 'none';
+    teamForm.style.display    = 'block';
+    teamSizeRow.style.display = 'block';
+    mapInput.placeholder      = '예: 2:2생컨, 2:2투혼, 3:3헌터';
+    mapHint.style.display     = 'none';
+    buildTeamSlots();
+  } else {  // pro
+    soloForm.style.display    = 'none';
+    teamForm.style.display    = 'block';
+    teamSizeRow.style.display = 'none';
+    mapInput.value            = 'Match';
+    mapHint.style.display     = 'inline';
+    buildProSlots();
+  }
+}
 
-      document.getElementById('eloPlayerSelect').addEventListener('change', e=>{
-        const sel=[...e.target.selectedOptions].map(o=>o.value);
-        draw(sel);
-      });
-    }
+function buildProSlots() {
+  buildSlots(4);
+}
 
-    // --- 팝업 로직: 플레이어 클릭 시 상세 ---
-    const tbody = document.querySelector('#players-table tbody');
-    if(tbody){
-      tbody.addEventListener('click', async e=>{
-        const tr = e.target.closest('tr');
-        if(!tr) return;
-        const playerId = tr.children[1]?.textContent.trim();
-        if(!playerId) return;
-        await showPlayerModal(playerId, CURRENT_SEASON_KEY);
-      });
-    }
-    
-// ✅ Old Records 테이블에서도 ID 클릭 시 팝업 열기
-const oldContent = document.getElementById('oldSeasonContent');
-if(oldContent){
-  oldContent.addEventListener('click', async e=>{
-    const cell = e.target.closest('td');
-    if(!cell) return;
+function buildTeamSlots() {
+  const n = parseInt(document.getElementById('teamSize').value, 10);
+  buildSlots(n);
+}
 
-    const row = cell.parentElement;
-    const table = row.closest('table');
-    if(!table || !table.classList.contains('old-records-table')) return;
+function buildSlots(n) {
+  const t1 = document.getElementById('team1Slots');
+  const t2 = document.getElementById('team2Slots');
+  t1.innerHTML = '';
+  t2.innerHTML = '';
 
-    // Old Records 컬럼 순서: Rank, ID, 종족, 티어, ELO, 승, 패, 승률
-    const colIndex = Array.from(row.children).indexOf(cell);
-    if(colIndex !== 1) return; // ID 컬럼(두 번째 칸)이 아닐 때 무시
+  for (let i = 0; i < n; i++) {
+    t1.innerHTML += `<div class="player-slot"><select data-team="1" data-idx="${i}" onchange="buildTeamWinner()">${playerOption()}</select></div>`;
+    t2.innerHTML += `<div class="player-slot"><select data-team="2" data-idx="${i}" onchange="buildTeamWinner()">${playerOption()}</select></div>`;
+  }
+  buildTeamWinner();
+}
 
-    const playerId = (cell.textContent || '').trim();
-    if(!playerId) return;
-    const activeBtn = document.querySelector('#oldSeasonTabs .old-season-tab.active');
-    const seasonKey = activeBtn?.dataset?.season || '2025'; // fallback
-    await showPlayerModal(playerId, seasonKey);
+// ── 승자 버튼 ─────────────────────────────────────────────────
+function buildSoloWinner() {
+  winnerSide = null;
+  const p1 = document.getElementById('soloP1').value;
+  const p2 = document.getElementById('soloP2').value;
+  const row = document.getElementById('winnerRow');
+  row.innerHTML = '';
+
+  [p1, p2].filter(Boolean).forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'winner-btn';
+    btn.textContent = name;
+    btn.onclick = () => {
+      winnerSide = name;
+      row.querySelectorAll('.winner-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    row.appendChild(btn);
   });
 }
 
-async function showPlayerModal(playerId, seasonKey=CURRENT_SEASON_KEY){
-  try{
-    const base = await safe(path('data.json'));
-    const months = ['oct','nov','dec','jan','feb','mar'];
-    for(const m of months){
-      const add = await safe(path(`data_${m}.json`));
-      base.matches = (base.matches||[]).concat(add.matches||[]);
-      const seen = new Set((base.players||[]).map(p=>p.id));
-      (add.players||[]).forEach(p=>{ if(!seen.has(p.id)) base.players.push(p); });
-    }
+function buildTeamWinner() {
+  winnerSide = null;
+  const row = document.getElementById('winnerRow');
+  row.innerHTML = '';
 
-    const season = SEASONS.find(s=>s.key===seasonKey) || CURRENT_SEASON;
-    const seasonTierMap = SEASON_TIER_SNAPSHOT[seasonKey] || {};
+  const t1names = [...document.querySelectorAll('[data-team="1"]')].map(s => s.value).filter(Boolean);
+  const t2names = [...document.querySelectorAll('[data-team="2"]')].map(s => s.value).filter(Boolean);
 
-    const player = base.players.find(p=>p.id===playerId);
-    if(!player){ alert('플레이어 데이터를 찾을 수 없습니다.'); return; }
+  if (t1names.length === 0 && t2names.length === 0) {
+    row.innerHTML = '<span style="color:var(--muted);font-size:.85rem">팀 선수를 먼저 선택하세요</span>';
+    return;
+  }
 
-    const TierOrder=['Stone','Bronze','Silver','Gold','Diamond','Legend'];
-    const getTierIndex=t=>Math.max(0,TierOrder.indexOf(t||'Silver'));
-    const calc=(A,B,res,isTeam)=>{
-      const K=isTeam?8:12;
-      const effA=A.elo+getTierIndex(A.tier)*40;
-      const effB=B.elo+getTierIndex(B.tier)*40;
-      const expectedA=1/(1+Math.pow(10,(effB-effA)/400));
-      const delta=K*(res-expectedA);
-      A.elo+=delta; B.elo-=delta;
+  const makeBtn = (label, side) => {
+    const btn = document.createElement('button');
+    btn.className = 'winner-btn';
+    btn.textContent = label;
+    btn.onclick = () => {
+      winnerSide = side;
+      row.querySelectorAll('.winner-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    return btn;
+  };
+
+  row.appendChild(makeBtn(`🔵 팀1 승 (${t1names.join(', ')})`, 'team1'));
+  row.appendChild(makeBtn(`🔴 팀2 승 (${t2names.join(', ')})`, 'team2'));
+}
+
+// ── 경기 저장 ─────────────────────────────────────────────────
+async function submitMatch() {
+  const date  = document.getElementById('matchDate').value;
+  const map   = document.getElementById('matchMap').value.trim();
+  const score = document.getElementById('matchScore').value.trim();
+
+  if (!date) { toast('날짜를 선택하세요', true); return; }
+  if (!winnerSide) { toast('승자를 선택하세요', true); return; }
+
+  let row;
+
+  if (matchType === 'solo') {
+    const p1 = document.getElementById('soloP1').value;
+    const p2 = document.getElementById('soloP2').value;
+    if (!p1 || !p2) { toast('선수를 모두 선택하세요', true); return; }
+    if (p1 === p2)  { toast('선수가 중복됩니다', true); return; }
+    if (!map)       { toast('맵을 입력하세요', true); return; }
+
+    row = {
+      match_date: date,
+      map,
+      player1:    p1,
+      player2:    p2,
+      winner:     winnerSide,
+      score:      score || null,
+      created_by: currentUser.id,
+    };
+  } else {
+    const t1 = [...document.querySelectorAll('[data-team="1"]')].map(s => s.value).filter(Boolean);
+    const t2 = [...document.querySelectorAll('[data-team="2"]')].map(s => s.value).filter(Boolean);
+    if (t1.length === 0 || t2.length === 0) { toast('팀 선수를 선택하세요', true); return; }
+
+    const winnerArr = winnerSide === 'team1' ? t1 : t2;
+    row = {
+      match_date:  date,
+      map:         matchType === 'pro' ? 'Match' : (map || null),
+      team1:       t1,
+      team2:       t2,
+      winner_arr:  winnerArr,
+      score:       score || null,
+      created_by:  currentUser.id,
     };
 
-    const stat=new Map();
-    const ensure=(id)=>{
-      if(stat.has(id)) return stat.get(id);
-      const meta=(base.players||[]).find(p=>p.id===id)||{};
-      const fixedTier = seasonTierMap[id] || meta.tier || 'Silver'; // ✅ 시즌 스냅샷 우선
-      const o={id,tier:fixedTier,race:meta.race||'Protoss',elo:1000,history:[1000]};
-      stat.set(id,o); return o;
-    };
+    if (!matchType === 'pro' && !map) { toast('맵을 입력하세요', true); return; }
+  }
 
-    const matches=(base.matches||[])
-      .filter(m=>m && m.map!=="Match" && isInSeason(m, season)) // ✅ 시즌 필터
-      .slice()
-      .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
 
-    const playerLog=[];
-    for(const m of matches){
-      if(m.player1 && m.player2){
-        const p1=ensure(m.player1), p2=ensure(m.player2);
-        const res=(m.winner===m.player1)?1:(m.winner===m.player2)?0:null;
-        let involved=false, eloBefore=0, opponentText='';
-        if(m.player1===playerId){ involved=true; eloBefore=p1.elo; opponentText=m.player2; }
-        else if(m.player2===playerId){ involved=true; eloBefore=p2.elo; opponentText=m.player1; }
-        if(res!==null){ calc(p1,p2,res,false); p1.history.push(Math.round(p1.elo)); p2.history.push(Math.round(p2.elo)); }
-        if(involved){
-          const after=(m.player1===playerId)?p1.elo:p2.elo;
-          const isWin=(m.winner===playerId);
-          playerLog.push({date:m.date,map:m.map||'-',opponentText,isWin,eloAfter:Math.round(after),delta:Math.round(after-eloBefore)});
-        }
-      }
+  const { error } = await sb.from('matches').insert(row);
+  btn.disabled = false;
+  btn.textContent = '경기 결과 저장';
 
-      if(Array.isArray(m.team1)&&Array.isArray(m.team2)){
-        const T1=m.team1.map(ensure), T2=m.team2.map(ensure);
-        const winners=Array.isArray(m.winner)?m.winner:[];
-        const win1=winners.some(x=>m.team1.includes(x))?1:0;
+  if (error) {
+    toast('저장 실패: ' + error.message, true);
+  } else {
+    toast('✅ 저장 완료!');
+    // 폼 초기화 (날짜, 유형 유지)
+    document.getElementById('matchScore').value = '';
+    winnerSide = null;
+    setType(matchType);
+    await loadRecent();
+  }
+}
 
-        const avg1=T1.reduce((a,b)=>a+b.elo,0)/T1.length;
-        const avg2=T2.reduce((a,b)=>a+b.elo,0)/T2.length;
-        const dA={elo:avg1,tier:'Silver'}, dB={elo:avg2,tier:'Silver'};
-        calc(dA,dB,win1,true);
-        const diffA=dA.elo-avg1, diffB=dB.elo-avg2;
+// ── 최근 경기 목록 ────────────────────────────────────────────
+async function loadRecent() {
+  const listEl = document.getElementById('recentList');
+  listEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem">불러오는 중...</p>';
 
-        T1.forEach(p=>{ const before=p.elo; p.elo+=diffA; p.history.push(Math.round(p.elo));
-          if(p.id===playerId) playerLog.push({date:m.date,map:m.map||'-',opponentText:`${m.team2.join(',')}`,isWin:!!win1,eloAfter:Math.round(p.elo),delta:Math.round(p.elo-before)});
-        });
-        T2.forEach(p=>{ const before=p.elo; p.elo+=diffB; p.history.push(Math.round(p.elo));
-          if(p.id===playerId) playerLog.push({date:m.date,map:m.map||'-',opponentText:`${m.team1.join(',')}`,isWin:!win1,eloAfter:Math.round(p.elo),delta:Math.round(p.elo-before)});
-        });
-      }
+  const { data, error } = await sb
+    .from('matches')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) { listEl.innerHTML = '<p style="color:var(--danger)">불러오기 실패</p>'; return; }
+  if (!data.length) { listEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem">경기 기록 없음</p>'; return; }
+
+  listEl.innerHTML = '';
+  data.forEach(m => {
+    const isTeam = Array.isArray(m.team1);
+    let desc, winnerText;
+
+    if (isTeam) {
+      const t1 = m.team1.join(', ');
+      const t2 = m.team2.join(', ');
+      const wArr = m.winner_arr || [];
+      const wonSide = JSON.stringify(wArr) === JSON.stringify(m.team1) ? '🔵팀1' : '🔴팀2';
+      desc = `[${m.map}] ${t1} vs ${t2}`;
+      winnerText = `${wonSide} 승 ${m.score || ''}`;
+    } else {
+      desc = `[${m.map}] ${m.player1} vs ${m.player2}`;
+      winnerText = `${m.winner} 승 ${m.score || ''}`;
     }
 
-        const target=stat.get(playerId);
-        if(!target){ alert('경기 기록이 없습니다.'); return; }
+    const row = document.createElement('div');
+    row.className = 'match-row';
+    row.innerHTML = `
+      <div>
+        <div>${desc}</div>
+        <div class="meta">${m.match_date} · ${winnerText}</div>
+      </div>
+      ${currentRole === 'admin'
+        ? `<button class="btn-danger del" onclick="deleteMatch('${m.id}', this)">삭제</button>`
+        : ''}
+    `;
+    listEl.appendChild(row);
+  });
+}
 
-        document.getElementById('modalPlayerName').textContent=player.id;
-        document.getElementById('modalPlayerInfo').innerHTML=
-          `<b>Race:</b> ${player.race} | <b>Tier:</b> ${player.tier} | <b>현재 ELO:</b> ${Math.round(target.elo)} (${target.history.length-1}경기)`;
+async function deleteMatch(id, btn) {
+  if (!confirm('이 경기 기록을 삭제하시겠습니까?')) return;
+  btn.disabled = true;
+  const { error } = await sb.from('matches').delete().eq('id', id);
+  if (error) { toast('삭제 실패: ' + error.message, true); btn.disabled = false; return; }
+  toast('삭제 완료');
+  await loadRecent();
+}
 
-        let soloWin=0, soloLoss=0, teamWin=0, teamLoss=0;
-        let scWin=0, scLoss=0, htWin=0, htLoss=0;
-        let proWin=0, proLoss=0;
-        const proLog = [];
-
-        for (const m of base.matches || []) {
-          if (!isInSeason(m, season)) continue; // ✅ 선택된 시즌(현재/Old Records 모두) 기준으로 스킵
-
-          const isSolo = !!(m.player1 && m.player2);
-          const isTeam = Array.isArray(m.team1) && Array.isArray(m.team2);
-          const isSC = (m.map||'').includes('생컨');
-          const isHT = (m.map||'').includes('헌터');
-
-          if (m.map === "Match" && Array.isArray(m.team1) && Array.isArray(m.team2)) {
-            const inT1 = m.team1.includes(playerId);
-            const inT2 = m.team2.includes(playerId);
-            if (!inT1 && !inT2) continue;
-
-            const winners = Array.isArray(m.winner) ? m.winner : [];
-            const win1 = winners.some(x => m.team1.includes(x)) ? 1 : 0;
-            const isWin = inT1 ? !!win1 : !win1;
-            isWin ? proWin++ : proLoss++;
-
-            proLog.push({
-              isWin,
-              date: m.date || '-',
-              map: m.map || '-',
-              score: m.score || ''
-            });
-            continue;
-          }
-
-          if (isSolo && (m.player1===playerId || m.player2===playerId)) {
-            const isWin = (m.winner===playerId);
-            isWin ? soloWin++ : soloLoss++;
-            if (isSC) (isWin ? scWin++ : scLoss++);
-            if (isHT) (isWin ? htWin++ : htLoss++);
-          }
-
-          if (isTeam && ((m.team1||[]).includes(playerId) || (m.team2||[]).includes(playerId))) {
-            const isTeam1 = m.team1.includes(playerId);
-            const winners = Array.isArray(m.winner) ? m.winner : [];
-            const win1 = winners.some(x => m.team1.includes(x)) ? 1 : 0;
-            const isWin = isTeam1 ? !!win1 : !win1;
-            isWin ? teamWin++ : teamLoss++;
-            if (isSC) (isWin ? scWin++ : scLoss++);
-            if (isHT) (isWin ? htWin++ : htLoss++);
-          }
-        }
-
-        let statsEl = document.getElementById('modalStats');
-        if (!statsEl) {
-          statsEl = document.createElement('div');
-          statsEl.id = 'modalStats';
-          statsEl.style.margin = '10px 0 14px 0';
-          statsEl.style.color = '#ccc';
-          statsEl.style.fontSize = '14px';
-          const infoEl = document.getElementById('modalPlayerInfo');
-          infoEl.insertAdjacentElement('afterend', statsEl);
-        }
-
-        let recentStreakText = '';
-        if (proLog.length) {
-          const recent = proLog.slice(-10);
-          const seq = recent.map(g => g.isWin ? '승' : '패').join(' ');
-          recentStreakText = ` <span style="color:#ffb347;font-size:13px;">(최근 ${recent.length}경기: ${seq})</span>`;
-        }
-
-        statsEl.innerHTML = `
-          <div>
-            🏆 <b>프로리그:</b> ${proWin}승 ${proLoss}패${recentStreakText}<br>
-            <b>개인전:</b> ${soloWin}승 ${soloLoss}패,
-            <b>팀전:</b> ${teamWin}승 ${teamLoss}패
-            <span style="color:#888">(팀전은 생컨·헌터 모두 포함)</span><br>
-            <b>생컨:</b> ${scWin}승 ${scLoss}패,
-            <b>헌터:</b> ${htWin}승 ${htLoss}패
-          </div>
-        `;
-
-        const ctx=document.getElementById('modalEloChart').getContext('2d');
-        if(window.modalChart)window.modalChart.destroy();
-        window.modalChart=new Chart(ctx,{
-          type:'line',
-          data:{
-            labels:target.history.map((_,i)=>i),
-            datasets:[{label:'ELO',data:target.history,borderColor:'#ff6a00',borderWidth:2,fill:false,tension:0.3}]
-          },
-          options:{
-            plugins:{legend:{display:false}},
-            scales:{
-              x:{ticks:{color:'#ccc'}},
-              y:{ticks:{color:'#ccc'}}
-            }
-          }
-        });
-
-        document.getElementById('modalMatchHistory').innerHTML =
-          (playerLog.length? playerLog : []).map(row=>{
-            const color = row.isWin ? '#4ade80' : '#f87171';
-            const deltaText = (row.delta>0? `+${row.delta}` : `${row.delta}`);
-            return `<div style="margin:4px 0;">
-              ${row.date} | ${row.map}
-              ${row.opponentText ? ` | vs ${row.opponentText}` : ''}
-              | <b style="color:${color}">${row.isWin ? '승' : '패'}</b>
-              | <span style="color:${color}">${deltaText}</span>
-              <span style="color:#aaa"> (현재 ELO: ${row.eloAfter})</span>
-            </div>`;
-          }).join('') || '경기 기록 없음';
-
-        const modal=document.getElementById('playerModal');
-        modal.style.display='block';
-        document.getElementById('closeModal').onclick=()=>modal.style.display='none';
-        window.onclick=(e)=>{if(e.target===modal)modal.style.display='none';};
-        window.addEventListener('keydown',(e)=>{if(e.key==='Escape')modal.style.display='none';},{once:true});
-      }
-      catch(err){ console.error('팝업 로직 오류:', err); }
-    }
-  })();
-  </script>
-
+// ── 토스트 알림 ───────────────────────────────────────────────
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (isError ? ' error' : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = ''; }, 2800);
+}
+</script>
 </body>
 </html>
