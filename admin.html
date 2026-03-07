@@ -7,172 +7,168 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:      #0f0f1a;
-      --surface: #1a1a2e;
-      --card:    #16213e;
-      --accent:  #ff6a00;
-      --accent2: #e05200;
-      --text:    #e0e0e0;
-      --muted:   #888;
-      --border:  #2a2a4a;
-      --danger:  #e05252;
-      --success: #52c087;
+      --bg: #0f0f1a; --surface: #1a1a2e; --card: #16213e;
+      --accent: #ff6a00; --accent2: #e05200;
+      --text: #e0e0e0; --muted: #888; --border: #2a2a4a;
+      --danger: #e05252; --success: #52c087; --warn: #f0b429;
     }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', sans-serif;
-      min-height: 100vh;
-    }
-
-    /* ── 헤더 ── */
+    /* 헤더 */
     header {
-      background: var(--surface);
-      border-bottom: 2px solid var(--accent);
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      background: var(--surface); border-bottom: 2px solid var(--accent);
+      padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
     }
-    header h1 { font-size: 1.2rem; }
-    header h1 span { color: var(--accent); }
-    #userInfo { font-size: .85rem; color: var(--muted); display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 1.1rem; } header h1 span { color: var(--accent); }
+    #userInfo { font-size: .82rem; color: var(--muted); display: none; align-items: center; gap: 10px; }
     #userInfo strong { color: var(--text); }
 
-    /* ── 공통 버튼 ── */
-    button {
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 18px;
-      font-size: .9rem;
-      transition: background .15s;
+    /* 탭 */
+    .main-tabs { display: flex; gap: 8px; background: var(--surface); padding: 10px 20px; border-bottom: 1px solid var(--border); }
+    .main-tab {
+      padding: 7px 18px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer; font-size: .88rem;
     }
-    .btn-primary  { background: var(--accent);  color: #fff; }
-    .btn-primary:hover  { background: var(--accent2); }
-    .btn-danger   { background: var(--danger);  color: #fff; }
-    .btn-danger:hover   { background: #c04040; }
-    .btn-ghost    { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-    .btn-ghost:hover    { border-color: var(--accent); color: var(--accent); }
+    .main-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* 레이아웃 */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    main { max-width: 900px; margin: 0 auto; padding: 20px 14px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 18px; }
+    .card h2 { font-size: .95rem; color: var(--accent); margin-bottom: 14px; }
+
+    /* 공통 인풋 */
+    input[type="text"], input[type="password"], input[type="date"], select, textarea {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 7px 10px; font-size: .88rem; width: 100%;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    label.field-label { display: block; font-size: .78rem; color: var(--muted); margin-bottom: 4px; }
+
+    /* 버튼 */
+    button { cursor: pointer; border: none; border-radius: 6px; padding: 7px 16px; font-size: .88rem; transition: background .15s; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-danger  { background: var(--danger); color: #fff; }
+    .btn-danger:hover  { background: #c04040; }
+    .btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-ghost:hover   { border-color: var(--accent); color: var(--accent); }
+    .btn-success { background: var(--success); color: #000; }
+    .btn-warn    { background: var(--warn); color: #000; }
+    .btn-sm      { padding: 4px 10px; font-size: .78rem; }
     button:disabled { opacity: .45; cursor: not-allowed; }
 
-    /* ── 레이아웃 ── */
-    main { max-width: 860px; margin: 0 auto; padding: 28px 16px; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    .card h2 { font-size: 1rem; color: var(--accent); margin-bottom: 18px; }
+    /* 로그인 */
+    #loginSection { max-width: 380px; margin: 60px auto; }
+    #loginError { color: var(--danger); font-size: .82rem; margin-top: 8px; min-height: 18px; }
 
-    /* ── 로그인 ── */
-    #loginSection { max-width: 400px; margin: 60px auto; }
-    #loginSection h2 { font-size: 1.1rem; margin-bottom: 20px; }
-    .field { margin-bottom: 14px; }
-    .field label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: 5px; }
-    .field input, .field select, .field textarea {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      padding: 9px 12px;
-      font-size: .9rem;
+    /* ── 경기 입력 ── */
+    .mode-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+    .mode-tab {
+      padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); font-size: .83rem; cursor: pointer;
     }
-    .field input:focus, .field select:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-    #loginError { color: var(--danger); font-size: .85rem; margin-top: 10px; min-height: 20px; }
+    .mode-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-    /* ── 경기 유형 탭 ── */
-    .type-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-    .type-tab {
-      padding: 7px 16px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      font-size: .85rem;
-      cursor: pointer;
+    /* 라운드 입력 */
+    .team-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .team-col h3 { font-size: .82rem; color: var(--muted); margin-bottom: 6px; }
+    .player-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; min-height: 28px; }
+    .player-chip {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 3px 10px; font-size: .8rem; display: flex; align-items: center; gap: 5px;
     }
-    .type-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .player-chip .rm { cursor: pointer; color: var(--muted); font-size: .9rem; }
+    .player-chip .rm:hover { color: var(--danger); }
+    .add-player-row { display: flex; gap: 6px; }
+    .add-player-row select { flex: 1; }
 
-    /* ── 선수 선택 그리드 ── */
-    .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .team-box h3 { font-size: .85rem; color: var(--muted); margin-bottom: 8px; }
-    .player-select-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    /* 매치업 테이블 */
+    .matchup-list { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+    .matchup-row {
+      display: grid; grid-template-columns: 1fr 40px 1fr 100px 1fr; gap: 6px; align-items: center;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px;
     }
-    .player-slot select {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      padding: 7px 10px;
-      font-size: .85rem;
-    }
+    .matchup-row .vs { text-align: center; color: var(--muted); font-size: .8rem; }
+    .winner-pick { display: flex; gap: 4px; }
+    .wpick { flex: 1; padding: 4px 6px; font-size: .75rem; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wpick.sel1 { background: #2a4a8a; color: #8ab4f8; border-color: #4a6aaa; }
+    .wpick.sel2 { background: #4a2a2a; color: #f8a8a8; border-color: #8a4a4a; }
+    .matchup-row .rm-btn { padding: 3px 7px; font-size: .75rem; }
 
-    /* ── 승자 선택 ── */
-    .winner-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .winner-btn {
-      padding: 7px 18px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      font-size: .85rem;
+    /* 팀전 행 */
+    .teamgame-row {
+      display: grid; grid-template-columns: 1fr 40px 1fr 100px 1fr; gap: 6px; align-items: center;
+      background: rgba(255,106,0,0.05); border: 1px solid rgba(255,106,0,0.2); border-radius: 8px; padding: 7px 10px;
     }
-    .winner-btn.selected { background: var(--success); color: #000; border-color: var(--success); }
+    .teamgame-row .tg-label { font-size: .75rem; color: #ffb347; text-align: center; }
 
-    /* ── 알림 ── */
+    /* 최종 결과 행 */
+    .final-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; align-items: end; }
+    .final-row .field-group label { font-size: .78rem; color: var(--muted); display: block; margin-bottom: 4px; }
+    .team-winner-btns { display: flex; gap: 6px; }
+    .twbtn { flex: 1; padding: 7px; font-size: .8rem; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
+    .twbtn.sel { background: var(--success); color: #000; border-color: var(--success); }
+
+    /* 단일 입력 */
+    .single-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .single-players { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .winner-opts { display: flex; gap: 8px; flex-wrap: wrap; }
+    .wopt { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-size: .83rem; }
+    .wopt.active { background: var(--success); color: #000; border-color: var(--success); }
+
+    /* 최근 기록 */
+    #recentList { display: flex; flex-direction: column; gap: 6px; }
+    .rec-row {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+      padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; font-size: .82rem; gap: 8px;
+    }
+    .rec-row .meta { color: var(--muted); font-size: .75rem; }
+    .rec-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    /* 선수 관리 */
+    .player-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .player-table th, .player-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+    .player-table th { color: var(--muted); font-size: .75rem; }
+    .add-player-form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: end; margin-top: 14px; }
+    .add-player-form label { font-size: .78rem; color: var(--muted); display: block; margin-bottom: 4px; }
+
+    /* 수정 모달 */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.75); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 22px; width: min(480px, 95vw);
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-box h2 { font-size: .95rem; color: var(--accent); margin-bottom: 16px; }
+    .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+    .edit-field { margin-bottom: 10px; }
+    .edit-winner-row { display: flex; gap: 6px; }
+    .ewbtn { flex: 1; padding: 7px; font-size: .8rem; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
+    .ewbtn.sel { background: var(--success); color: #000; border-color: var(--success); }
+
+    /* 토스트 */
     #toast {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--success);
-      color: #000;
-      padding: 10px 24px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: .9rem;
-      opacity: 0;
-      transition: all .3s;
-      pointer-events: none;
-      z-index: 999;
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--success); color: #000; padding: 9px 22px; border-radius: 8px;
+      font-weight: 600; font-size: .88rem; opacity: 0; transition: all .3s; pointer-events: none; z-index: 999;
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     #toast.error { background: var(--danger); color: #fff; }
 
-    /* ── 최근 경기 목록 ── */
-    #recentList { display: flex; flex-direction: column; gap: 8px; }
-    .match-row {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: .85rem;
-      gap: 10px;
-    }
-    .match-row .meta { color: var(--muted); font-size: .78rem; }
-    .match-row .del { font-size: .78rem; padding: 4px 10px; }
-
-    /* ── 반응형 ── */
-    @media (max-width: 520px) {
-      .team-grid { grid-template-columns: 1fr; }
-      header h1 { font-size: 1rem; }
+    @media (max-width: 600px) {
+      .matchup-row, .teamgame-row { grid-template-columns: 1fr 30px 1fr 80px 28px; }
+      .single-grid { grid-template-columns: 1fr 1fr; }
+      .add-player-form { grid-template-columns: 1fr 1fr; }
+      .team-row { grid-template-columns: 1fr; }
+      .final-row { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -180,125 +176,238 @@
 
 <header>
   <h1>RockClan <span>관리자</span></h1>
-  <div id="userInfo" style="display:none">
-    <span>👤 <strong id="userNick"></strong></span>
-    <span id="roleTag"></span>
-    <button class="btn-ghost" style="padding:4px 12px;font-size:.8rem" onclick="logout()">로그아웃</button>
+  <div id="userInfo">
+    <span>👤 <strong id="userNick"></strong> <span id="roleTag"></span></span>
+    <button class="btn-ghost btn-sm" onclick="logout()">로그아웃</button>
   </div>
 </header>
 
-<!-- ── 로그인 섹션 ── -->
+<!-- 로그인 -->
 <main id="loginSection">
   <div class="card">
     <h2>🔐 로그인</h2>
-    <div class="field">
-      <label>이메일</label>
-      <input type="email" id="email" placeholder="이메일 입력" />
+    <div style="margin-bottom:10px">
+      <label class="field-label">ID</label>
+      <input type="text" id="loginId" placeholder="관리자 ID 입력" onkeydown="if(event.key==='Enter')login()" />
     </div>
-    <div class="field">
-      <label>비밀번호</label>
-      <input type="password" id="password" placeholder="비밀번호 입력"
-             onkeydown="if(event.key==='Enter') login()" />
+    <div style="margin-bottom:12px">
+      <label class="field-label">비밀번호</label>
+      <input type="password" id="password" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')login()" />
     </div>
     <button class="btn-primary" id="loginBtn" onclick="login()" style="width:100%">로그인</button>
     <div id="loginError"></div>
   </div>
 </main>
 
-<!-- ── 관리자 패널 ── -->
-<main id="adminSection" style="display:none">
-
-  <!-- 경기 입력 폼 -->
-  <div class="card">
-    <h2>⚔️ 경기 결과 입력</h2>
-
-    <!-- 경기 유형 -->
-    <div class="type-tabs">
-      <button class="type-tab active" data-type="pro"  onclick="setType('pro')">프로리그 (Match)</button>
-      <button class="type-tab"        data-type="solo" onclick="setType('solo')">개인전 (1v1)</button>
-      <button class="type-tab"        data-type="team" onclick="setType('team')">팀전 (2v2/3v3)</button>
-    </div>
-
-    <!-- 공통 필드: 날짜, 맵, 점수 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
-      <div class="field" style="margin:0">
-        <label>날짜</label>
-        <input type="date" id="matchDate" />
-      </div>
-      <div class="field" style="margin:0">
-        <label>맵 <span id="mapHint" style="color:var(--accent);font-size:.75rem">(자동)</span></label>
-        <input type="text" id="matchMap" placeholder="예: 투혼, 2:2생컨" />
-      </div>
-      <div class="field" style="margin:0">
-        <label>스코어</label>
-        <input type="text" id="matchScore" placeholder="예: 3:4, 0:1" />
-      </div>
-    </div>
-
-    <!-- 팀전 인원 수 선택 (team 타입만) -->
-    <div id="teamSizeRow" style="display:none;margin-bottom:14px">
-      <div class="field" style="margin:0;max-width:160px">
-        <label>팀 인원</label>
-        <select id="teamSize" onchange="buildTeamSlots()">
-          <option value="2">2 vs 2</option>
-          <option value="3">3 vs 3</option>
-          <option value="4">4 vs 4</option>
-          <option value="5">5 vs 5</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- 개인전 선수 선택 -->
-    <div id="soloForm" style="display:none;margin-bottom:16px">
-      <div class="team-grid">
-        <div class="team-box">
-          <h3>선수 1</h3>
-          <select id="soloP1" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px;font-size:.9rem">
-            <option value="">-- 선택 --</option>
-          </select>
-        </div>
-        <div class="team-box">
-          <h3>선수 2</h3>
-          <select id="soloP2" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px;font-size:.9rem">
-            <option value="">-- 선택 --</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- 팀 선수 선택 (pro / team 공통) -->
-    <div id="teamForm" style="margin-bottom:16px">
-      <div class="team-grid">
-        <div class="team-box">
-          <h3>🔵 팀 1</h3>
-          <div class="player-select-list" id="team1Slots"></div>
-        </div>
-        <div class="team-box">
-          <h3>🔴 팀 2</h3>
-          <div class="player-select-list" id="team2Slots"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 승자 선택 -->
-    <div style="margin-bottom:20px">
-      <label style="font-size:.82rem;color:var(--muted);display:block;margin-bottom:8px">승자</label>
-      <div class="winner-row" id="winnerRow"></div>
-    </div>
-
-    <button class="btn-primary" id="submitBtn" onclick="submitMatch()">경기 결과 저장</button>
+<!-- 관리자 패널 -->
+<div id="adminSection" style="display:none">
+  <div class="main-tabs">
+    <button class="main-tab active" onclick="switchMainTab('match')">⚔️ 경기 입력</button>
+    <button class="main-tab" onclick="switchMainTab('player')">👤 선수 관리</button>
   </div>
 
-  <!-- 최근 입력 경기 목록 -->
-  <div class="card">
-    <h2 style="display:flex;justify-content:space-between;align-items:center">
-      <span>📋 최근 입력 경기 (50건)</span>
-      <button class="btn-ghost" style="font-size:.8rem;padding:4px 10px" onclick="loadRecent()">새로고침</button>
-    </h2>
-    <div id="recentList"><p style="color:var(--muted);font-size:.85rem">불러오는 중...</p></div>
+  <!-- ══ 경기 입력 탭 ══ -->
+  <div id="tab-match" class="tab-content active">
+    <main>
+
+      <!-- 입력 모드 선택 -->
+      <div class="card">
+        <h2>경기 결과 입력</h2>
+
+        <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:140px">
+            <label class="field-label">날짜</label>
+            <input type="date" id="matchDate" />
+          </div>
+        </div>
+
+        <div class="mode-tabs">
+          <button class="mode-tab active" data-mode="round" onclick="setMode('round')">🏆 프로리그 라운드 (일괄 입력)</button>
+          <button class="mode-tab" data-mode="solo"  onclick="setMode('solo')">👤 개인전</button>
+          <button class="mode-tab" data-mode="team"  onclick="setMode('team')">👥 팀전</button>
+        </div>
+
+        <!-- ─ 프로리그 라운드 모드 ─ -->
+        <div id="mode-round">
+          <div class="team-row">
+            <div class="team-col">
+              <h3>🔵 팀 1</h3>
+              <div class="player-chips" id="t1chips"></div>
+              <div class="add-player-row">
+                <select id="t1add"><option value="">선수 추가...</option></select>
+                <button class="btn-ghost btn-sm" onclick="addChip(1)">추가</button>
+              </div>
+            </div>
+            <div class="team-col">
+              <h3>🔴 팀 2</h3>
+              <div class="player-chips" id="t2chips"></div>
+              <div class="add-player-row">
+                <select id="t2add"><option value="">선수 추가...</option></select>
+                <button class="btn-ghost btn-sm" onclick="addChip(2)">추가</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:.82rem;color:var(--muted)">개인전 매치업</span>
+            <button class="btn-ghost btn-sm" onclick="addMatchup()">+ 개인전 추가</button>
+            <button class="btn-ghost btn-sm" onclick="addTeamGame()">+ 팀전 추가</button>
+          </div>
+          <div class="matchup-list" id="matchupList"></div>
+
+          <div class="final-row">
+            <div class="field-group">
+              <label>최종 스코어</label>
+              <input type="text" id="roundScore" placeholder="예: 3:4" />
+            </div>
+            <div class="field-group">
+              <label>승리팀</label>
+              <div class="team-winner-btns">
+                <button class="twbtn" id="twBtn1" onclick="setTeamWinner(1)">팀 1 승</button>
+                <button class="twbtn" id="twBtn2" onclick="setTeamWinner(2)">팀 2 승</button>
+              </div>
+            </div>
+            <div>
+              <button class="btn-primary" id="roundSaveBtn" onclick="saveRound()" style="width:100%;margin-top:20px">
+                라운드 전체 저장
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─ 개인전 모드 ─ -->
+        <div id="mode-solo" style="display:none">
+          <div class="single-grid">
+            <div>
+              <label class="field-label">맵</label>
+              <input type="text" id="soloMap" placeholder="예: 투혼, 투혼(에결)" />
+            </div>
+            <div>
+              <label class="field-label">스코어</label>
+              <input type="text" id="soloScore" placeholder="예: 0:1" />
+            </div>
+          </div>
+          <div class="single-players">
+            <div>
+              <label class="field-label">선수 1</label>
+              <select id="soloP1" onchange="buildSoloWinner()"><option value="">선택</option></select>
+            </div>
+            <div>
+              <label class="field-label">선수 2</label>
+              <select id="soloP2" onchange="buildSoloWinner()"><option value="">선택</option></select>
+            </div>
+          </div>
+          <div style="margin-bottom:14px">
+            <label class="field-label">승자</label>
+            <div class="winner-opts" id="soloWinnerOpts"></div>
+          </div>
+          <button class="btn-primary" onclick="saveSingle('solo')">저장</button>
+        </div>
+
+        <!-- ─ 팀전 모드 ─ -->
+        <div id="mode-team" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+            <div>
+              <label class="field-label">맵</label>
+              <input type="text" id="teamMap" placeholder="예: 2:2생컨, 3:3헌터" />
+            </div>
+            <div>
+              <label class="field-label">팀 인원</label>
+              <select id="teamSize" onchange="buildTeamInputs()">
+                <option value="2">2 vs 2</option>
+                <option value="3">3 vs 3</option>
+                <option value="4">4 vs 4</option>
+                <option value="5">5 vs 5</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">스코어</label>
+              <input type="text" id="teamScore" placeholder="예: 3:2" />
+            </div>
+          </div>
+          <div class="team-row" style="margin-bottom:12px">
+            <div>
+              <label class="field-label">팀 1</label>
+              <div id="teamInputs1" style="display:flex;flex-direction:column;gap:5px"></div>
+            </div>
+            <div>
+              <label class="field-label">팀 2</label>
+              <div id="teamInputs2" style="display:flex;flex-direction:column;gap:5px"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:14px">
+            <label class="field-label">승리팀</label>
+            <div class="team-winner-btns" style="max-width:200px">
+              <button class="twbtn" id="stBtn1" onclick="setSingleTeamWinner(1)">팀 1 승</button>
+              <button class="twbtn" id="stBtn2" onclick="setSingleTeamWinner(2)">팀 2 승</button>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="saveSingle('team')">저장</button>
+        </div>
+      </div>
+
+      <!-- 최근 입력 목록 -->
+      <div class="card">
+        <h2 style="display:flex;justify-content:space-between;align-items:center">
+          <span>📋 최근 입력 (30건)</span>
+          <button class="btn-ghost btn-sm" onclick="loadRecent()">새로고침</button>
+        </h2>
+        <div id="recentList"><p style="color:var(--muted);font-size:.83rem">불러오는 중...</p></div>
+      </div>
+
+    </main>
   </div>
 
-</main>
+  <!-- ══ 선수 관리 탭 ══ -->
+  <div id="tab-player" class="tab-content">
+    <main>
+      <div class="card">
+        <h2>👤 선수 목록</h2>
+        <table class="player-table">
+          <thead><tr><th>ID</th><th>종족</th><th>티어</th><th></th></tr></thead>
+          <tbody id="playerTableBody"><tr><td colspan="4" style="color:var(--muted)">불러오는 중...</td></tr></tbody>
+        </table>
+
+        <div class="add-player-form">
+          <div>
+            <label>닉네임 (ID)</label>
+            <input type="text" id="newId" placeholder="닉네임" />
+          </div>
+          <div>
+            <label>종족</label>
+            <select id="newRace">
+              <option value="Terran">Terran</option>
+              <option value="Protoss">Protoss</option>
+              <option value="Zerg">Zerg</option>
+            </select>
+          </div>
+          <div>
+            <label>티어</label>
+            <select id="newTier">
+              <option>Stone</option><option>Bronze</option><option selected>Silver</option>
+              <option>Gold</option><option>Diamond</option><option>Legend</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button class="btn-primary" onclick="addPlayer()" style="white-space:nowrap">+ 추가</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- 경기 수정 모달 -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <h2>✏️ 경기 수정</h2>
+    <div id="editForm"></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeEdit()">취소</button>
+      <button class="btn-primary" id="editSaveBtn" onclick="saveEdit()">저장</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast"></div>
 
@@ -306,345 +415,681 @@
 // ── 설정 ──────────────────────────────────────────────────────
 const SUPABASE_URL      = 'https://ugrvylgrkwjtyekpznau.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVncnZ5bGdya3dqdHlla3B6bmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MDgxNDMsImV4cCI6MjA4ODM4NDE0M30.tIBkee7X97IDuBQQg8ugwOrLsW2RzCRoqM-CNEnR4Ao';
-// ─────────────────────────────────────────────────────────────
-
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentUser = null;
-let currentRole = null;
-let playerList  = [];
-let matchType   = 'pro';   // 'pro' | 'solo' | 'team'
-let winnerSide  = null;    // 'team1' | 'team2' | 선수 이름(solo)
+let currentUser = null, currentRole = null, playerList = [];
+let currentMode = 'round';
+let t1 = [], t2 = [];
+let teamWinner = null;
+let singleTeamWinner = null;
+let soloWinner = null;
+
+// 수정 모달 상태
+let editingMatch = null;
+let editWinnerSide = null;   // 팀전/프로리그 수정 시 승리팀 (1 or 2)
+let editSoloWinner = null;   // 개인전 수정 시 승자 이름
 
 // ── 초기화 ────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('matchDate').value = new Date().toISOString().slice(0, 10);
-
   const { data: { session } } = await sb.auth.getSession();
   if (session) await onLogin(session.user);
-
-  sb.auth.onAuthStateChange((_e, s) => {
-    if (s) onLogin(s.user); else showLogin();
-  });
+  sb.auth.onAuthStateChange((_e, s) => { if (s) onLogin(s.user); else showLogin(); });
 });
 
-// ── 로그인 ────────────────────────────────────────────────────
+// ── 탭 전환 ──────────────────────────────────────────────────
+function switchMainTab(name) {
+  document.querySelectorAll('.main-tab').forEach((b, i) => b.classList.toggle('active', ['match','player'][i] === name));
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'player') renderPlayerTable();
+}
+
+// ── 로그인 (ID 기반) ──────────────────────────────────────────
 async function login() {
-  const email    = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-  const errEl    = document.getElementById('loginError');
-  const btn      = document.getElementById('loginBtn');
+  const loginId = document.getElementById('loginId').value.trim();
+  const pw      = document.getElementById('password').value;
+  const errEl   = document.getElementById('loginError');
+  const btn     = document.getElementById('loginBtn');
+  errEl.textContent = ''; btn.disabled = true; btn.textContent = '로그인 중...';
 
-  errEl.textContent = '';
-  btn.disabled = true;
-  btn.textContent = '로그인 중...';
+  // login_id → email 조회 (RPC)
+  const { data: email, error: rpcErr } = await sb.rpc('get_email_by_login_id', { p_login_id: loginId });
+  if (rpcErr || !email) {
+    errEl.textContent = '❌ 존재하지 않는 ID입니다.';
+    btn.disabled = false; btn.textContent = '로그인';
+    return;
+  }
 
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
-  btn.disabled = false;
-  btn.textContent = '로그인';
-
-  if (error) { errEl.textContent = '❌ ' + error.message; return; }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+  btn.disabled = false; btn.textContent = '로그인';
+  if (error) { errEl.textContent = '❌ 비밀번호가 올바르지 않습니다.'; return; }
   await onLogin(data.user);
 }
 
 async function onLogin(user) {
   currentUser = user;
-
-  // 역할 확인
-  const { data: roleRow } = await sb.from('user_roles').select('role, nickname').eq('user_id', user.id).single();
-  if (!roleRow) {
-    await sb.auth.signOut();
-    document.getElementById('loginError').textContent = '❌ 권한이 없습니다. 관리자에게 문의하세요.';
-    return;
-  }
+  const { data: roleRow } = await sb.from('user_roles').select('role,nickname,login_id').eq('user_id', user.id).single();
+  if (!roleRow) { await sb.auth.signOut(); document.getElementById('loginError').textContent = '❌ 권한이 없습니다.'; return; }
   currentRole = roleRow.role;
-
-  document.getElementById('userNick').textContent = roleRow.nickname || user.email;
+  document.getElementById('userNick').textContent = roleRow.nickname || roleRow.login_id || 'admin';
   document.getElementById('roleTag').textContent  = currentRole === 'admin' ? '🛡 관리자' : '✏️ 에디터';
   document.getElementById('userInfo').style.display = 'flex';
-  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('loginSection').style.display  = 'none';
   document.getElementById('adminSection').style.display  = 'block';
-
   await loadPlayers();
-  setType('pro');
+  setMode('round');
+  buildTeamInputs();
   await loadRecent();
 }
 
 function showLogin() {
   currentUser = null; currentRole = null;
-  document.getElementById('loginSection').style.display = 'block';
+  document.getElementById('loginSection').style.display  = 'block';
   document.getElementById('adminSection').style.display  = 'none';
   document.getElementById('userInfo').style.display = 'none';
 }
+async function logout() { await sb.auth.signOut(); showLogin(); }
 
-async function logout() {
-  await sb.auth.signOut();
-  showLogin();
-}
-
-// ── 선수 목록 로드 ────────────────────────────────────────────
+// ── 선수 목록 ────────────────────────────────────────────────
 async function loadPlayers() {
-  const { data, error } = await sb.from('players').select('id, race, tier').order('id');
-  if (!error) playerList = data || [];
+  const { data } = await sb.from('players').select('*').order('id');
+  playerList = data || [];
+  fillPlayerSelects();
 }
 
-function playerOption(selected = '') {
-  const opts = ['<option value="">-- 선택 --</option>'];
-  playerList.forEach(p => {
-    const sel = p.id === selected ? ' selected' : '';
-    opts.push(`<option value="${p.id}"${sel}>${p.id} (${p.race[0]} / ${p.tier})</option>`);
+function playerOpts(exclude = []) {
+  return '<option value="">-- 선택 --</option>' +
+    playerList.filter(p => !exclude.includes(p.id))
+      .map(p => `<option value="${esc(p.id)}">${esc(p.id)} (${p.race[0]}/${p.tier})</option>`).join('');
+}
+
+function fillPlayerSelects() {
+  ['t1add','t2add','soloP1','soloP2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = playerOpts();
   });
-  return opts.join('');
+  buildTeamInputs();
 }
 
-// ── 경기 유형 전환 ────────────────────────────────────────────
-function setType(type) {
-  matchType = type;
-  winnerSide = null;
+// ── 입력 모드 ─────────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  ['round','solo','team'].forEach(m => document.getElementById('mode-' + m).style.display = m === mode ? 'block' : 'none');
+  if (mode === 'solo') { buildSoloWinner(); }
+}
 
-  document.querySelectorAll('.type-tab').forEach(t =>
-    t.classList.toggle('active', t.dataset.type === type)
-  );
+// ── 라운드 입력 ───────────────────────────────────────────────
+function renderChips() {
+  ['t1','t2'].forEach((tk, ti) => {
+    const arr = ti === 0 ? t1 : t2;
+    document.getElementById(tk + 'chips').innerHTML = arr.map(p =>
+      `<span class="player-chip">${esc(p)} <span class="rm" onclick="removeChip(${ti+1},'${esc(p)}')">×</span></span>`
+    ).join('');
+  });
+}
 
-  const soloForm    = document.getElementById('soloForm');
-  const teamForm    = document.getElementById('teamForm');
-  const teamSizeRow = document.getElementById('teamSizeRow');
-  const mapInput    = document.getElementById('matchMap');
-  const mapHint     = document.getElementById('mapHint');
+function addChip(team) {
+  const sel = document.getElementById('t' + team + 'add');
+  const val = sel.value;
+  if (!val) return;
+  const arr = team === 1 ? t1 : t2;
+  if (!arr.includes(val)) { arr.push(val); renderChips(); autoMatchups(); }
+  sel.value = '';
+}
 
-  if (type === 'solo') {
-    soloForm.style.display    = 'block';
-    teamForm.style.display    = 'none';
-    teamSizeRow.style.display = 'none';
-    mapInput.placeholder      = '예: 투혼, 투혼(에결)';
-    mapHint.style.display     = 'none';
-    buildSoloWinner();
-    // 선수 선택 드롭다운 채우기
-    document.getElementById('soloP1').innerHTML = playerOption();
-    document.getElementById('soloP2').innerHTML = playerOption();
-    document.getElementById('soloP1').onchange = buildSoloWinner;
-    document.getElementById('soloP2').onchange = buildSoloWinner;
-  } else if (type === 'team') {
-    soloForm.style.display    = 'none';
-    teamForm.style.display    = 'block';
-    teamSizeRow.style.display = 'block';
-    mapInput.placeholder      = '예: 2:2생컨, 2:2투혼, 3:3헌터';
-    mapHint.style.display     = 'none';
-    buildTeamSlots();
-  } else {  // pro
-    soloForm.style.display    = 'none';
-    teamForm.style.display    = 'block';
-    teamSizeRow.style.display = 'none';
-    mapInput.value            = 'Match';
-    mapHint.style.display     = 'inline';
-    buildProSlots();
+function removeChip(team, name) {
+  if (team === 1) t1 = t1.filter(p => p !== name);
+  else            t2 = t2.filter(p => p !== name);
+  renderChips();
+  autoMatchups();
+}
+
+function autoMatchups() {
+  const list = document.getElementById('matchupList');
+  const target = Math.max(t1.length, t2.length, 0);
+  while (list.querySelectorAll('.matchup-row').length < target) addMatchup();
+  const rows = [...list.querySelectorAll('.matchup-row')];
+  rows.slice(target).forEach(r => r.remove());
+  list.querySelectorAll('.matchup-row').forEach((row, i) => {
+    const s1 = row.querySelector('.mp1');
+    const s2 = row.querySelector('.mp2');
+    if (t1[i] && s1) s1.value = t1[i];
+    if (t2[i] && s2) s2.value = t2[i];
+    updateWpickLabels(row);
+  });
+}
+
+function addMatchup() {
+  const list = document.getElementById('matchupList');
+  const div  = document.createElement('div');
+  div.className = 'matchup-row';
+  div.innerHTML = `
+    <select class="mp1" onchange="updateWpickLabels(this.closest('.matchup-row'))">${playerOpts()}</select>
+    <div class="vs">vs</div>
+    <select class="mp2" onchange="updateWpickLabels(this.closest('.matchup-row'))">${playerOpts()}</select>
+    <input type="text" class="mpmap" placeholder="맵 (투혼 등)" style="font-size:.78rem;padding:5px 7px" />
+    <div class="winner-pick">
+      <button class="wpick" onclick="pickWinner(this,'1')">선수1</button>
+      <button class="wpick" onclick="pickWinner(this,'2')">선수2</button>
+      <button class="btn-ghost btn-sm rm-btn" onclick="this.closest('.matchup-row').remove()">✕</button>
+    </div>`;
+  list.appendChild(div);
+}
+
+function addTeamGame() {
+  const list = document.getElementById('matchupList');
+  const div  = document.createElement('div');
+  div.className = 'teamgame-row';
+  div.innerHTML = `
+    <input type="text" class="tg-t1" placeholder="팀1 선수 (쉼표 구분)" style="font-size:.78rem;padding:5px 7px" />
+    <div class="tg-label">vs</div>
+    <input type="text" class="tg-t2" placeholder="팀2 선수 (쉼표 구분)" style="font-size:.78rem;padding:5px 7px" />
+    <input type="text" class="tg-map" placeholder="맵" style="font-size:.78rem;padding:5px 7px" />
+    <div class="winner-pick">
+      <button class="wpick" onclick="pickWinner(this,'1')">팀1</button>
+      <button class="wpick" onclick="pickWinner(this,'2')">팀2</button>
+      <button class="btn-ghost btn-sm rm-btn" onclick="this.closest('.teamgame-row').remove()">✕</button>
+    </div>`;
+  list.appendChild(div);
+}
+
+function updateWpickLabels(row) {
+  const p1 = row.querySelector('.mp1')?.value || '선수1';
+  const p2 = row.querySelector('.mp2')?.value || '선수2';
+  const btns = row.querySelectorAll('.wpick');
+  if (btns[0]) btns[0].textContent = p1 || '선수1';
+  if (btns[1]) btns[1].textContent = p2 || '선수2';
+}
+
+function pickWinner(btn, side) {
+  const row = btn.closest('.matchup-row, .teamgame-row');
+  row.querySelectorAll('.wpick').forEach(b => { b.classList.remove('sel1','sel2'); });
+  btn.classList.add(side === '1' ? 'sel1' : 'sel2');
+  btn.dataset.side = side;
+}
+
+function setTeamWinner(side) {
+  teamWinner = side;
+  document.getElementById('twBtn1').classList.toggle('sel', side === 1);
+  document.getElementById('twBtn2').classList.toggle('sel', side === 2);
+}
+
+async function saveRound() {
+  const date  = document.getElementById('matchDate').value;
+  const score = document.getElementById('roundScore').value.trim();
+  if (!date)        { toast('날짜를 선택하세요', true); return; }
+  if (!t1.length || !t2.length) { toast('팀 구성을 입력하세요', true); return; }
+  if (!teamWinner)  { toast('승리팀을 선택하세요', true); return; }
+  if (!score)       { toast('최종 스코어를 입력하세요', true); return; }
+
+  const winTeam = teamWinner === 1 ? [...t1] : [...t2];
+  const rows = [];
+
+  document.querySelectorAll('#matchupList .matchup-row').forEach(row => {
+    const p1   = row.querySelector('.mp1')?.value;
+    const p2   = row.querySelector('.mp2')?.value;
+    const map  = row.querySelector('.mpmap')?.value.trim() || '투혼';
+    const sel  = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
+    const side = sel?.dataset.side;
+    if (p1 && p2 && side) rows.push({ type: 'solo', p1, p2, map, winner: side === '1' ? p1 : p2 });
+  });
+
+  document.querySelectorAll('#matchupList .teamgame-row').forEach(row => {
+    const raw1 = row.querySelector('.tg-t1')?.value.trim();
+    const raw2 = row.querySelector('.tg-t2')?.value.trim();
+    const map  = row.querySelector('.tg-map')?.value.trim() || '';
+    const sel  = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
+    const side = sel?.dataset.side;
+    if (raw1 && raw2 && side) {
+      const tt1 = raw1.split(',').map(s => s.trim()).filter(Boolean);
+      const tt2 = raw2.split(',').map(s => s.trim()).filter(Boolean);
+      rows.push({ type: 'team', tt1, tt2, map, winSide: side });
+    }
+  });
+
+  const btn = document.getElementById('roundSaveBtn');
+  btn.disabled = true; btn.textContent = '저장 중...';
+
+  try {
+    const nextSeq = await getNextSeq();
+    const toInsert = [];
+
+    toInsert.push({ match_date: date, map: 'Match', team1: [...t1], team2: [...t2], winner_arr: winTeam, score: score || null, created_by: currentUser.id, seq: nextSeq });
+
+    rows.forEach((r, i) => {
+      if (r.type === 'solo') {
+        toInsert.push({ match_date: date, map: r.map, player1: r.p1, player2: r.p2, winner: r.winner, score: null, created_by: currentUser.id, seq: nextSeq + 1 + i });
+      } else {
+        toInsert.push({ match_date: date, map: r.map, team1: r.tt1, team2: r.tt2, winner_arr: r.winSide === '1' ? r.tt1 : r.tt2, score: null, created_by: currentUser.id, seq: nextSeq + 1 + i });
+      }
+    });
+
+    const { error } = await sb.from('matches').insert(toInsert);
+    if (error) throw error;
+
+    toast(`라운드 저장 완료 (${toInsert.length}경기)`);
+    t1 = []; t2 = []; teamWinner = null;
+    renderChips();
+    document.getElementById('matchupList').innerHTML = '';
+    document.getElementById('roundScore').value = '';
+    document.getElementById('twBtn1').classList.remove('sel');
+    document.getElementById('twBtn2').classList.remove('sel');
+    await loadRecent();
+  } catch (e) {
+    toast('저장 실패: ' + e.message, true);
   }
+  btn.disabled = false; btn.textContent = '라운드 전체 저장';
 }
 
-function buildProSlots() {
-  buildSlots(4);
-}
-
-function buildTeamSlots() {
-  const n = parseInt(document.getElementById('teamSize').value, 10);
-  buildSlots(n);
-}
-
-function buildSlots(n) {
-  const t1 = document.getElementById('team1Slots');
-  const t2 = document.getElementById('team2Slots');
-  t1.innerHTML = '';
-  t2.innerHTML = '';
-
-  for (let i = 0; i < n; i++) {
-    t1.innerHTML += `<div class="player-slot"><select data-team="1" data-idx="${i}" onchange="buildTeamWinner()">${playerOption()}</select></div>`;
-    t2.innerHTML += `<div class="player-slot"><select data-team="2" data-idx="${i}" onchange="buildTeamWinner()">${playerOption()}</select></div>`;
-  }
-  buildTeamWinner();
-}
-
-// ── 승자 버튼 ─────────────────────────────────────────────────
+// ── 단일 입력 (개인전) ────────────────────────────────────────
 function buildSoloWinner() {
-  winnerSide = null;
+  soloWinner = null;
   const p1 = document.getElementById('soloP1').value;
   const p2 = document.getElementById('soloP2').value;
-  const row = document.getElementById('winnerRow');
-  row.innerHTML = '';
-
+  const el = document.getElementById('soloWinnerOpts');
+  el.innerHTML = '';
   [p1, p2].filter(Boolean).forEach(name => {
     const btn = document.createElement('button');
-    btn.className = 'winner-btn';
+    btn.className = 'wopt';
     btn.textContent = name;
     btn.onclick = () => {
-      winnerSide = name;
-      row.querySelectorAll('.winner-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
+      soloWinner = name;
+      el.querySelectorAll('.wopt').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
     };
-    row.appendChild(btn);
+    el.appendChild(btn);
   });
 }
 
-function buildTeamWinner() {
-  winnerSide = null;
-  const row = document.getElementById('winnerRow');
-  row.innerHTML = '';
-
-  const t1names = [...document.querySelectorAll('[data-team="1"]')].map(s => s.value).filter(Boolean);
-  const t2names = [...document.querySelectorAll('[data-team="2"]')].map(s => s.value).filter(Boolean);
-
-  if (t1names.length === 0 && t2names.length === 0) {
-    row.innerHTML = '<span style="color:var(--muted);font-size:.85rem">팀 선수를 먼저 선택하세요</span>';
-    return;
-  }
-
-  const makeBtn = (label, side) => {
-    const btn = document.createElement('button');
-    btn.className = 'winner-btn';
-    btn.textContent = label;
-    btn.onclick = () => {
-      winnerSide = side;
-      row.querySelectorAll('.winner-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-    };
-    return btn;
-  };
-
-  row.appendChild(makeBtn(`🔵 팀1 승 (${t1names.join(', ')})`, 'team1'));
-  row.appendChild(makeBtn(`🔴 팀2 승 (${t2names.join(', ')})`, 'team2'));
+// ── 단일 입력 (팀전) ──────────────────────────────────────────
+function buildTeamInputs() {
+  const n = parseInt(document.getElementById('teamSize')?.value || 2);
+  ['1','2'].forEach(t => {
+    const el = document.getElementById('teamInputs' + t);
+    if (!el) return;
+    el.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const sel = document.createElement('select');
+      sel.className = 'team-player-' + t;
+      sel.innerHTML = playerOpts();
+      el.appendChild(sel);
+    }
+  });
+  singleTeamWinner = null;
+  document.getElementById('stBtn1')?.classList.remove('sel');
+  document.getElementById('stBtn2')?.classList.remove('sel');
 }
 
-// ── 경기 저장 ─────────────────────────────────────────────────
-async function submitMatch() {
-  const date  = document.getElementById('matchDate').value;
-  const map   = document.getElementById('matchMap').value.trim();
-  const score = document.getElementById('matchScore').value.trim();
+function setSingleTeamWinner(side) {
+  singleTeamWinner = side;
+  document.getElementById('stBtn1').classList.toggle('sel', side === 1);
+  document.getElementById('stBtn2').classList.toggle('sel', side === 2);
+}
 
+async function saveSingle(type) {
+  const date = document.getElementById('matchDate').value;
   if (!date) { toast('날짜를 선택하세요', true); return; }
-  if (!winnerSide) { toast('승자를 선택하세요', true); return; }
 
   let row;
-
-  if (matchType === 'solo') {
+  if (type === 'solo') {
     const p1 = document.getElementById('soloP1').value;
     const p2 = document.getElementById('soloP2').value;
-    if (!p1 || !p2) { toast('선수를 모두 선택하세요', true); return; }
+    const map = document.getElementById('soloMap').value.trim();
+    const sc  = document.getElementById('soloScore').value.trim();
+    if (!p1 || !p2) { toast('선수를 선택하세요', true); return; }
     if (p1 === p2)  { toast('선수가 중복됩니다', true); return; }
-    if (!map)       { toast('맵을 입력하세요', true); return; }
-
-    row = {
-      match_date: date,
-      map,
-      player1:    p1,
-      player2:    p2,
-      winner:     winnerSide,
-      score:      score || null,
-      created_by: currentUser.id,
-    };
+    if (!soloWinner) { toast('승자를 선택하세요', true); return; }
+    if (!map)        { toast('맵을 입력하세요', true); return; }
+    row = { match_date: date, map, player1: p1, player2: p2, winner: soloWinner, score: sc || null, created_by: currentUser.id };
   } else {
-    const t1 = [...document.querySelectorAll('[data-team="1"]')].map(s => s.value).filter(Boolean);
-    const t2 = [...document.querySelectorAll('[data-team="2"]')].map(s => s.value).filter(Boolean);
-    if (t1.length === 0 || t2.length === 0) { toast('팀 선수를 선택하세요', true); return; }
-
-    const winnerArr = winnerSide === 'team1' ? t1 : t2;
-    row = {
-      match_date:  date,
-      map:         matchType === 'pro' ? 'Match' : (map || null),
-      team1:       t1,
-      team2:       t2,
-      winner_arr:  winnerArr,
-      score:       score || null,
-      created_by:  currentUser.id,
-    };
-
-    if (!matchType === 'pro' && !map) { toast('맵을 입력하세요', true); return; }
+    const tt1 = [...document.querySelectorAll('.team-player-1')].map(s => s.value).filter(Boolean);
+    const tt2 = [...document.querySelectorAll('.team-player-2')].map(s => s.value).filter(Boolean);
+    const map = document.getElementById('teamMap').value.trim();
+    const sc  = document.getElementById('teamScore').value.trim();
+    if (!tt1.length || !tt2.length) { toast('팀 선수를 선택하세요', true); return; }
+    if (!singleTeamWinner) { toast('승리팀을 선택하세요', true); return; }
+    if (!map) { toast('맵을 입력하세요', true); return; }
+    row = { match_date: date, map, team1: tt1, team2: tt2, winner_arr: singleTeamWinner === 1 ? tt1 : tt2, score: sc || null, created_by: currentUser.id };
   }
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = '저장 중...';
-
-  // 현재 최대 seq + 1을 자동 부여 (기록실 표시 순서 보장)
-  const { data: maxRow } = await sb.from('matches').select('seq').order('seq', { ascending: false }).limit(1);
-  row.seq = (maxRow?.[0]?.seq || 0) + 1;
-
+  row.seq = await getNextSeq();
   const { error } = await sb.from('matches').insert(row);
-  btn.disabled = false;
-  btn.textContent = '경기 결과 저장';
-
-  if (error) {
-    toast('저장 실패: ' + error.message, true);
-  } else {
-    toast('✅ 저장 완료!');
-    // 폼 초기화 (날짜, 유형 유지)
-    document.getElementById('matchScore').value = '';
-    winnerSide = null;
-    setType(matchType);
-    await loadRecent();
+  if (error) { toast('저장 실패: ' + error.message, true); return; }
+  toast('저장 완료');
+  if (type === 'solo') {
+    document.getElementById('soloScore').value = '';
+    soloWinner = null;
+    document.getElementById('soloWinnerOpts').querySelectorAll('.wopt').forEach(b => b.classList.remove('active'));
   }
+  await loadRecent();
+}
+
+// ── 공통 유틸 ─────────────────────────────────────────────────
+async function getNextSeq() {
+  const { data } = await sb.from('matches').select('seq').order('seq', { ascending: false }).limit(1);
+  return (data?.[0]?.seq || 0) + 1;
+}
+
+function arrEq(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  return JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
 }
 
 // ── 최근 경기 목록 ────────────────────────────────────────────
 async function loadRecent() {
-  const listEl = document.getElementById('recentList');
-  listEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem">불러오는 중...</p>';
+  const el = document.getElementById('recentList');
+  el.innerHTML = '<p style="color:var(--muted);font-size:.82rem">불러오는 중...</p>';
+  const { data, error } = await sb.from('matches').select('*').order('seq', { ascending: false }).limit(30);
+  if (error || !data?.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.82rem">기록 없음</p>'; return; }
 
-  const { data, error } = await sb
-    .from('matches')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(50);
-
-  if (error) { listEl.innerHTML = '<p style="color:var(--danger)">불러오기 실패</p>'; return; }
-  if (!data.length) { listEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem">경기 기록 없음</p>'; return; }
-
-  listEl.innerHTML = '';
+  el.innerHTML = '';
   data.forEach(m => {
-    const isTeam = Array.isArray(m.team1);
-    let desc, winnerText;
-
+    const isTeam = Array.isArray(m.team1) && m.team1.length > 0;
+    let desc, winText;
     if (isTeam) {
-      const t1 = m.team1.join(', ');
-      const t2 = m.team2.join(', ');
-      const wArr = m.winner_arr || [];
-      const wonSide = JSON.stringify(wArr) === JSON.stringify(m.team1) ? '🔵팀1' : '🔴팀2';
-      desc = `[${m.map}] ${t1} vs ${t2}`;
-      winnerText = `${wonSide} 승 ${m.score || ''}`;
+      desc    = `[${m.map}] ${m.team1.join(', ')} vs ${m.team2.join(', ')}`;
+      const won = arrEq(m.winner_arr, m.team1) ? '팀1' : '팀2';
+      winText = `${won} 승 ${m.score || ''}`;
     } else {
-      desc = `[${m.map}] ${m.player1} vs ${m.player2}`;
-      winnerText = `${m.winner} 승 ${m.score || ''}`;
+      desc    = `[${m.map}] ${m.player1} vs ${m.player2}`;
+      winText = `${m.winner} 승 ${m.score || ''}`;
     }
-
     const row = document.createElement('div');
-    row.className = 'match-row';
+    row.className = 'rec-row';
     row.innerHTML = `
-      <div>
-        <div>${desc}</div>
-        <div class="meta">${m.match_date} · ${winnerText}</div>
+      <div style="flex:1;min-width:0">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(desc)}</div>
+        <div class="meta">${m.match_date} · ${esc(winText)}</div>
       </div>
-      ${currentRole === 'admin'
-        ? `<button class="btn-danger del" onclick="deleteMatch('${m.id}', this)">삭제</button>`
-        : ''}
-    `;
-    listEl.appendChild(row);
+      <div class="rec-actions">
+        <button class="btn-warn btn-sm" onclick="editMatch('${m.id}')">수정</button>
+        ${currentRole === 'admin' ? `<button class="btn-danger btn-sm" onclick="delMatch('${m.id}',this)">삭제</button>` : ''}
+      </div>`;
+    el.appendChild(row);
   });
 }
 
-async function deleteMatch(id, btn) {
-  if (!confirm('이 경기 기록을 삭제하시겠습니까?')) return;
+async function delMatch(id, btn) {
+  if (!confirm('삭제하시겠습니까?')) return;
   btn.disabled = true;
   const { error } = await sb.from('matches').delete().eq('id', id);
-  if (error) { toast('삭제 실패: ' + error.message, true); btn.disabled = false; return; }
+  if (error) { toast('삭제 실패', true); btn.disabled = false; return; }
   toast('삭제 완료');
   await loadRecent();
 }
 
-// ── 토스트 알림 ───────────────────────────────────────────────
+// ── 경기 수정 모달 ────────────────────────────────────────────
+async function editMatch(id) {
+  const { data: m, error } = await sb.from('matches').select('*').eq('id', id).single();
+  if (error || !m) { toast('데이터를 불러올 수 없습니다', true); return; }
+  editingMatch = m;
+  editWinnerSide = null;
+  editSoloWinner = null;
+
+  const isMatchHeader = m.map === 'Match';
+  const isTeam = Array.isArray(m.team1) && m.team1.length > 0;
+
+  let html = `
+    <div class="edit-field">
+      <label class="field-label">날짜</label>
+      <input type="date" id="editDate" value="${m.match_date}" />
+    </div>`;
+
+  if (isMatchHeader) {
+    // 프로리그 헤더 수정
+    html += `
+      <div class="edit-field">
+        <label class="field-label">팀 1 (쉼표로 구분)</label>
+        <input type="text" id="editTeam1" value="${esc(m.team1.join(', '))}" />
+      </div>
+      <div class="edit-field">
+        <label class="field-label">팀 2 (쉼표로 구분)</label>
+        <input type="text" id="editTeam2" value="${esc(m.team2.join(', '))}" />
+      </div>
+      <div class="edit-field">
+        <label class="field-label">최종 스코어</label>
+        <input type="text" id="editScore" value="${esc(m.score || '')}" placeholder="예: 3:4" />
+      </div>
+      <div class="edit-field">
+        <label class="field-label">승리팀</label>
+        <div class="edit-winner-row">
+          <button class="ewbtn" id="ewBtn1" onclick="setEditWinner(1)">팀 1 승</button>
+          <button class="ewbtn" id="ewBtn2" onclick="setEditWinner(2)">팀 2 승</button>
+        </div>
+      </div>`;
+    editWinnerSide = arrEq(m.winner_arr, m.team1) ? 1 : 2;
+  } else if (isTeam) {
+    // 팀전 수정
+    html += `
+      <div class="edit-field">
+        <label class="field-label">맵</label>
+        <input type="text" id="editMap" value="${esc(m.map || '')}" />
+      </div>
+      <div class="edit-field">
+        <label class="field-label">팀 1 (쉼표로 구분)</label>
+        <input type="text" id="editTeam1" value="${esc(m.team1.join(', '))}" />
+      </div>
+      <div class="edit-field">
+        <label class="field-label">팀 2 (쉼표로 구분)</label>
+        <input type="text" id="editTeam2" value="${esc(m.team2.join(', '))}" />
+      </div>
+      <div class="edit-field">
+        <label class="field-label">스코어</label>
+        <input type="text" id="editScore" value="${esc(m.score || '')}" />
+      </div>
+      <div class="edit-field">
+        <label class="field-label">승리팀</label>
+        <div class="edit-winner-row">
+          <button class="ewbtn" id="ewBtn1" onclick="setEditWinner(1)">팀 1 승</button>
+          <button class="ewbtn" id="ewBtn2" onclick="setEditWinner(2)">팀 2 승</button>
+        </div>
+      </div>`;
+    editWinnerSide = arrEq(m.winner_arr, m.team1) ? 1 : 2;
+  } else {
+    // 개인전 수정
+    html += `
+      <div class="edit-field">
+        <label class="field-label">맵</label>
+        <input type="text" id="editMap" value="${esc(m.map || '')}" />
+      </div>
+      <div class="edit-field">
+        <label class="field-label">선수 1</label>
+        <select id="editP1" onchange="buildEditSoloWinner()">${playerOpts()}</select>
+      </div>
+      <div class="edit-field">
+        <label class="field-label">선수 2</label>
+        <select id="editP2" onchange="buildEditSoloWinner()">${playerOpts()}</select>
+      </div>
+      <div class="edit-field">
+        <label class="field-label">스코어</label>
+        <input type="text" id="editScore" value="${esc(m.score || '')}" />
+      </div>
+      <div class="edit-field">
+        <label class="field-label">승자</label>
+        <div class="winner-opts" id="editWinnerOpts"></div>
+      </div>`;
+  }
+
+  document.getElementById('editForm').innerHTML = html;
+
+  // 값 설정 (DOM 생성 후)
+  if (isMatchHeader || isTeam) {
+    // 승리팀 버튼 초기 상태 반영
+    setTimeout(() => setEditWinner(editWinnerSide), 0);
+  } else {
+    // 개인전: 선수 셀렉트 값 설정 후 승자 버튼 빌드
+    document.getElementById('editP1').value = m.player1 || '';
+    document.getElementById('editP2').value = m.player2 || '';
+    buildEditSoloWinner(m.winner);
+  }
+
+  document.getElementById('editModal').classList.add('open');
+}
+
+function setEditWinner(side) {
+  editWinnerSide = side;
+  document.getElementById('ewBtn1')?.classList.toggle('sel', side === 1);
+  document.getElementById('ewBtn2')?.classList.toggle('sel', side === 2);
+}
+
+function buildEditSoloWinner(preselect) {
+  editSoloWinner = preselect || null;
+  const p1 = document.getElementById('editP1')?.value;
+  const p2 = document.getElementById('editP2')?.value;
+  const el = document.getElementById('editWinnerOpts');
+  if (!el) return;
+  el.innerHTML = '';
+  [p1, p2].filter(Boolean).forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'wopt' + (name === preselect ? ' active' : '');
+    btn.textContent = name;
+    btn.onclick = () => {
+      editSoloWinner = name;
+      el.querySelectorAll('.wopt').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    el.appendChild(btn);
+  });
+}
+
+function closeEdit() {
+  document.getElementById('editModal').classList.remove('open');
+  editingMatch = null;
+  editWinnerSide = null;
+  editSoloWinner = null;
+}
+
+async function saveEdit() {
+  const m = editingMatch;
+  if (!m) return;
+
+  const date = document.getElementById('editDate').value;
+  if (!date) { toast('날짜를 선택하세요', true); return; }
+
+  const isMatchHeader = m.map === 'Match';
+  const isTeam = Array.isArray(m.team1) && m.team1.length > 0;
+
+  let updates = { match_date: date };
+
+  if (isMatchHeader || isTeam) {
+    const t1v = document.getElementById('editTeam1').value.split(',').map(s => s.trim()).filter(Boolean);
+    const t2v = document.getElementById('editTeam2').value.split(',').map(s => s.trim()).filter(Boolean);
+    const score = document.getElementById('editScore').value.trim();
+    if (!t1v.length || !t2v.length) { toast('팀 구성을 입력하세요', true); return; }
+    if (!editWinnerSide) { toast('승리팀을 선택하세요', true); return; }
+    updates = { ...updates, team1: t1v, team2: t2v, winner_arr: editWinnerSide === 1 ? t1v : t2v, score: score || null };
+    if (!isMatchHeader) {
+      updates.map = document.getElementById('editMap').value.trim();
+    }
+  } else {
+    const p1  = document.getElementById('editP1').value;
+    const p2  = document.getElementById('editP2').value;
+    const map = document.getElementById('editMap').value.trim();
+    const sc  = document.getElementById('editScore').value.trim();
+    if (!p1 || !p2) { toast('선수를 선택하세요', true); return; }
+    if (!editSoloWinner) { toast('승자를 선택하세요', true); return; }
+    if (!map) { toast('맵을 입력하세요', true); return; }
+    updates = { ...updates, player1: p1, player2: p2, map, winner: editSoloWinner, score: sc || null };
+  }
+
+  const saveBtn = document.getElementById('editSaveBtn');
+  saveBtn.disabled = true; saveBtn.textContent = '저장 중...';
+  const { error } = await sb.from('matches').update(updates).eq('id', m.id);
+  saveBtn.disabled = false; saveBtn.textContent = '저장';
+
+  if (error) { toast('수정 실패: ' + error.message, true); return; }
+  toast('수정 완료');
+  closeEdit();
+  await loadRecent();
+}
+
+// ── 선수 관리 ─────────────────────────────────────────────────
+async function renderPlayerTable() {
+  const tbody = document.getElementById('playerTableBody');
+  tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted)">불러오는 중...</td></tr>';
+  await loadPlayers();
+  if (!playerList.length) { tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted)">선수 없음</td></tr>'; return; }
+  tbody.innerHTML = playerList.map(p => `
+    <tr data-player="${esc(p.id)}">
+      <td><strong>${esc(p.id)}</strong></td>
+      <td>${p.race}</td>
+      <td style="color:${tierColor(p.tier)}">${p.tier}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          ${currentRole === 'admin' ? `
+            <button class="btn-warn btn-sm" onclick="editPlayerRow('${esc(p.id)}')">수정</button>
+            <button class="btn-danger btn-sm" onclick="deletePlayer('${esc(p.id)}',this)">삭제</button>
+          ` : ''}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function editPlayerRow(id) {
+  const p = playerList.find(x => x.id === id);
+  if (!p) return;
+  const tr = document.querySelector(`tr[data-player="${CSS.escape(id)}"]`);
+  if (!tr) return;
+  const raceOpts = ['Terran','Protoss','Zerg'].map(r => `<option${r === p.race ? ' selected' : ''}>${r}</option>`).join('');
+  const tierOpts = ['Stone','Bronze','Silver','Gold','Diamond','Legend'].map(t => `<option${t === p.tier ? ' selected' : ''}>${t}</option>`).join('');
+  tr.innerHTML = `
+    <td><strong>${esc(p.id)}</strong></td>
+    <td><select id="ep-race" style="padding:4px 6px;font-size:.82rem">${raceOpts}</select></td>
+    <td><select id="ep-tier" style="padding:4px 6px;font-size:.82rem">${tierOpts}</select></td>
+    <td>
+      <div style="display:flex;gap:4px">
+        <button class="btn-success btn-sm" onclick="savePlayerEdit('${esc(id)}')">저장</button>
+        <button class="btn-ghost btn-sm" onclick="renderPlayerTable()">취소</button>
+      </div>
+    </td>`;
+}
+
+async function savePlayerEdit(id) {
+  const race = document.getElementById('ep-race').value;
+  const tier = document.getElementById('ep-tier').value;
+  const { error } = await sb.from('players').update({ race, tier }).eq('id', id);
+  if (error) { toast('수정 실패: ' + error.message, true); return; }
+  toast(`${id} 수정 완료`);
+  await renderPlayerTable();
+}
+
+async function addPlayer() {
+  const id   = document.getElementById('newId').value.trim();
+  const race = document.getElementById('newRace').value;
+  const tier = document.getElementById('newTier').value;
+  if (!id) { toast('닉네임을 입력하세요', true); return; }
+  const { error } = await sb.from('players').insert({ id, race, tier });
+  if (error) { toast('추가 실패: ' + (error.message.includes('duplicate') ? '이미 존재하는 ID입니다' : error.message), true); return; }
+  document.getElementById('newId').value = '';
+  toast(`${id} 추가 완료`);
+  await renderPlayerTable();
+}
+
+async function deletePlayer(id, btn) {
+  if (!confirm(`'${id}' 선수를 삭제하시겠습니까?\n경기 기록은 유지됩니다.`)) return;
+  btn.disabled = true;
+  const { error } = await sb.from('players').delete().eq('id', id);
+  if (error) { toast('삭제 실패', true); btn.disabled = false; return; }
+  toast(`${id} 삭제 완료`);
+  await renderPlayerTable();
+}
+
+function tierColor(t) {
+  return { Stone:'#8b8b8b', Bronze:'#cd7f32', Silver:'#c0c0c0', Gold:'#ffd700', Diamond:'#67e8f9', Legend:'#ff7f50' }[t] || '#eee';
+}
+
+// ── 토스트 / 이스케이프 ───────────────────────────────────────
 function toast(msg, isError = false) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.className = 'show' + (isError ? ' error' : '');
   clearTimeout(el._t);
   el._t = setTimeout(() => { el.className = ''; }, 2800);
+}
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
 </body>
