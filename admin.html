@@ -89,7 +89,7 @@
     .dropdown-panel {
       display: none; position: absolute; top: calc(100% + 3px); left: 0; right: 0;
       background: var(--surface); border: 1px solid var(--accent);
-      border-radius: 8px; z-index: 50; max-height: 200px; overflow-y: auto;
+      border-radius: 8px; z-index: 50; max-height: 400px; overflow-y: auto;
       box-shadow: 0 4px 16px rgba(0,0,0,.5);
     }
     .dropdown-panel.open { display: block; }
@@ -585,6 +585,17 @@ function playerOpts(exclude = []) {
       .map(p => `<option value="${esc(p.id)}">${esc(p.id)} (${p.race[0]}/${p.tier})</option>`).join('');
 }
 
+// 현재 값이 playerList에 없어도 항상 선택된 상태로 표시
+function playerOptsWithCurrent(currentVal, exclude = []) {
+  const listOpts = playerList.filter(p => !exclude.includes(p.id))
+    .map(p => `<option value="${esc(p.id)}"${p.id === currentVal ? ' selected' : ''}>${esc(p.id)} (${p.race[0]}/${p.tier})</option>`).join('');
+  let extra = '';
+  if (currentVal && !playerList.some(p => p.id === currentVal)) {
+    extra = `<option value="${esc(currentVal)}" selected>${esc(currentVal)}</option>`;
+  }
+  return `<option value="">-- 선택 --</option>${extra}${listOpts}`;
+}
+
 function fillPlayerSelects() {
   renderCheckboxDropdowns();
   ['soloP1','soloP2'].forEach(id => {
@@ -774,23 +785,24 @@ async function saveRound() {
   const winTeam = teamWinner === 1 ? [...t1] : [...t2];
   const rows = [];
 
-  document.querySelectorAll('#matchupList .matchup-row').forEach(row => {
-    const p1   = row.querySelector('.mp1')?.value;
-    const p2   = row.querySelector('.mp2')?.value;
-    const map  = row.querySelector('.mpmap')?.value.trim() || '투혼';
-    const sel  = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
-    const side = sel?.dataset.side;
-    if (p1 && p2 && side) rows.push({ type: 'solo', p1, p2, map, winner: side === '1' ? p1 : p2 });
-  });
-
-  document.querySelectorAll('#matchupList .teamgame-row').forEach(row => {
-    const tt1 = [...row.querySelectorAll('.tg-t1-cb:checked')].map(cb => cb.value);
-    const tt2 = [...row.querySelectorAll('.tg-t2-cb:checked')].map(cb => cb.value);
-    const map  = row.querySelector('.tg-map')?.value.trim() || '';
-    const sel  = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
-    const side = sel?.dataset.side;
-    if (tt1.length && tt2.length && side) {
-      rows.push({ type: 'team', tt1, tt2, map, winSide: side });
+  // DOM 순서대로 수집 (팀전이 중간에 있어도 올바른 순서 유지)
+  document.querySelectorAll('#matchupList .matchup-row, #matchupList .teamgame-row').forEach(row => {
+    if (row.classList.contains('matchup-row')) {
+      const p1   = row.querySelector('.mp1')?.value;
+      const p2   = row.querySelector('.mp2')?.value;
+      const map  = row.querySelector('.mpmap')?.value.trim() || '투혼';
+      const sel  = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
+      const side = sel?.dataset.side;
+      if (p1 && p2 && side) rows.push({ type: 'solo', p1, p2, map, winner: side === '1' ? p1 : p2 });
+    } else {
+      const tt1 = [...row.querySelectorAll('.tg-t1-cb:checked')].map(cb => cb.value);
+      const tt2 = [...row.querySelectorAll('.tg-t2-cb:checked')].map(cb => cb.value);
+      const map  = row.querySelector('.tg-map')?.value.trim() || '';
+      const sel  = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
+      const side = sel?.dataset.side;
+      if (tt1.length && tt2.length && side) {
+        rows.push({ type: 'team', tt1, tt2, map, winSide: side });
+      }
     }
   });
 
@@ -982,18 +994,22 @@ async function editMatch(id) {
     return;
   } else if (isTeam) {
     // 팀전 수정
+    const t1Selects = (m.team1 || []).map(p =>
+      `<select class="edit-t1-sel" style="margin-bottom:4px">${playerOptsWithCurrent(p)}</select>`).join('');
+    const t2Selects = (m.team2 || []).map(p =>
+      `<select class="edit-t2-sel" style="margin-bottom:4px">${playerOptsWithCurrent(p)}</select>`).join('');
     html += `
       <div class="edit-field">
         <label class="field-label">맵</label>
         <input type="text" id="editMap" value="${esc(m.map || '')}" />
       </div>
       <div class="edit-field">
-        <label class="field-label">팀 1 (쉼표로 구분)</label>
-        <input type="text" id="editTeam1" value="${esc(m.team1.join(', '))}" />
+        <label class="field-label">팀 1</label>
+        <div style="display:flex;flex-direction:column;gap:4px">${t1Selects}</div>
       </div>
       <div class="edit-field">
-        <label class="field-label">팀 2 (쉼표로 구분)</label>
-        <input type="text" id="editTeam2" value="${esc(m.team2.join(', '))}" />
+        <label class="field-label">팀 2</label>
+        <div style="display:flex;flex-direction:column;gap:4px">${t2Selects}</div>
       </div>
       <div class="edit-field">
         <label class="field-label">스코어</label>
@@ -1016,11 +1032,11 @@ async function editMatch(id) {
       </div>
       <div class="edit-field">
         <label class="field-label">선수 1</label>
-        <select id="editP1" onchange="buildEditSoloWinner()">${playerOpts()}</select>
+        <select id="editP1" onchange="buildEditSoloWinner()">${playerOptsWithCurrent(m.player1)}</select>
       </div>
       <div class="edit-field">
         <label class="field-label">선수 2</label>
-        <select id="editP2" onchange="buildEditSoloWinner()">${playerOpts()}</select>
+        <select id="editP2" onchange="buildEditSoloWinner()">${playerOptsWithCurrent(m.player2)}</select>
       </div>
       <div class="edit-field">
         <label class="field-label">스코어</label>
@@ -1039,9 +1055,7 @@ async function editMatch(id) {
     // 승리팀 버튼 초기 상태 반영
     setTimeout(() => setEditWinner(editWinnerSide), 0);
   } else {
-    // 개인전: 선수 셀렉트 값 설정 후 승자 버튼 빌드
-    document.getElementById('editP1').value = m.player1 || '';
-    document.getElementById('editP2').value = m.player2 || '';
+    // 개인전: 승자 버튼 빌드 (select 값은 playerOptsWithCurrent에서 이미 selected 처리됨)
     buildEditSoloWinner(m.winner);
   }
 
@@ -1101,8 +1115,8 @@ async function saveEdit() {
   let updates = { match_date: date };
 
   if (!isMatchHeader && isTeam) {
-    const t1v = document.getElementById('editTeam1').value.split(',').map(s => s.trim()).filter(Boolean);
-    const t2v = document.getElementById('editTeam2').value.split(',').map(s => s.trim()).filter(Boolean);
+    const t1v = [...document.querySelectorAll('.edit-t1-sel')].map(s => s.value).filter(Boolean);
+    const t2v = [...document.querySelectorAll('.edit-t2-sel')].map(s => s.value).filter(Boolean);
     const score = document.getElementById('editScore').value.trim();
     if (!t1v.length || !t2v.length) { toast('팀 구성을 입력하세요', true); return; }
     if (!editWinnerSide) { toast('승리팀을 선택하세요', true); return; }
@@ -1314,22 +1328,23 @@ async function saveProLeagueEdit() {
   const winTeam = editProWinner === 1 ? [...editProT1] : [...editProT2];
   const newRows = [];
 
-  document.querySelectorAll('#editMatchupList .matchup-row').forEach(row => {
-    const p1  = row.querySelector('.mp1')?.value;
-    const p2  = row.querySelector('.mp2')?.value;
-    const map = row.querySelector('.mpmap')?.value.trim() || '투혼';
-    const sel = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
-    const side = sel?.dataset.side;
-    if (p1 && p2 && side) newRows.push({ type: 'solo', p1, p2, map, winner: side === '1' ? p1 : p2 });
-  });
-
-  document.querySelectorAll('#editMatchupList .teamgame-row').forEach(row => {
-    const tt1 = [...row.querySelectorAll('.tg-t1-cb:checked')].map(cb => cb.value);
-    const tt2 = [...row.querySelectorAll('.tg-t2-cb:checked')].map(cb => cb.value);
-    const map = row.querySelector('.tg-map')?.value.trim() || '';
-    const sel = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
-    const side = sel?.dataset.side;
-    if (tt1.length && tt2.length && side) newRows.push({ type: 'team', tt1, tt2, map, winSide: side });
+  // DOM 순서대로 수집 (팀전이 중간에 있어도 올바른 순서 유지)
+  document.querySelectorAll('#editMatchupList .matchup-row, #editMatchupList .teamgame-row').forEach(row => {
+    if (row.classList.contains('matchup-row')) {
+      const p1  = row.querySelector('.mp1')?.value;
+      const p2  = row.querySelector('.mp2')?.value;
+      const map = row.querySelector('.mpmap')?.value.trim() || '투혼';
+      const sel = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
+      const side = sel?.dataset.side;
+      if (p1 && p2 && side) newRows.push({ type: 'solo', p1, p2, map, winner: side === '1' ? p1 : p2 });
+    } else {
+      const tt1 = [...row.querySelectorAll('.tg-t1-cb:checked')].map(cb => cb.value);
+      const tt2 = [...row.querySelectorAll('.tg-t2-cb:checked')].map(cb => cb.value);
+      const map = row.querySelector('.tg-map')?.value.trim() || '';
+      const sel = [...row.querySelectorAll('.wpick')].find(b => b.classList.contains('sel1') || b.classList.contains('sel2'));
+      const side = sel?.dataset.side;
+      if (tt1.length && tt2.length && side) newRows.push({ type: 'team', tt1, tt2, map, winSide: side });
+    }
   });
 
   const saveBtn = document.getElementById('editSaveBtn');
@@ -1344,24 +1359,46 @@ async function saveProLeagueEdit() {
     }).eq('id', m.id);
     if (hErr) throw hErr;
 
-    // 2. 기존 매치업 행 삭제
-    if (editingProRowIds.length) {
-      const { error: dErr } = await sb.from('matches').delete().in('id', editingProRowIds);
-      if (dErr) throw dErr;
+    const existingIds = [...editingProRowIds];
+    const updateCount = Math.min(existingIds.length, newRows.length);
+
+    // 2. 기존 매치업 행 in-place 업데이트 (seq 유지 → 순서 및 그룹핑 보존)
+    for (let i = 0; i < updateCount; i++) {
+      const r = newRows[i];
+      let upd = { match_date: date };
+      if (r.type === 'solo') {
+        upd = { ...upd, map: r.map, player1: r.p1, player2: r.p2, winner: r.winner,
+                team1: null, team2: null, winner_arr: null };
+      } else {
+        upd = { ...upd, map: r.map, team1: r.tt1, team2: r.tt2,
+                winner_arr: r.winSide === '1' ? r.tt1 : r.tt2,
+                player1: null, player2: null, winner: null };
+      }
+      const { error } = await sb.from('matches').update(upd).eq('id', existingIds[i]);
+      if (error) throw error;
     }
 
-    // 3. 새 매치업 행 삽입
-    if (newRows.length) {
+    // 3. 남는 기존 행 삭제 (매치업이 줄었을 때)
+    const toDelete = existingIds.slice(newRows.length);
+    if (toDelete.length) {
+      const { error } = await sb.from('matches').delete().in('id', toDelete);
+      if (error) throw error;
+    }
+
+    // 4. 새 행 삽입 (매치업이 늘었을 때)
+    const toAdd = newRows.slice(existingIds.length);
+    if (toAdd.length) {
       const nextSeq = await getNextSeq();
-      const toInsert = newRows.map((r, i) => {
+      const toInsert = toAdd.map((r, i) => {
+        const base = { match_date: date, created_by: currentUser.id, seq: nextSeq + i };
         if (r.type === 'solo') {
-          return { match_date: date, map: r.map, player1: r.p1, player2: r.p2, winner: r.winner, score: null, created_by: currentUser.id, seq: nextSeq + i };
+          return { ...base, map: r.map, player1: r.p1, player2: r.p2, winner: r.winner };
         } else {
-          return { match_date: date, map: r.map, team1: r.tt1, team2: r.tt2, winner_arr: r.winSide === '1' ? r.tt1 : r.tt2, score: null, created_by: currentUser.id, seq: nextSeq + i };
+          return { ...base, map: r.map, team1: r.tt1, team2: r.tt2, winner_arr: r.winSide === '1' ? r.tt1 : r.tt2 };
         }
       });
-      const { error: iErr } = await sb.from('matches').insert(toInsert);
-      if (iErr) throw iErr;
+      const { error } = await sb.from('matches').insert(toInsert);
+      if (error) throw error;
     }
 
     toast(`프로리그 라운드 수정 완료 (매치업 ${newRows.length}경기)`);
