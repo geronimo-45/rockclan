@@ -238,7 +238,8 @@
 <div id="adminSection" style="display:none">
   <div class="main-tabs">
     <button class="main-tab active" onclick="switchMainTab('match')">⚔️ 경기 입력</button>
-    <button class="main-tab" id="playerTab" onclick="switchMainTab('player')">👤 선수 관리</button>
+    <button class="main-tab" id="playerTab" onclick="switchMainTab('player')" style="display:none">👤 선수 관리</button>
+    <button class="main-tab" id="snapshotTab" onclick="switchMainTab('snapshot')" style="display:none">📸 시즌 스냅샷</button>
   </div>
 
   <!-- ══ 경기 입력 탭 ══ -->
@@ -397,8 +398,13 @@
         </div>
       </div>
 
-      <!-- 시즌 스냅샷 관리 (admin 전용) -->
-      <div class="card" id="seasonSnapshotCard" style="display:none">
+    </main>
+  </div>
+
+  <!-- ══ 시즌 스냅샷 탭 ══ -->
+  <div id="tab-snapshot" class="tab-content">
+    <main>
+      <div class="card">
         <h2>📸 시즌 스냅샷 관리</h2>
         <p style="font-size:.78rem;color:var(--muted);margin-bottom:12px">
           시즌 종료 후 해당 시즌의 최종 선수 티어를 저장합니다. Old Records에서 당시 티어 기준으로 정확한 랭킹이 표시됩니다.
@@ -466,17 +472,14 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 // ── 탭 전환 ──────────────────────────────────────────────────
 function switchMainTab(name) {
-  document.querySelectorAll('.main-tab').forEach((b, i) => b.classList.toggle('active', ['match','player'][i] === name));
+  document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById(name === 'match' ? null : name + 'Tab');
+  if (name === 'match') document.querySelector('.main-tab').classList.add('active');
+  else if (activeBtn) activeBtn.classList.add('active');
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'player') {
-    renderPlayerTable();
-    const card = document.getElementById('seasonSnapshotCard');
-    if (card && currentRole === 'admin') {
-      card.style.display = '';
-      initSnapshotUI();
-    }
-  }
+  if (name === 'player') renderPlayerTable();
+  if (name === 'snapshot') initSnapshotUI();
 }
 
 // ── 로그인 (ID 기반) ──────────────────────────────────────────
@@ -508,7 +511,8 @@ async function onLogin(user) {
   currentRole = roleRow.role;
   document.getElementById('userNick').textContent = roleRow.nickname || roleRow.login_id || 'admin';
   document.getElementById('roleTag').textContent  = currentRole === 'admin' ? '🛡 관리자' : '✏️ 에디터';
-  document.getElementById('playerTab').style.display = currentRole === 'admin' ? '' : 'none';
+  document.getElementById('playerTab').style.display    = currentRole === 'admin' ? '' : 'none';
+  document.getElementById('snapshotTab').style.display  = currentRole === 'admin' ? '' : 'none';
   document.getElementById('userInfo').style.display = 'flex';
   document.getElementById('loginSection').style.display  = 'none';
   document.getElementById('adminSection').style.display  = 'block';
