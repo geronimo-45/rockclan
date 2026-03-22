@@ -396,6 +396,25 @@
           </div>
         </div>
       </div>
+
+      <!-- 시즌 스냅샷 관리 (admin 전용) -->
+      <div class="card" id="seasonSnapshotCard" style="display:none">
+        <h2>📸 시즌 스냅샷 관리</h2>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:12px">
+          시즌 종료 후 해당 시즌의 최종 선수 티어를 저장합니다. Old Records에서 당시 티어 기준으로 정확한 랭킹이 표시됩니다.
+        </p>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px">
+          <div style="flex:1;min-width:160px">
+            <label class="field-label">시즌 선택</label>
+            <select id="snapshotSeasonSel" onchange="loadSeasonSnapshot()"></select>
+          </div>
+          <button class="btn-primary" onclick="bulkSaveSnapshot()" style="white-space:nowrap">현재 선수 상태로 일괄 저장</button>
+        </div>
+        <table class="player-table">
+          <thead><tr><th>ID</th><th>종족</th><th>티어</th><th></th></tr></thead>
+          <tbody id="snapshotTableBody"><tr><td colspan="4" style="color:var(--muted)">시즌을 선택하세요</td></tr></tbody>
+        </table>
+      </div>
     </main>
   </div>
 </div>
@@ -450,7 +469,14 @@ function switchMainTab(name) {
   document.querySelectorAll('.main-tab').forEach((b, i) => b.classList.toggle('active', ['match','player'][i] === name));
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'player') renderPlayerTable();
+  if (name === 'player') {
+    renderPlayerTable();
+    const card = document.getElementById('seasonSnapshotCard');
+    if (card && currentRole === 'admin') {
+      card.style.display = '';
+      initSnapshotUI();
+    }
+  }
 }
 
 // ── 로그인 (ID 기반) ──────────────────────────────────────────
@@ -1278,6 +1304,116 @@ async function saveProLeagueEdit() {
   }
 
   saveBtn.disabled = false; saveBtn.textContent = '저장';
+}
+
+// ── 시즌 정의 (index.html과 동일하게 유지) ───────────────────
+const SEASONS = [
+  { key:'2025',   label:'2025 시즌',    start:'2025-09-01', end:'2025-12-31' },
+  { key:'2026Q1', label:'2026 시즌 1Q', start:'2026-01-01', end:'2026-03-31' },
+  { key:'2026Q2', label:'2026 시즌 2Q', start:'2026-04-01', end:'2026-06-30' },
+  { key:'2026Q3', label:'2026 시즌 3Q', start:'2026-07-01', end:'2026-09-30' },
+  { key:'2026Q4', label:'2026 시즌 4Q', start:'2026-10-01', end:'2026-12-31' },
+];
+
+// ── 시즌 스냅샷 관리 ──────────────────────────────────────────
+function initSnapshotUI() {
+  const sel = document.getElementById('snapshotSeasonSel');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = SEASONS.map(s => `<option value="${esc(s.key)}">${esc(s.label)}</option>`).join('');
+  if (prev && SEASONS.some(s => s.key === prev)) sel.value = prev;
+  loadSeasonSnapshot();
+}
+
+async function loadSeasonSnapshot() {
+  const key = document.getElementById('snapshotSeasonSel')?.value;
+  if (!key) return;
+  const tbody = document.getElementById('snapshotTableBody');
+  tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted)">불러오는 중...</td></tr>';
+
+  const { data, error } = await sb.from('player_seasons').select('*')
+    .eq('season_key', key).order('player_id');
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger)">${esc(error.message)}</td></tr>`;
+    return;
+  }
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--muted)">
+      이 시즌의 스냅샷이 없습니다.<br>
+      <span style="font-size:.75rem">"현재 선수 상태로 일괄 저장" 버튼으로 생성하세요.</span>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(p => `
+    <tr data-snap="${esc(p.player_id)}">
+      <td><strong>${esc(p.player_id)}</strong></td>
+      <td>${esc(p.race || '-')}</td>
+      <td style="color:${tierColor(p.tier)}">${esc(p.tier)}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn-warn btn-sm" onclick="editSnapshotRow('${esc(p.player_id)}','${esc(key)}','${esc(p.tier)}','${esc(p.race||'')}')">수정</button>
+          <button class="btn-danger btn-sm" onclick="deleteSnapshotRow('${esc(p.player_id)}','${esc(key)}',this)">삭제</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function bulkSaveSnapshot() {
+  const key = document.getElementById('snapshotSeasonSel')?.value;
+  if (!key) return;
+  if (!playerList.length) { toast('선수 목록이 없습니다', true); return; }
+  const season = SEASONS.find(s => s.key === key);
+  const label = season ? season.label : key;
+  if (!confirm(`현재 선수 목록 전체 (${playerList.length}명)를\n"${label}" 스냅샷으로 저장합니다.\n이미 있는 항목은 덮어씁니다. 계속하시겠습니까?`)) return;
+
+  const rows = playerList.map(p => ({ player_id: p.id, season_key: key, tier: p.tier, race: p.race }));
+  const { error } = await sb.from('player_seasons').upsert(rows, { onConflict: 'player_id,season_key' });
+  if (error) { toast('저장 실패: ' + error.message, true); return; }
+  toast(`${rows.length}명 스냅샷 저장 완료`);
+  loadSeasonSnapshot();
+}
+
+function editSnapshotRow(id, seasonKey, currentTier, currentRace) {
+  const tr = document.querySelector(`tr[data-snap="${CSS.escape(id)}"]`);
+  if (!tr) return;
+  const raceOpts = ['Terran','Protoss','Zerg'].map(r =>
+    `<option${r === (currentRace || 'Protoss') ? ' selected' : ''}>${r}</option>`).join('');
+  const tierOpts = ['Stone','Bronze','Silver','Gold','Diamond','Legend'].map(t =>
+    `<option${t === currentTier ? ' selected' : ''}>${t}</option>`).join('');
+  const safeId = esc(id).replace(/'/g, "\\'");
+  const safeSeason = esc(seasonKey).replace(/'/g, "\\'");
+  tr.innerHTML = `
+    <td><strong>${esc(id)}</strong></td>
+    <td><select id="sp-race-${esc(id)}" style="padding:4px 6px;font-size:.82rem">${raceOpts}</select></td>
+    <td><select id="sp-tier-${esc(id)}" style="padding:4px 6px;font-size:.82rem">${tierOpts}</select></td>
+    <td>
+      <div style="display:flex;gap:4px">
+        <button class="btn-success btn-sm" onclick="saveSnapshotRow('${safeId}','${safeSeason}')">저장</button>
+        <button class="btn-ghost btn-sm" onclick="loadSeasonSnapshot()">취소</button>
+      </div>
+    </td>`;
+}
+
+async function saveSnapshotRow(id, seasonKey) {
+  const race = document.getElementById(`sp-race-${id}`)?.value;
+  const tier = document.getElementById(`sp-tier-${id}`)?.value;
+  const { error } = await sb.from('player_seasons')
+    .upsert({ player_id: id, season_key: seasonKey, tier, race }, { onConflict: 'player_id,season_key' });
+  if (error) { toast('수정 실패: ' + error.message, true); return; }
+  toast(`${id} 수정 완료`);
+  loadSeasonSnapshot();
+}
+
+async function deleteSnapshotRow(id, seasonKey, btn) {
+  if (!confirm(`'${id}'의 ${seasonKey} 스냅샷을 삭제하시겠습니까?`)) return;
+  btn.disabled = true;
+  const { error } = await sb.from('player_seasons').delete()
+    .eq('player_id', id).eq('season_key', seasonKey);
+  if (error) { toast('삭제 실패', true); btn.disabled = false; return; }
+  toast(`${id} 스냅샷 삭제 완료`);
+  loadSeasonSnapshot();
 }
 
 // ── 선수 관리 ─────────────────────────────────────────────────
