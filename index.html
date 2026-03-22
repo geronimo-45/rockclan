@@ -441,7 +441,10 @@
         };
       });
 
-      _cachedData = { players: playerRows, matches };
+      // 시즌별 선수 스냅샷 (Old Records 티어 복원용)
+      const { data: seasonRows } = await _sb.from('player_seasons').select('*');
+
+      _cachedData = { players: playerRows, matches, playerSeasons: seasonRows || [] };
       return _cachedData;
     }
     // ─────────────────────────────────────────────────────────────
@@ -495,58 +498,28 @@ const SEASONS = [
     // 🔹 시즌별 티어 스냅샷 (Old Records 전용)
     // 2025 시즌이 끝난 시점의 티어를 여기 기록해두면,
     // 나중에 data.json에서 티어를 바꿔도 Old Records(2025 시즌) 결과는 그대로 유지된다.
+    // 🔹 하드코딩 폴백 스냅샷 (DB player_seasons 테이블 데이터가 우선, 없으면 여기서 참조)
     const SEASON_TIER_SNAPSHOT = {
       '2025': {
-        'Attaboy': 'Diamond',
-        'Basic': 'Silver',
-        'Chan': 'Silver',
-        'DanielK': 'Silver',
-        'Essence': 'Bronze',
-        'Friend': 'Silver',
-        'Gdragon': 'Diamond',
-        'GgoMajin': 'Silver',
-        'Hani': 'Gold',
-        'Hyunho': 'Silver',
-        'IN': 'Gold',
-        'MGZG': 'Bronze',
-        'Macho': 'Diamond',
-        'MiSTY': 'Silver',
-        'Miny': 'Silver',
-        'Mukddak': 'Silver',
-        'Rocky': 'Silver',
-        'Rupark': 'Diamond',
-        'Shinny': 'Legend',
-        'Skidashi': 'Gold',
-        'Strive': 'Legend',
-        'Templar': 'Gold',
-        'Veeny': 'Gold',
-        'Winter': 'Gold',
-        'Yolo': 'Diamond',
-        'umi': 'Bronze',
-        'Zeze': 'Gold',
-        'coolguy': 'Silver',
-        'dong9': 'Diamond',
-        'dopamine': 'Diamond',
-        'dalsun2': 'Diamond',
-        'qooqoo': 'Silver',
-        'ToTo': 'Diamond',
-        'eun': 'Silver',
-        '5making': 'Gold',
-        'Jangbi': 'Silver',
-        'Pang': 'Gold',
-        'SunnySea': 'Diamond',
-        'JeJu': 'Diamond',
-        'Nangman': 'Gold',
-        'PE': 'Diamond',
-        'JoJo': 'Bronze'
+        'Attaboy': 'Diamond', 'Basic': 'Silver', 'Chan': 'Silver', 'DanielK': 'Silver',
+        'Essence': 'Bronze', 'Friend': 'Silver', 'Gdragon': 'Diamond', 'GgoMajin': 'Silver',
+        'Hani': 'Gold', 'Hyunho': 'Silver', 'IN': 'Gold', 'MGZG': 'Bronze',
+        'Macho': 'Diamond', 'MiSTY': 'Silver', 'Miny': 'Silver', 'Mukddak': 'Silver',
+        'Rocky': 'Silver', 'Rupark': 'Diamond', 'Shinny': 'Legend', 'Skidashi': 'Gold',
+        'Strive': 'Legend', 'Templar': 'Gold', 'Veeny': 'Gold', 'Winter': 'Gold',
+        'Yolo': 'Diamond', 'umi': 'Bronze', 'Zeze': 'Gold', 'coolguy': 'Silver',
+        'dong9': 'Diamond', 'dopamine': 'Diamond', 'dalsun2': 'Diamond', 'qooqoo': 'Silver',
+        'ToTo': 'Diamond', 'eun': 'Silver', '5making': 'Gold', 'Jangbi': 'Silver',
+        'Pang': 'Gold', 'SunnySea': 'Diamond', 'JeJu': 'Diamond', 'Nangman': 'Gold',
+        'PE': 'Diamond', 'JoJo': 'Bronze'
       }
-      // 나중에 2026 시즌1이 끝난 뒤에 스냅샷을 고정하고 싶으면
-      // 여기에 '2026Q1': { ... } 형태로 한 번 더 추가하면 됨.
     };
 
-    // 🔹 현재 시즌 설정 (지금은 2026 시즌 1Q)
-    const CURRENT_SEASON_KEY = '2026Q1';
-    const CURRENT_SEASON = SEASONS.find(s => s.key === CURRENT_SEASON_KEY) || SEASONS[0];
+    // 🔹 현재 시즌 자동 감지 (오늘 날짜가 속한 시즌)
+    const _today = new Date().toISOString().slice(0, 10);
+    const CURRENT_SEASON = SEASONS.find(s => _today >= s.start && _today <= s.end)
+      || (_today < SEASONS[0].start ? SEASONS[0] : SEASONS[SEASONS.length - 1]);
+    const CURRENT_SEASON_KEY = CURRENT_SEASON.key;
 
     // 🔹 탈퇴/숨김 ID
     const HIDE_IDS = new Set(['Wonder','ceta','sika']);
@@ -825,20 +798,26 @@ const SEASONS = [
 
         const seasonRankings = {};
 
+        // 🔹 DB player_seasons 데이터를 { season_key: { player_id: {tier, race} } } 형태로 변환
+        const seasonDbMap = {};
+        (data.playerSeasons || []).forEach(row => {
+          if (!seasonDbMap[row.season_key]) seasonDbMap[row.season_key] = {};
+          seasonDbMap[row.season_key][row.player_id] = { tier: row.tier, race: row.race };
+        });
+
         function computeSeasonRanking(season){
           const st = new Map();
 
-            // ✅ 이 시즌에 해당하는 티어 스냅샷 (없으면 빈 객체)
-          const seasonTierMap = SEASON_TIER_SNAPSHOT[season.key] || {};
+          // DB 스냅샷 우선, 없으면 하드코딩 폴백
+          const dbSnap = seasonDbMap[season.key] || {};
           const ensureS = (id)=>{
             if (st.has(id)) return st.get(id);
-          const m = playersMeta.get(id) || {};
-            
-    // 스냅샷에 값이 있으면 그 티어를 우선 사용,
-    // 없으면 현재 data.json의 tier 사용 (예: 새로 합류한 사람 등)
-            const snapshotTier = seasonTierMap[id];
-            const tier = snapshotTier || m.tier || 'Silver';
-            const o = { id, elo:1000, tier, race:m.race || 'Protoss', win:0, loss:0, played:0 };
+            const m = playersMeta.get(id) || {};
+            const snap = dbSnap[id];
+            // DB 스냅샷 → 하드코딩 폴백 → 현재 tier 순으로 참조
+            const tier = snap?.tier || SEASON_TIER_SNAPSHOT[season.key]?.[id] || m.tier || 'Silver';
+            const race = snap?.race || m.race || 'Protoss';
+            const o = { id, elo:1000, tier, race, win:0, loss:0, played:0 };
             st.set(id, o);
             return o;
           };
