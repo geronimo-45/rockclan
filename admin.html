@@ -166,6 +166,17 @@
     .player-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
     .player-table th, .player-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
     .player-table th { color: var(--muted); font-size: .75rem; }
+
+    /* 맵 관리 */
+    .map-list { display: flex; flex-direction: column; gap: 6px; }
+    .map-item {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px;
+    }
+    .map-item .map-name { flex: 1; font-size: .88rem; }
+    .map-item .map-order { color: var(--muted); font-size: .75rem; width: 28px; text-align: center; }
+    .add-map-form { display: flex; gap: 8px; align-items: end; margin-top: 14px; }
+    .add-map-form input { flex: 1; }
     .add-player-form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: end; margin-top: 14px; }
     .add-player-form label { font-size: .78rem; color: var(--muted); display: block; margin-bottom: 4px; }
 
@@ -240,6 +251,7 @@
     <button class="main-tab active" onclick="switchMainTab('match')">⚔️ 경기 입력</button>
     <button class="main-tab" id="playerTab" onclick="switchMainTab('player')" style="display:none">👤 선수 관리</button>
     <button class="main-tab" id="snapshotTab" onclick="switchMainTab('snapshot')" style="display:none">📸 시즌 스냅샷</button>
+    <button class="main-tab" id="mapTab" onclick="switchMainTab('map')" style="display:none">🗺 시즌맵지정</button>
   </div>
 
   <!-- ══ 경기 입력 탭 ══ -->
@@ -401,6 +413,28 @@
     </main>
   </div>
 
+  <!-- ══ 시즌맵지정 탭 ══ -->
+  <div id="tab-map" class="tab-content">
+    <main>
+      <div class="card">
+        <h2>🗺 시즌 맵 관리</h2>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:12px">
+          경기 입력 시 맵 드롭다운에 표시될 맵 목록을 관리합니다. 추가/삭제/순서 변경이 가능합니다.
+        </p>
+        <div class="map-list" id="mapList">
+          <p style="color:var(--muted);font-size:.83rem">불러오는 중...</p>
+        </div>
+        <div class="add-map-form">
+          <div style="flex:1">
+            <label class="field-label">맵 이름</label>
+            <input type="text" id="newMapName" placeholder="새 맵 이름 입력" onkeydown="if(event.key==='Enter')addSeasonMap()" />
+          </div>
+          <button class="btn-primary" onclick="addSeasonMap()" style="white-space:nowrap">+ 맵 추가</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
   <!-- ══ 시즌 스냅샷 탭 ══ -->
   <div id="tab-snapshot" class="tab-content">
     <main>
@@ -445,7 +479,7 @@ const SUPABASE_URL      = 'https://ugrvylgrkwjtyekpznau.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVncnZ5bGdya3dqdHlla3B6bmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MDgxNDMsImV4cCI6MjA4ODM4NDE0M30.tIBkee7X97IDuBQQg8ugwOrLsW2RzCRoqM-CNEnR4Ao';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentUser = null, currentRole = null, playerList = [];
+let currentUser = null, currentRole = null, playerList = [], seasonMaps = [];
 let currentMode = 'round';
 let t1 = [], t2 = [];
 let teamWinner = null;
@@ -480,6 +514,7 @@ function switchMainTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
   if (name === 'player') renderPlayerTable();
   if (name === 'snapshot') initSnapshotUI();
+  if (name === 'map') renderMapList();
 }
 
 // ── 로그인 (ID 기반) ──────────────────────────────────────────
@@ -513,10 +548,12 @@ async function onLogin(user) {
   document.getElementById('roleTag').textContent  = currentRole === 'admin' ? '🛡 관리자' : '✏️ 에디터';
   document.getElementById('playerTab').style.display    = currentRole === 'admin' ? '' : 'none';
   document.getElementById('snapshotTab').style.display  = currentRole === 'admin' ? '' : 'none';
+  document.getElementById('mapTab').style.display       = '';
   document.getElementById('userInfo').style.display = 'flex';
   document.getElementById('loginSection').style.display  = 'none';
   document.getElementById('adminSection').style.display  = 'block';
   await loadPlayers();
+  await loadSeasonMaps();
   setMode('round');
   buildTeamInputs();
   await loadRecent();
@@ -655,7 +692,7 @@ function addMatchup(defaultP1 = '', defaultP2 = '') {
     <select class="mp1" onchange="updateWpickLabels(this.closest('.matchup-row'))">${t1Opts}</select>
     <div class="vs">vs</div>
     <select class="mp2" onchange="updateWpickLabels(this.closest('.matchup-row'))">${t2Opts}</select>
-    <input type="text" class="mpmap" placeholder="맵" style="font-size:.78rem;padding:5px 7px" />
+    <select class="mpmap" style="font-size:.78rem;padding:5px 7px">${mapSelectOpts()}</select>
     <div class="winner-pick">
       <button class="wpick" onclick="pickWinner(this,'1')">${esc(defaultP1) || '팀1'}</button>
       <button class="wpick" onclick="pickWinner(this,'2')">${esc(defaultP2) || '팀2'}</button>
@@ -684,7 +721,7 @@ function addTeamGame() {
     <div class="tg-checks">${t1checks}</div>
     <div class="tg-label">vs</div>
     <div class="tg-checks">${t2checks}</div>
-    <input type="text" class="tg-map" placeholder="맵" style="font-size:.78rem;padding:5px 7px" />
+    <select class="tg-map" style="font-size:.78rem;padding:5px 7px">${mapSelectOpts()}</select>
     <div class="winner-pick">
       <button class="wpick" onclick="pickWinner(this,'1')">팀1</button>
       <button class="wpick" onclick="pickWinner(this,'2')">팀2</button>
@@ -1133,7 +1170,7 @@ function addEditMatchup(defaultP1 = '', defaultP2 = '', defaultMap = '', winner 
     <select class="mp1" onchange="updateEditWpickLabels(this.closest('.matchup-row'))">${t1Opts}</select>
     <div class="vs">vs</div>
     <select class="mp2" onchange="updateEditWpickLabels(this.closest('.matchup-row'))">${t2Opts}</select>
-    <input type="text" class="mpmap" placeholder="맵" value="${esc(defaultMap)}" style="font-size:.78rem;padding:5px 7px" />
+    <select class="mpmap" style="font-size:.78rem;padding:5px 7px">${mapSelectOpts(defaultMap)}</select>
     <div class="winner-pick">
       <button class="wpick" onclick="pickEditWinner(this,'1')">${esc(defaultP1) || '팀1'}</button>
       <button class="wpick" onclick="pickEditWinner(this,'2')">${esc(defaultP2) || '팀2'}</button>
@@ -1168,7 +1205,7 @@ function addEditTeamGame(t1arr = [], t2arr = [], defaultMap = '', winnerArr = []
     <div class="tg-checks">${t1checks}</div>
     <div class="tg-label">vs</div>
     <div class="tg-checks">${t2checks}</div>
-    <input type="text" class="tg-map" placeholder="맵" value="${esc(defaultMap)}" style="font-size:.78rem;padding:5px 7px" />
+    <select class="tg-map" style="font-size:.78rem;padding:5px 7px">${mapSelectOpts(defaultMap)}</select>
     <div class="winner-pick">
       <button class="wpick${winSide === '1' ? ' sel1' : ''}" onclick="pickEditWinner(this,'1')" ${winSide === '1' ? 'data-side="1"' : ''}>팀1</button>
       <button class="wpick${winSide === '2' ? ' sel2' : ''}" onclick="pickEditWinner(this,'2')" ${winSide === '2' ? 'data-side="2"' : ''}>팀2</button>
@@ -1418,6 +1455,110 @@ async function deleteSnapshotRow(id, seasonKey, btn) {
   if (error) { toast('삭제 실패', true); btn.disabled = false; return; }
   toast(`${id} 스냅샷 삭제 완료`);
   loadSeasonSnapshot();
+}
+
+// ── 시즌 맵 관리 ──────────────────────────────────────────────
+async function loadSeasonMaps() {
+  const { data, error } = await sb.from('season_maps').select('*').order('sort_order').order('map_name');
+  seasonMaps = (data || []).map(r => r.map_name);
+}
+
+function mapSelectOpts(selected = '') {
+  let extra = '';
+  if (selected && !seasonMaps.includes(selected)) {
+    extra = `<option value="${esc(selected)}" selected>${esc(selected)}</option>`;
+  }
+  return '<option value="">-- 맵 선택 --</option>' + extra +
+    seasonMaps.map(m => `<option value="${esc(m)}"${m === selected ? ' selected' : ''}>${esc(m)}</option>`).join('');
+}
+
+async function renderMapList() {
+  const el = document.getElementById('mapList');
+  el.innerHTML = '<p style="color:var(--muted);font-size:.83rem">불러오는 중...</p>';
+  const { data, error } = await sb.from('season_maps').select('*').order('sort_order').order('map_name');
+  if (error) { el.innerHTML = `<p style="color:var(--danger);font-size:.83rem">${esc(error.message)}</p>`; return; }
+  seasonMaps = (data || []).map(r => r.map_name);
+  if (!data.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.83rem">등록된 맵이 없습니다.</p>'; return; }
+  el.innerHTML = data.map((m, i) => `
+    <div class="map-item" data-map-id="${m.id}">
+      <div class="map-order">${i + 1}</div>
+      <div class="order-btns" style="flex-direction:row;gap:3px">
+        <button class="order-btn" onclick="moveMap(${m.id},-1)" title="위로">▲</button>
+        <button class="order-btn" onclick="moveMap(${m.id},1)" title="아래로">▼</button>
+      </div>
+      <div class="map-name" id="mapName-${m.id}">${esc(m.map_name)}</div>
+      <button class="btn-warn btn-sm" onclick="editMapRow(${m.id},'${esc(m.map_name).replace(/'/g,"\\'")}')">수정</button>
+      <button class="btn-danger btn-sm" onclick="deleteMap(${m.id},'${esc(m.map_name).replace(/'/g,"\\'")}',this)">삭제</button>
+    </div>`).join('');
+}
+
+async function addSeasonMap() {
+  const input = document.getElementById('newMapName');
+  const name = input.value.trim();
+  if (!name) { toast('맵 이름을 입력하세요', true); return; }
+  const maxOrder = seasonMaps.length;
+  const { error } = await sb.from('season_maps').insert({ map_name: name, sort_order: maxOrder + 1 });
+  if (error) {
+    toast('추가 실패: ' + (error.message.includes('duplicate') ? '이미 존재하는 맵입니다' : error.message), true);
+    return;
+  }
+  input.value = '';
+  toast(`${name} 맵 추가 완료`);
+  await loadSeasonMaps();
+  renderMapList();
+}
+
+function editMapRow(id, currentName) {
+  const nameEl = document.getElementById('mapName-' + id);
+  if (!nameEl) return;
+  const item = nameEl.closest('.map-item');
+  const warnBtn = item.querySelector('.btn-warn');
+  const dangerBtn = item.querySelector('.btn-danger');
+  nameEl.innerHTML = `<input type="text" id="editMapInput-${id}" value="${esc(currentName)}" style="width:100%" onkeydown="if(event.key==='Enter')saveMapEdit(${id})" />`;
+  warnBtn.textContent = '저장';
+  warnBtn.className = 'btn-success btn-sm';
+  warnBtn.onclick = () => saveMapEdit(id);
+  dangerBtn.textContent = '취소';
+  dangerBtn.className = 'btn-ghost btn-sm';
+  dangerBtn.onclick = () => renderMapList();
+}
+
+async function saveMapEdit(id) {
+  const input = document.getElementById('editMapInput-' + id);
+  if (!input) return;
+  const name = input.value.trim();
+  if (!name) { toast('맵 이름을 입력하세요', true); return; }
+  const { error } = await sb.from('season_maps').update({ map_name: name }).eq('id', id);
+  if (error) {
+    toast('수정 실패: ' + (error.message.includes('duplicate') ? '이미 존재하는 맵입니다' : error.message), true);
+    return;
+  }
+  toast(`맵 이름 수정 완료`);
+  await loadSeasonMaps();
+  renderMapList();
+}
+
+async function deleteMap(id, name, btn) {
+  if (!confirm(`'${name}' 맵을 삭제하시겠습니까?`)) return;
+  btn.disabled = true;
+  const { error } = await sb.from('season_maps').delete().eq('id', id);
+  if (error) { toast('삭제 실패', true); btn.disabled = false; return; }
+  toast(`${name} 삭제 완료`);
+  await loadSeasonMaps();
+  renderMapList();
+}
+
+async function moveMap(id, dir) {
+  const { data } = await sb.from('season_maps').select('*').order('sort_order').order('map_name');
+  if (!data) return;
+  const idx = data.findIndex(m => m.id === id);
+  const swapIdx = idx + dir;
+  if (swapIdx < 0 || swapIdx >= data.length) return;
+  const a = data[idx], b = data[swapIdx];
+  await sb.from('season_maps').update({ sort_order: b.sort_order }).eq('id', a.id);
+  await sb.from('season_maps').update({ sort_order: a.sort_order }).eq('id', b.id);
+  await loadSeasonMaps();
+  renderMapList();
 }
 
 // ── 선수 관리 ─────────────────────────────────────────────────
