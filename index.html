@@ -858,8 +858,9 @@ const SEASONS = [
           seasonRankings[s.key] = computeSeasonRanking(s);
         });
 
+        const lastIdx = archivedSeasons.length - 1;
         tabsEl.innerHTML = archivedSeasons.map((s,i)=>`
-          <button class="old-season-tab ${i===0?'active':''}"
+          <button class="old-season-tab ${i===lastIdx?'active':''}"
             data-season="${s.key}"
             style="background:#1a1a22;border:1px solid #232532;color:#ddd;padding:8px 12px;border-radius:10px;cursor:pointer;">
             ${escapeHtml(s.label)}
@@ -918,8 +919,8 @@ const SEASONS = [
           `;
         }
 
-        // 초기 표시 (첫 시즌)
-        renderSeason(archivedSeasons[0].key);
+        // 초기 표시 (가장 최신 시즌)
+        renderSeason(archivedSeasons[lastIdx].key);
 
         tabsEl.addEventListener('click', e=>{
           const btn = e.target.closest('.old-season-tab');
