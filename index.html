@@ -522,7 +522,7 @@ const SEASONS = [
     const CURRENT_SEASON_KEY = CURRENT_SEASON.key;
 
     // 🔹 탈퇴/숨김 ID
-    const HIDE_IDS = new Set(['Wonder','ceta','sika']);
+    const HIDE_IDS = new Set(['Wonder','ceta','sika','Shinny']);
 
     const isInSeason = (match, season)=>{
       if(!season) return false;
@@ -1060,7 +1060,7 @@ if(round && round !== curRound){
 
       if(!$p1 || !$p2 || !$btn || !$out) return;
 
-      const HIDE = new Set(['Wonder','ceta','sika']);
+      const HIDE = new Set(['Wonder','ceta','sika','Shinny']);
 
       const ids = [...new Set([
         ...(data.players||[]).map(p=>p.id),
@@ -1651,7 +1651,7 @@ if (selectedSet.size === allPlayers.length) {
       const container=document.getElementById('elo-chart-container');
       if(!container) return;
 
-      const HIDE = new Set(['Wonder', 'ceta','sika']);
+      const HIDE = new Set(['Wonder', 'ceta','sika','Shinny']);
 
       container.innerHTML = `
         <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
