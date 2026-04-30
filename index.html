@@ -650,7 +650,8 @@ const SEASONS = [
           }
         }
 
-        let rows = [...stat.values()].filter(p => !HIDE_IDS.has(p.id));
+        // 탈퇴(삭제)된 선수: players 테이블에 없으면 랭킹에서 제외
+        let rows = [...stat.values()].filter(p => !HIDE_IDS.has(p.id) && playersMeta.has(p.id));
 
         if(mode==='pro'){
           // 프로리그: 득실(승-패) 우선 정렬 → 승수 → 패수(적을수록) → ID
@@ -849,8 +850,9 @@ const SEASONS = [
             }
           }
 
+          // 탈퇴(삭제)된 선수: players 테이블에도 없고 시즌 스냅샷에도 없으면 제외
           return [...st.values()]
-            .filter(p=>!HIDE_IDS.has(p.id))
+            .filter(p=>!HIDE_IDS.has(p.id) && (playersMeta.has(p.id) || dbSnap[p.id] || (SEASON_TIER_SNAPSHOT[season.key] && SEASON_TIER_SNAPSHOT[season.key][p.id])))
             .sort((a,b)=>b.elo-a.elo);
         }
 
@@ -1062,17 +1064,9 @@ if(round && round !== curRound){
 
       const HIDE = new Set(['Wonder','ceta','sika']);
 
-      const ids = [...new Set([
-        ...(data.players||[]).map(p=>p.id),
-        ...matches.flatMap(m=>{
-          const a=[];
-          if(m.player1) a.push(m.player1);
-          if(m.player2) a.push(m.player2);
-          if(Array.isArray(m.team1)) a.push(...m.team1);
-          if(Array.isArray(m.team2)) a.push(...m.team2);
-          return a;
-        })
-      ])].filter(Boolean).filter(id=>!HIDE.has(id)).sort((a,b)=>a.localeCompare(b));
+      // 탈퇴(삭제)된 선수는 검색 대상에서 제외 - players 테이블 기준으로만 ID 수집
+      const ids = [...new Set((data.players||[]).map(p=>p.id))]
+        .filter(Boolean).filter(id=>!HIDE.has(id)).sort((a,b)=>a.localeCompare(b));
 
       function fillSelectOptions(){
         const prev1 = $p1.value || '';
