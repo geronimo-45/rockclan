@@ -146,6 +146,56 @@
 .tier-matrix .cell-muted { color: var(--muted); font-size:12px; }
 
 
+/* ──────────────────────────────────────────────
+   📱 모바일 전용 레이아웃 (≤640px)
+   - 데스크톱(웹) 화면에는 전혀 영향을 주지 않습니다.
+   ────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  html, body { overflow-x: hidden; }
+
+  /* 헤더 축소 */
+  header { padding: 14px 12px; }
+  header h1 { font-size: 20px; }
+  header .sub { font-size: 11px; line-height: 1.5; }
+
+  /* 내비게이션 탭: 줄바꿈 + 작은 버튼 */
+  nav { flex-wrap: wrap; gap: 6px; padding: 8px 6px; }
+  nav button { padding: 7px 10px; font-size: 12px; border-radius: 8px; }
+
+  /* 본문 여백 축소 */
+  main { margin: 12px auto; padding: 0 8px; }
+  .card { padding: 10px; border-radius: 10px; }
+  .card h2 { font-size: 17px; }
+
+  /* 표: 글자/여백 축소로 화면 안에 맞춤 */
+  table { font-size: 12px; }
+  th, td { padding: 6px 4px; }
+  th { font-size: 10px; }
+  .old-records-table th,
+  .old-records-table td { font-size: 12px; }
+  #elo-info table td,
+  #elo-info table th { padding: 4px 3px !important; font-size: 11px !important; }
+
+  /* 필터/검색 입력: 세로로 한 줄씩 정렬 */
+  .filters { gap: 6px; }
+  .filters > * { flex: 1 1 100%; }
+
+  /* 기록실 경기 항목: 긴 글자 줄바꿈 */
+  .match { padding: 8px; }
+  .match-header { font-size: 14px; }
+  .match-item { font-size: 13px; word-break: break-word; }
+
+  /* 차트 캔버스가 넘치지 않도록 */
+  canvas { max-width: 100%; height: auto; }
+
+  /* 플레이어 히스토리 팝업 */
+  .modal { padding-top: 30px !important; }
+  .modal-content { width: 94% !important; padding: 14px !important; }
+
+  /* 가로 스크롤이 필요한 매트릭스는 스크롤 허용 */
+  #tierSoloMatrix { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
   </style>
 </head>
 
