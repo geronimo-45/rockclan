@@ -158,6 +158,10 @@
   header h1 { font-size: 20px; }
   header .sub { font-size: 11px; line-height: 1.5; }
 
+  /* 헤더 설명도 상단 탭과 동일하게 4 + 2 줄로 분리 */
+  .sub-sep { display: none; }
+  .sub-grp { display: block; }
+
   /* 내비게이션 탭: 줄바꿈 + 작은 버튼 */
   nav { flex-wrap: wrap; gap: 6px; padding: 8px 6px; }
   nav button { padding: 7px 10px; font-size: 12px; border-radius: 8px; }
@@ -202,7 +206,7 @@
 <body>
   <header>
     <h1>RockClan Records</h1>
-    <div class="sub">클랜원 랭킹 • 기록실 • Old Records • ELO 시스템 설명 • 상대 전적 조회 • 티어별 개인전 통계</div>
+    <div class="sub"><span class="sub-grp">클랜원 랭킹 • 기록실 • Old Records • ELO 시스템 설명</span><span class="sub-sep"> • </span><span class="sub-grp">상대 전적 조회 • 티어별 개인전 통계</span></div>
   </header>
 
   <nav>
