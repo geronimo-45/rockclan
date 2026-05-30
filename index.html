@@ -147,6 +147,64 @@
 
 
 /* ──────────────────────────────────────────────
+   🔹 모달 종합 분석 패널 (개인전)
+   ────────────────────────────────────────────── */
+.mp{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px;margin:14px 0}
+.mp-title{color:#ffb347;font-weight:700;font-size:14px;margin:0 0 14px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.mp-title small{color:var(--muted);font-weight:400;font-size:11px}
+.mp-section{margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed rgba(255,255,255,0.06)}
+.mp-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.mp-h{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:600;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.mp-h .meta{text-transform:none;letter-spacing:0;font-size:11px}
+.mp-stream{display:flex;gap:4px;margin:6px 0;flex-wrap:wrap;align-items:center}
+.mp-pill{width:26px;height:26px;border-radius:6px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.mp-pill.w{background:rgba(74,222,128,0.2);color:#4ade80;border:1px solid rgba(74,222,128,0.4)}
+.mp-pill.l{background:rgba(248,113,113,0.2);color:#f87171;border:1px solid rgba(248,113,113,0.4)}
+.mp-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+.mp-stat{background:rgba(255,255,255,0.03);border-radius:6px;padding:8px 10px;text-align:center;border:1px solid rgba(255,255,255,0.05)}
+.mp-stat .v{font-size:18px;font-weight:700;color:#ffb347;line-height:1.2}
+.mp-stat .k{font-size:11px;color:var(--muted);margin-top:2px}
+.mp-stat.hot .v{color:#4ade80}
+.mp-tier{display:grid;grid-template-columns:78px 1fr 110px;align-items:center;gap:10px;margin:6px 0;font-size:13px}
+.mp-tier-name{font-weight:700;font-size:13px}
+.mp-bar{height:18px;background:rgba(255,255,255,0.05);border-radius:5px;overflow:hidden;position:relative}
+.mp-bar-fill{height:100%;background:linear-gradient(90deg,#4ade80,#22c55e);border-radius:5px}
+.mp-bar-fill.low{background:linear-gradient(90deg,#f87171,#ef4444)}
+.mp-bar-fill.mid{background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+.mp-bar-label{position:absolute;top:0;left:8px;line-height:18px;font-size:11px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);font-weight:600}
+.mp-tier-stat{text-align:right;font-size:12px;color:#ddd;font-variant-numeric:tabular-nums}
+.mp-summary{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:#ccc;flex-wrap:wrap}
+.mp-badge{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,106,0,0.15);color:#ffb347;font-size:12px;font-weight:600;border:1px solid rgba(255,106,0,0.3)}
+.mp-w{color:#4ade80}.mp-l{color:#f87171}
+.mp-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mp-col-h{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-weight:600}
+.mp-rival{display:grid;grid-template-columns:22px 1fr 70px;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+.mp-rival:last-child{border-bottom:none}
+.mp-rank{width:20px;height:20px;border-radius:5px;background:rgba(255,106,0,0.15);color:#ffb347;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,106,0,0.3)}
+.mp-rid{font-weight:600;color:#eee;font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.mp-rid small{color:var(--muted);font-weight:400;font-size:10px;display:block;margin-top:1px}
+.mp-rwl{font-size:11px;font-variant-numeric:tabular-nums;text-align:right}
+.mp-rwl .mp-w,.mp-rwl .mp-l{font-weight:700}
+.mp-map{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 8px;background:rgba(255,255,255,0.02);border-radius:5px;margin-bottom:4px;border:1px solid rgba(255,255,255,0.04)}
+.mp-map .name{color:#eee;font-weight:500}
+.mp-map .stats{font-variant-numeric:tabular-nums;font-size:11px}
+.mp-map.strong::before{content:"✓";color:#4ade80;margin-right:4px;font-weight:700}
+.mp-map.weak::before{content:"✗";color:#f87171;margin-right:4px;font-weight:700}
+.mp-toggle{text-align:center;padding:8px;margin-top:8px;cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;background:rgba(255,255,255,0.02);border-radius:6px;border:1px solid rgba(255,255,255,0.06);user-select:none;transition:background .15s,color .15s}
+.mp-toggle:hover{background:rgba(255,255,255,0.05);color:#ffb347}
+.mp-history-more{display:none}
+.mp-history-more.open{display:block}
+@media (max-width: 640px){
+  .mp-2col{grid-template-columns:1fr;gap:12px}
+  .mp-stats{gap:6px}
+  .mp-stat{padding:6px 4px}
+  .mp-stat .v{font-size:15px}
+  .mp-tier{grid-template-columns:60px 1fr 84px;gap:6px;font-size:12px}
+  .mp-tier-name{font-size:12px}
+  .mp-pill{width:22px;height:22px;font-size:11px}
+}
+
+/* ──────────────────────────────────────────────
    📱 모바일 전용 레이아웃 (≤640px)
    - 데스크톱(웹) 화면에는 전혀 영향을 주지 않습니다.
    ────────────────────────────────────────────── */
@@ -225,6 +283,7 @@
       <h2 id="modalPlayerName" style="color:#ff6a00;margin-top:0;"></h2>
       <div id="modalPlayerInfo" style="font-size:14px;margin-bottom:12px;color:#ccc;"></div>
       <canvas id="modalEloChart" width="600" height="250" style="background:#111;border-radius:8px;margin-bottom:16px;"></canvas>
+      <div id="modalPanel"></div>
       <div id="modalMatchHistory" style="font-size:14px;color:#ddd;"></div>
     </div>
   </div>
@@ -1874,7 +1933,17 @@ async function showPlayerModal(playerId, seasonKey=CURRENT_SEASON_KEY){
         let proWin=0, proLoss=0;
         const proLog = [];
 
-        for (const m of base.matches || []) {
+        // ✅ 종합 분석(개인전 1:1, 생컨·헌터 제외) 집계
+        const soloPureLog = [];   // 시간순 (date asc) {date, isWin, oppId}
+        const tierBuckets = { Stone:{w:0,l:0}, Bronze:{w:0,l:0}, Silver:{w:0,l:0}, Gold:{w:0,l:0}, Diamond:{w:0,l:0}, Legend:{w:0,l:0} };
+        let oppEloSum = 0, oppEloCount = 0;
+        const rivalMap = new Map();
+        const mapBuckets = new Map();
+
+        // 시간순 정렬된 사본 (스트림/연승 계산용)
+        const sortedAll = (base.matches || []).slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
+
+        for (const m of sortedAll) {
           if (!isInSeason(m, season)) continue; // ✅ 선택된 시즌(현재/Old Records 모두) 기준으로 스킵
 
           const isSolo = !!(m.player1 && m.player2);
@@ -1906,6 +1975,35 @@ async function showPlayerModal(playerId, seasonKey=CURRENT_SEASON_KEY){
             isWin ? soloWin++ : soloLoss++;
             if (isSC) (isWin ? scWin++ : scLoss++);
             if (isHT) (isWin ? htWin++ : htLoss++);
+
+            // ✅ 1:1 개인전 (생컨·헌터 제외)만 종합 분석에 반영
+            if (!isSC && !isHT) {
+              const oppId = (m.player1 === playerId) ? m.player2 : m.player1;
+              const oppStat = stat.get(oppId);
+
+              soloPureLog.push({ date: m.date||'', isWin, oppId });
+
+              const oppTier = (oppStat && oppStat.tier)
+                ? oppStat.tier
+                : (seasonTierMap[oppId] || ((base.players||[]).find(p=>p.id===oppId)||{}).tier || 'Silver');
+              if (tierBuckets[oppTier]) {
+                isWin ? tierBuckets[oppTier].w++ : tierBuckets[oppTier].l++;
+              }
+
+              if (oppStat && Number.isFinite(oppStat.elo)) {
+                oppEloSum += oppStat.elo;
+                oppEloCount++;
+              }
+
+              const rk = rivalMap.get(oppId) || { w:0, l:0 };
+              isWin ? rk.w++ : rk.l++;
+              rivalMap.set(oppId, rk);
+
+              const mapName = m.map || '-';
+              const mk = mapBuckets.get(mapName) || { w:0, l:0 };
+              isWin ? mk.w++ : mk.l++;
+              mapBuckets.set(mapName, mk);
+            }
           }
 
           if (isTeam && ((m.team1||[]).includes(playerId) || (m.team2||[]).includes(playerId))) {
@@ -1948,6 +2046,133 @@ async function showPlayerModal(playerId, seasonKey=CURRENT_SEASON_KEY){
           </div>
         `;
 
+        // ✅ 종합 분석 패널 (개인전 1:1)
+        const panelEl = document.getElementById('modalPanel');
+        if (panelEl) {
+          if (soloPureLog.length === 0) {
+            panelEl.innerHTML = '';
+          } else {
+            const total11 = soloPureLog.length;
+
+            // 최근 10경기 + 현재/시즌 최다 연승
+            const recent10 = soloPureLog.slice(-10);
+            const recentW = recent10.filter(g=>g.isWin).length;
+            const recentL = recent10.length - recentW;
+            let currentStreak = 0;
+            for (let i = soloPureLog.length - 1; i >= 0; i--) {
+              if (soloPureLog[i].isWin) currentStreak++; else break;
+            }
+            let maxStreak = 0, _cur = 0;
+            for (const g of soloPureLog) {
+              if (g.isWin) { _cur++; if (_cur > maxStreak) maxStreak = _cur; } else _cur = 0;
+            }
+
+            // 티어 매트릭스
+            const tierOrderDesc = ['Legend','Diamond','Gold','Silver','Bronze','Stone'];
+            const tierClass = { Stone:'tier-Stone', Bronze:'tier-Bronze', Silver:'tier-Silver', Gold:'tier-Gold', Diamond:'tier-Diamond', Legend:'tier-Legend' };
+            const tierRowsHtml = tierOrderDesc.map(t => {
+              const c = tierBuckets[t] || {w:0,l:0};
+              const tot = c.w + c.l;
+              if (tot === 0) {
+                return `<div class="mp-tier">
+                  <span class="mp-tier-name ${tierClass[t]}">${t}</span>
+                  <div class="mp-bar"><span class="mp-bar-label" style="color:#666">—</span></div>
+                  <span class="mp-tier-stat" style="color:#666">전적 없음</span>
+                </div>`;
+              }
+              const rate = c.w / tot;
+              const pct = Math.round(rate * 100);
+              const cls = rate >= 0.70 ? '' : (rate >= 0.40 ? 'mid' : 'low');
+              return `<div class="mp-tier">
+                <span class="mp-tier-name ${tierClass[t]}">${t}</span>
+                <div class="mp-bar"><div class="mp-bar-fill ${cls}" style="width:${pct}%"></div><span class="mp-bar-label">${pct}%</span></div>
+                <span class="mp-tier-stat"><b class="mp-w">${c.w}승</b> <b class="mp-l">${c.l}패</b></span>
+              </div>`;
+            }).join('');
+
+            // 강자 사냥꾼 배지 (상위 티어 5경기 이상 & 승률 60%+)
+            const topW = (tierBuckets.Diamond?.w||0) + (tierBuckets.Legend?.w||0);
+            const topL = (tierBuckets.Diamond?.l||0) + (tierBuckets.Legend?.l||0);
+            const topTot = topW + topL;
+            const topRate = topTot ? Math.round((topW/topTot)*100) : 0;
+            const showHunter = topTot >= 5 && (topW/topTot) >= 0.60;
+
+            // 평균 상대 ELO
+            const avgOppElo = oppEloCount > 0 ? Math.round(oppEloSum / oppEloCount) : null;
+
+            // 라이벌 Top 3
+            const rivals = [...rivalMap.entries()]
+              .map(([id, c]) => {
+                const meta = (base.players||[]).find(p=>p.id===id) || {};
+                const oppSeasonTier = seasonTierMap[id] || meta.tier || 'Silver';
+                const oppStat = stat.get(id);
+                return { id, w:c.w, l:c.l, total:c.w+c.l, race:meta.race||'-', tier:oppSeasonTier, elo:oppStat?Math.round(oppStat.elo):null };
+              })
+              .sort((a,b) => b.total - a.total || b.w - a.w)
+              .slice(0, 3);
+
+            const rivalsHtml = rivals.length ? rivals.map((r,i)=>`
+              <div class="mp-rival">
+                <span class="mp-rank">${i+1}</span>
+                <span class="mp-rid">${escapeHtml(r.id)}<small>${escapeHtml(r.race)} · <span class="${tierClass[r.tier]||''}">${escapeHtml(r.tier)}</span>${r.elo?(' · ELO '+r.elo):''}</small></span>
+                <span class="mp-rwl"><span class="mp-w">${r.w}승</span> <span class="mp-l">${r.l}패</span></span>
+              </div>
+            `).join('') : '<div style="color:#666;font-size:12px;padding:4px 0">상대 정보 없음</div>';
+
+            // 맵: 최소 3경기 필터, 강/약 각 Top 2
+            const mapStats = [...mapBuckets.entries()]
+              .map(([map, c]) => ({ map, w:c.w, l:c.l, total:c.w+c.l, rate: (c.w+c.l) ? c.w/(c.w+c.l) : 0 }))
+              .filter(m => m.total >= 3);
+            const strongMaps = mapStats.slice().sort((a,b)=> b.rate - a.rate || b.total - a.total).slice(0, 2);
+            const weakMaps   = mapStats.slice().sort((a,b)=> a.rate - b.rate || b.total - a.total).slice(0, 2);
+            const mapHtml = (strongMaps.length || weakMaps.length)
+              ? (
+                  strongMaps.map(m=>`<div class="mp-map strong"><span class="name">${escapeHtml(m.map)}</span><span class="stats"><span class="mp-w">${m.w}W</span> ${m.l}L · ${Math.round(m.rate*100)}%</span></div>`).join('')
+                + weakMaps.map(m=>`<div class="mp-map weak"><span class="name">${escapeHtml(m.map)}</span><span class="stats">${m.w}W <span class="mp-l">${m.l}L</span> · ${Math.round(m.rate*100)}%</span></div>`).join('')
+                )
+              : '<div style="color:#666;font-size:12px;padding:4px 0">표시할 맵 없음 (각 맵 ≥3경기 필요)</div>';
+
+            const pillsHtml = recent10.map(g => g.isWin ? '<span class="mp-pill w">W</span>' : '<span class="mp-pill l">L</span>').join('');
+            const recentHot  = (recent10.length>0 && recentW/recent10.length >= 0.5) ? 'hot' : '';
+            const currentHot = currentStreak >= 2 ? 'hot' : '';
+
+            panelEl.innerHTML = `
+              <div class="mp">
+                <div class="mp-title">종합 분석 (개인전) <small>${escapeHtml(season.label || season.key || '')} · ${total11}경기</small></div>
+
+                <div class="mp-section">
+                  <div class="mp-h"><span>최근 10경기</span></div>
+                  <div class="mp-stream">${pillsHtml || '<span style="color:#666;font-size:12px">기록 없음</span>'}</div>
+                  <div class="mp-stats">
+                    <div class="mp-stat ${recentHot}"><div class="v">${recentW}-${recentL}</div><div class="k">최근 10경기</div></div>
+                    <div class="mp-stat ${currentHot}"><div class="v">${currentStreak>0?('▲ '+currentStreak):'-'}</div><div class="k">현재 연승</div></div>
+                    <div class="mp-stat"><div class="v">${maxStreak>0?('▲ '+maxStreak):'-'}</div><div class="k">시즌 최다연승</div></div>
+                  </div>
+                </div>
+
+                <div class="mp-section">
+                  <div class="mp-h"><span>티어별 상대 승률</span>${avgOppElo?`<span class="meta">평균 상대 ELO ${avgOppElo}</span>`:''}</div>
+                  ${tierRowsHtml}
+                  ${showHunter ? `<div class="mp-summary"><span><span class="mp-badge">🔥 강자 사냥꾼</span> 상위 티어(Diamond+) ${topW}승 ${topL}패 (${topRate}%)</span></div>` : ''}
+                </div>
+
+                <div class="mp-section">
+                  <div class="mp-2col">
+                    <div>
+                      <div class="mp-col-h">라이벌 (자주 만난 상대)</div>
+                      ${rivalsHtml}
+                    </div>
+                    <div>
+                      <div class="mp-col-h">강한 맵 / 약한 맵 (개인전)</div>
+                      ${mapHtml}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+        }
+
         const ctx=document.getElementById('modalEloChart').getContext('2d');
         if(window.modalChart)window.modalChart.destroy();
         window.modalChart=new Chart(ctx,{
@@ -1965,18 +2190,43 @@ async function showPlayerModal(playerId, seasonKey=CURRENT_SEASON_KEY){
           }
         });
 
-        document.getElementById('modalMatchHistory').innerHTML =
-          (playerLog.length? playerLog : []).map(row=>{
-            const color = row.isWin ? '#4ade80' : '#f87171';
-            const deltaText = (row.delta>0? `+${row.delta}` : `${row.delta}`);
-            return `<div style="margin:4px 0;">
-              ${row.date} | ${row.map}
-              ${row.opponentText ? ` | vs ${row.opponentText}` : ''}
-              | <b style="color:${color}">${row.isWin ? '승' : '패'}</b>
-              | <span style="color:${color}">${deltaText}</span>
-              <span style="color:#aaa"> (현재 ELO: ${row.eloAfter})</span>
-            </div>`;
-          }).join('') || '경기 기록 없음';
+        // ✅ 최근 경기를 위로 + 첫 3개만 표시, 나머지는 "전체 경기 보기" 토글
+        const rowsHtml = (playerLog.length ? playerLog.slice().reverse() : []).map(row=>{
+          const color = row.isWin ? '#4ade80' : '#f87171';
+          const deltaText = (row.delta>0? `+${row.delta}` : `${row.delta}`);
+          return `<div style="margin:4px 0;">
+            ${row.date} | ${row.map}
+            ${row.opponentText ? ` | vs ${row.opponentText}` : ''}
+            | <b style="color:${color}">${row.isWin ? '승' : '패'}</b>
+            | <span style="color:${color}">${deltaText}</span>
+            <span style="color:#aaa"> (현재 ELO: ${row.eloAfter})</span>
+          </div>`;
+        });
+        const mhEl = document.getElementById('modalMatchHistory');
+        if (rowsHtml.length === 0) {
+          mhEl.innerHTML = '경기 기록 없음';
+        } else if (rowsHtml.length <= 3) {
+          mhEl.innerHTML = rowsHtml.join('');
+        } else {
+          const head = rowsHtml.slice(0, 3).join('');
+          const tail = rowsHtml.slice(3).join('');
+          mhEl.innerHTML =
+            head +
+            `<div id="modalHistoryMore" class="mp-history-more">${tail}</div>` +
+            `<div id="modalHistoryToggle" class="mp-toggle" onclick="window.__toggleMatchHistory()">전체 경기 보기 ▼</div>`;
+        }
+        window.__toggleMatchHistory = function(){
+          const more = document.getElementById('modalHistoryMore');
+          const btn  = document.getElementById('modalHistoryToggle');
+          if (!more || !btn) return;
+          if (more.classList.contains('open')) {
+            more.classList.remove('open');
+            btn.textContent = '전체 경기 보기 ▼';
+          } else {
+            more.classList.add('open');
+            btn.textContent = '접기 ▲';
+          }
+        };
 
         const modal=document.getElementById('playerModal');
         modal.style.display='block';
